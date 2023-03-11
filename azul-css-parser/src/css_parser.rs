@@ -5553,8 +5553,8 @@ mod css_tests {
     #[test]
     fn test_parse_style_font_family_1() {
         let fonts0: Vec<StyleFontFamily> = vec![
-            StyleFontFamily::System("Webly Sleeky UI".to_string().into()),
-            StyleFontFamily::System("monospace".to_string().into()),
+            StyleFontFamily::System("Webly Sleeky UI".to_string()),
+            StyleFontFamily::System("monospace".to_string()),
         ];
         let fonts0: StyleFontFamilyVec = fonts0.into();
         assert_eq!(
@@ -5566,7 +5566,7 @@ mod css_tests {
     #[test]
     fn test_parse_style_font_family_2() {
         let fonts0: Vec<StyleFontFamily> = vec![StyleFontFamily::System(
-            "Webly Sleeky UI".to_string().into(),
+            "Webly Sleeky UI".to_string(),
         )];
         let fonts0: StyleFontFamilyVec = fonts0.into();
         assert_eq!(parse_style_font_family("'Webly Sleeky UI'"), Ok(fonts0));

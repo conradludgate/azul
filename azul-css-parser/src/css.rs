@@ -898,8 +898,7 @@ mod stylesheet_parse {
                     selectors: vec![CssPathSelector::Class("my_class".to_string().into())].into(),
                 },
                 declarations: vec![CssDeclaration::Static(red.clone())].into(),
-            }]
-            .into();
+            }];
             test_css(css_1, expected_rules);
         }
 
@@ -932,7 +931,7 @@ mod stylesheet_parse {
                     path: CssPath {
                         selectors: vec![CssPathSelector::Global].into(),
                     },
-                    declarations: vec![CssDeclaration::Static(black.clone())].into(),
+                    declarations: vec![CssDeclaration::Static(black)].into(),
                 },
                 CssRuleBlock {
                     path: CssPath {
@@ -942,17 +941,16 @@ mod stylesheet_parse {
                         ]
                         .into(),
                     },
-                    declarations: vec![CssDeclaration::Static(red.clone())].into(),
+                    declarations: vec![CssDeclaration::Static(red)].into(),
                 },
                 CssRuleBlock {
                     path: CssPath {
                         selectors: vec![CssPathSelector::Class("my_class".to_string().into())]
                             .into(),
                     },
-                    declarations: vec![CssDeclaration::Static(blue.clone())].into(),
+                    declarations: vec![CssDeclaration::Static(blue)].into(),
                 },
-            ]
-            .into();
+            ];
             test_css(css_3, expected_rules);
         }
     }
