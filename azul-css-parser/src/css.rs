@@ -120,7 +120,7 @@ impl_display! { CssPseudoSelectorParseError<'a>, {
     UnknownSelector(selector, value) => {
         let format_str = match value {
             Some(v) => format!("{}({})", selector, v),
-            None => format!("{}", selector),
+            None => selector.to_string(),
         };
         format!("Invalid or unknown CSS pseudo-selector: ':{}'", format_str)
     },
@@ -191,10 +191,10 @@ fn parse_nth_child_selector<'a>(
     }
 
     // If the value is not a number
-    match value.as_ref() {
+    match value {
         "even" => Ok(Even),
         "odd" => Ok(Odd),
-        other => parse_nth_child_pattern(value),
+        _other => parse_nth_child_pattern(value),
     }
 }
 
@@ -212,14 +212,14 @@ fn parse_nth_child_pattern<'a>(
 
     // TODO: Test for "+"
     let repeat = value
-        .split("n")
+        .split('n')
         .next()
         .ok_or(CssPseudoSelectorParseError::InvalidNthChildPattern(value))?
         .trim()
         .parse::<u32>()?;
 
     // In a "2n+3" form, the first .next() yields the "2n", the second .next() yields the "3"
-    let mut offset_iterator = value.split("+");
+    let mut offset_iterator = value.split('+');
 
     // has to succeed, since the string is verified to not be empty
     offset_iterator.next().unwrap();
@@ -652,13 +652,13 @@ fn unparsed_css_blocks_to_stylesheet<'a>(
                 )
                 .map_err(|e| CssParseError {
                     css_string,
-                    error: e.into(),
+                    error: e,
                     location,
                 })?;
             }
 
             Ok(CssRuleBlock {
-                path: unparsed_css_block.path.into(),
+                path: unparsed_css_block.path,
                 declarations: declarations.into(),
             })
         })
@@ -678,8 +678,8 @@ pub fn parse_css_declaration<'a>(
     use self::CssParseErrorInner::*;
     use self::CssParseWarnMsgInner::*;
 
-    if let Some(combined_key) = CombinedCssPropertyType::from_str(unparsed_css_key, &css_key_map) {
-        if let Some(css_var) = check_if_value_is_css_var(unparsed_css_value) {
+    if let Some(combined_key) = CombinedCssPropertyType::from_str(unparsed_css_key, css_key_map) {
+        if let Some(_css_var) = check_if_value_is_css_var(unparsed_css_value) {
             // margin: var(--my-variable);
             return Err(VarOnShorthandProperty {
                 key: combined_key,
@@ -694,7 +694,7 @@ pub fn parse_css_declaration<'a>(
             declarations.extend(
                 parsed_css_properties
                     .into_iter()
-                    .map(|val| CssDeclaration::Static(val)),
+                    .map(CssDeclaration::Static),
             );
         }
     } else if let Some(normal_key) = CssPropertyType::from_str(unparsed_css_key, css_key_map) {
@@ -755,7 +755,7 @@ fn check_if_value_is_css_var<'a>(
 fn parse_css_variable_brace_contents<'a>(input: &'a str) -> Option<(&'a str, Option<&'a str>)> {
     let input = input.trim();
 
-    let mut split_comma_iter = input.splitn(2, ",");
+    let mut split_comma_iter = input.splitn(2, ',');
     let var_name = split_comma_iter.next()?;
     let var_name = var_name.trim();
 

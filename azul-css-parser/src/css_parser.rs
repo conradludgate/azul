@@ -238,8 +238,8 @@ pub fn parse_css_property<'a>(
     Ok(match value {
         "auto" => CssProperty::auto(key),
         "none" => CssProperty::none(key),
-        "initial" => CssProperty::initial(key).into(),
-        "inherit" => CssProperty::inherit(key).into(),
+        "initial" => CssProperty::initial(key),
+        "inherit" => CssProperty::inherit(key),
         value => match key {
             TextColor => parse_style_text_color(value)?.into(),
             FontSize => parse_style_font_size(value)?.into(),
@@ -280,11 +280,9 @@ pub fn parse_css_property<'a>(
 
             OverflowX => {
                 CssProperty::OverflowX(CssPropertyValue::Exact(parse_layout_overflow(value)?))
-                    .into()
             }
             OverflowY => {
                 CssProperty::OverflowY(CssPropertyValue::Exact(parse_layout_overflow(value)?))
-                    .into()
             }
 
             PaddingTop => parse_layout_padding_top(value)?.into(),
@@ -343,20 +341,16 @@ pub fn parse_css_property<'a>(
 
             BoxShadowLeft => {
                 CssProperty::BoxShadowLeft(CssPropertyValue::Exact(parse_style_box_shadow(value)?))
-                    .into()
             }
             BoxShadowRight => {
                 CssProperty::BoxShadowRight(CssPropertyValue::Exact(parse_style_box_shadow(value)?))
-                    .into()
             }
             BoxShadowTop => {
                 CssProperty::BoxShadowTop(CssPropertyValue::Exact(parse_style_box_shadow(value)?))
-                    .into()
             }
             BoxShadowBottom => CssProperty::BoxShadowBottom(CssPropertyValue::Exact(
                 parse_style_box_shadow(value)?,
-            ))
-            .into(),
+            )),
 
             ScrollbarStyle => parse_scrollbar_style(value)?.into(), // TODO: stub - always returns default style
 
@@ -368,15 +362,13 @@ pub fn parse_css_property<'a>(
 
             MixBlendMode => parse_style_mix_blend_mode(value)?.into(),
             Filter => {
-                CssProperty::Filter(CssPropertyValue::Exact(parse_style_filter_vec(value)?)).into()
+                CssProperty::Filter(CssPropertyValue::Exact(parse_style_filter_vec(value)?))
             }
             BackdropFilter => {
                 CssProperty::BackdropFilter(CssPropertyValue::Exact(parse_style_filter_vec(value)?))
-                    .into()
             }
             TextShadow => {
                 CssProperty::TextShadow(CssPropertyValue::Exact(parse_style_box_shadow(value)?))
-                    .into()
             }
         },
     })
@@ -510,18 +502,18 @@ pub fn parse_combined_css_property<'a>(
     };
 
     match value {
-        "auto" => return Ok(keys.into_iter().map(|ty| CssProperty::auto(ty)).collect()),
-        "none" => return Ok(keys.into_iter().map(|ty| CssProperty::none(ty)).collect()),
+        "auto" => return Ok(keys.into_iter().map(CssProperty::auto).collect()),
+        "none" => return Ok(keys.into_iter().map(CssProperty::none).collect()),
         "initial" => {
             return Ok(keys
                 .into_iter()
-                .map(|ty| CssProperty::initial(ty))
+                .map(CssProperty::initial)
                 .collect())
         }
         "inherit" => {
             return Ok(keys
                 .into_iter()
-                .map(|ty| CssProperty::inherit(ty))
+                .map(CssProperty::inherit)
                 .collect())
         }
         _ => {}
@@ -1240,7 +1232,7 @@ pub fn parse_percentage_value(input: &str) -> Result<PercentageValue, Percentage
     let unit = &input[split_pos..];
     let mut number = input[..split_pos]
         .parse::<f32>()
-        .map_err(|e| PercentageParseError::ValueParseErr(e))?;
+        .map_err(PercentageParseError::ValueParseErr)?;
 
     match unit {
         "" => {
@@ -1308,7 +1300,7 @@ pub fn parse_float_value(input: &str) -> Result<FloatValue, ParseFloatError> {
 pub fn parse_style_text_color<'a>(
     input: &'a str,
 ) -> Result<StyleTextColor, CssColorParseError<'a>> {
-    parse_css_color(input).and_then(|ok| Ok(StyleTextColor { inner: ok }))
+    parse_css_color(input).map(|ok| StyleTextColor { inner: ok })
 }
 
 /// Parse a built-in background color
@@ -1571,7 +1563,7 @@ pub fn parse_color_hsl_components<'a>(
         }
 
         let parsed_percent =
-            parse_percentage(c).map_err(|e| CssColorParseError::InvalidPercentage(e))?;
+            parse_percentage(c).map_err(CssColorParseError::InvalidPercentage)?;
 
         Ok(parsed_percent.get())
     }
@@ -1628,7 +1620,7 @@ fn parse_alpha_component<'a>(
         ));
     }
     let a = a.parse::<f32>()?;
-    if a < 0.0 || a > 1.0 {
+    if !(0.0..=1.0).contains(&a) {
         return Err(CssColorParseError::FloatValueOutOfRange(a));
     }
     let a = (a * 256.0).min(255.0) as u8;
@@ -1680,7 +1672,7 @@ pub fn parse_color_no_hash<'a>(input: &'a str) -> Result<ColorU, CssColorParseEr
         }
         6 => {
             let input = u32::from_str_radix(input, 16)
-                .map_err(|e| CssColorParseError::IntValueParseErr(e))?;
+                .map_err(CssColorParseError::IntValueParseErr)?;
             Ok(ColorU {
                 r: ((input >> 16) & 255) as u8,
                 g: ((input >> 8) & 255) as u8,
@@ -1690,7 +1682,7 @@ pub fn parse_color_no_hash<'a>(input: &'a str) -> Result<ColorU, CssColorParseEr
         }
         8 => {
             let input = u32::from_str_radix(input, 16)
-                .map_err(|e| CssColorParseError::IntValueParseErr(e))?;
+                .map_err(CssColorParseError::IntValueParseErr)?;
             Ok(ColorU {
                 r: ((input >> 24) & 255) as u8,
                 g: ((input >> 16) & 255) as u8,
@@ -1907,7 +1899,7 @@ pub fn parse_style_border<'a>(input: &'a str) -> Result<StyleBorderSide, CssBord
         None => {
             // First argument is the one and only argument, therefore has to be a style such as "double"
             border_style =
-                parse_style_border_style(first_arg_str).map_err(|e| InvalidBorderStyle(e))?;
+                parse_style_border_style(first_arg_str).map_err(InvalidBorderStyle)?;
             return Ok(StyleBorderSide {
                 border_style,
                 border_width: DEFAULT_BORDER_THICKNESS,
@@ -1916,10 +1908,10 @@ pub fn parse_style_border<'a>(input: &'a str) -> Result<StyleBorderSide, CssBord
         }
         Some(end) => {
             // First argument is a pixel value, second argument is the border style
-            border_width = parse_pixel_value(first_arg_str).map_err(|e| ThicknessParseError(e))?;
+            border_width = parse_pixel_value(first_arg_str).map_err(ThicknessParseError)?;
             let border_style_str = &input[first_arg_end..end];
             border_style =
-                parse_style_border_style(border_style_str).map_err(|e| InvalidBorderStyle(e))?;
+                parse_style_border_style(border_style_str).map_err(InvalidBorderStyle)?;
             border_width_str_end = end;
         }
     }
@@ -1927,7 +1919,7 @@ pub fn parse_style_border<'a>(input: &'a str) -> Result<StyleBorderSide, CssBord
     let border_color_str = &input[border_width_str_end..];
 
     // Last argument can be either a hex color or a rgb str
-    let border_color = parse_css_color(border_color_str).map_err(|e| ColorParseError(e))?;
+    let border_color = parse_css_color(border_color_str).map_err(ColorParseError)?;
 
     Ok(StyleBorderSide {
         border_width,
@@ -2008,7 +2000,7 @@ pub fn parse_style_box_shadow<'a>(
 
             if !is_inset {
                 let blur = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
-                box_shadow.blur_radius = blur.into();
+                box_shadow.blur_radius = blur;
             }
 
             let color = parse_css_color(input_iter.next().unwrap())?;
@@ -2023,11 +2015,11 @@ pub fn parse_style_box_shadow<'a>(
             box_shadow.offset[1] = v_offset;
 
             let blur = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
-            box_shadow.blur_radius = blur.into();
+            box_shadow.blur_radius = blur;
 
             if !is_inset {
                 let spread = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
-                box_shadow.spread_radius = spread.into();
+                box_shadow.spread_radius = spread;
             }
 
             let color = parse_css_color(input_iter.next().unwrap())?;
@@ -2041,10 +2033,10 @@ pub fn parse_style_box_shadow<'a>(
             box_shadow.offset[1] = v_offset;
 
             let blur = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
-            box_shadow.blur_radius = blur.into();
+            box_shadow.blur_radius = blur;
 
             let spread = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
-            box_shadow.spread_radius = spread.into();
+            box_shadow.spread_radius = spread;
 
             let color = parse_css_color(input_iter.next().unwrap())?;
             box_shadow.color = color;
@@ -2260,12 +2252,12 @@ pub fn parse_conic_first_item<'a>(
             .ok_or(CssConicGradientParseError::NoAngle(input))?,
     )?;
 
-    if !(iter.next() == Some("at")) {
+    if iter.next() != Some("at") {
         return Ok(Some((angle, StyleBackgroundPosition::default())));
     }
 
     let remaining = iter.next().unwrap_or("");
-    let position = parse_style_background_position(&remaining)?;
+    let position = parse_style_background_position(remaining)?;
 
     Ok(Some((angle, position)))
 }
@@ -2281,7 +2273,7 @@ impl_display! { CssScrollbarStyleParseError<'a>, {
 }}
 
 pub fn parse_scrollbar_style<'a>(
-    input: &'a str,
+    _input: &'a str,
 ) -> Result<ScrollbarStyle, CssScrollbarStyleParseError<'a>> {
     Ok(ScrollbarStyle::default()) // TODO!
 }
@@ -2443,7 +2435,7 @@ impl<'a> From<ParseFloatError> for CssStyleCompositeFilterParseError<'a> {
 pub fn parse_style_filter_vec<'a>(
     input: &'a str,
 ) -> Result<StyleFilterVec, CssStyleFilterParseError<'a>> {
-    let comma_separated_items = split_string_respect_comma(input);
+    let _comma_separated_items = split_string_respect_comma(input);
     let vec = split_string_respect_comma(input)
         .iter()
         .map(|i| parse_style_filter(i))
@@ -2471,7 +2463,7 @@ pub fn parse_style_filter<'a>(input: &'a str) -> Result<StyleFilter, CssStyleFil
 
     fn parse_style_blur<'a>(input: &'a str) -> Result<StyleBlur, CssStyleBlurParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let width = parse_pixel_value(iter.next().ok_or(
             CssStyleBlurParseError::WrongNumberOfComponents {
@@ -2495,7 +2487,7 @@ pub fn parse_style_filter<'a>(input: &'a str) -> Result<StyleFilter, CssStyleFil
         input: &'a str,
     ) -> Result<StyleColorMatrix, CssStyleColorMatrixParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
         let mut array = [FloatValue::const_new(0); 20];
 
         for (val_idx, val) in array.iter_mut().enumerate() {
@@ -2515,7 +2507,7 @@ pub fn parse_style_filter<'a>(input: &'a str) -> Result<StyleFilter, CssStyleFil
         input: &'a str,
     ) -> Result<StyleFilterOffset, CssStyleFilterOffsetParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let x = parse_pixel_value(iter.next().ok_or(
             CssStyleFilterOffsetParseError::WrongNumberOfComponents {
@@ -2542,7 +2534,7 @@ pub fn parse_style_filter<'a>(input: &'a str) -> Result<StyleFilter, CssStyleFil
             input: &'a str,
         ) -> Result<[FloatValue; 4], CssStyleCompositeFilterParseError<'a>> {
             let input = input.trim();
-            let mut iter = input.split(",");
+            let mut iter = input.split(',');
             let mut array = [FloatValue::const_new(0); 4];
 
             for (val_idx, val) in array.iter_mut().enumerate() {
@@ -2644,7 +2636,7 @@ impl<'a> From<PercentageParseError> for CssStyleTransformParseError<'a> {
 pub fn parse_style_transform_vec<'a>(
     input: &'a str,
 ) -> Result<StyleTransformVec, CssStyleTransformParseError<'a>> {
-    let comma_separated_items = split_string_respect_comma(input);
+    let _comma_separated_items = split_string_respect_comma(input);
     let vec = split_string_respect_comma(input)
         .iter()
         .map(|i| parse_style_transform(i))
@@ -2692,7 +2684,7 @@ pub fn parse_style_transform<'a>(
         input: &'a str,
     ) -> Result<StyleTransformMatrix2D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let a = parse_pixel_value(iter.next().ok_or(
             CssStyleTransformParseError::WrongNumberOfComponents {
@@ -2744,7 +2736,7 @@ pub fn parse_style_transform<'a>(
         input: &'a str,
     ) -> Result<StyleTransformMatrix3D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         // I realize I could use a loop here, but that makes passing the variables to the StyleTransformMatrix3D simpler
         let m11 = parse_pixel_value(iter.next().ok_or(
@@ -2884,7 +2876,7 @@ pub fn parse_style_transform<'a>(
         input: &'a str,
     ) -> Result<StyleTransformTranslate2D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let x = parse_pixel_value(iter.next().ok_or(
             CssStyleTransformParseError::WrongNumberOfComponents {
@@ -2908,7 +2900,7 @@ pub fn parse_style_transform<'a>(
         input: &'a str,
     ) -> Result<StyleTransformTranslate3D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let x = parse_pixel_value(iter.next().ok_or(
             CssStyleTransformParseError::WrongNumberOfComponents {
@@ -2939,7 +2931,7 @@ pub fn parse_style_transform<'a>(
         input: &'a str,
     ) -> Result<StyleTransformRotate3D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let x = parse_percentage_value(iter.next().ok_or(
             CssStyleTransformParseError::WrongNumberOfComponents {
@@ -2977,7 +2969,7 @@ pub fn parse_style_transform<'a>(
         input: &'a str,
     ) -> Result<StyleTransformScale2D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let x = parse_percentage_value(iter.next().ok_or(
             CssStyleTransformParseError::WrongNumberOfComponents {
@@ -3001,7 +2993,7 @@ pub fn parse_style_transform<'a>(
         input: &'a str,
     ) -> Result<StyleTransformScale3D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let x = parse_percentage_value(iter.next().ok_or(
             CssStyleTransformParseError::WrongNumberOfComponents {
@@ -3032,7 +3024,7 @@ pub fn parse_style_transform<'a>(
         input: &'a str,
     ) -> Result<StyleTransformSkew2D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
-        let mut iter = input.split(",");
+        let mut iter = input.split(',');
 
         let x = parse_percentage_value(iter.next().ok_or(
             CssStyleTransformParseError::WrongNumberOfComponents {
@@ -3130,7 +3122,7 @@ pub fn parse_style_transform_origin<'a>(
     input: &'a str,
 ) -> Result<StyleTransformOrigin, CssStyleTransformOriginParseError<'a>> {
     let input = input.trim();
-    let mut iter = input.split(",");
+    let mut iter = input.split(',');
 
     let x = parse_pixel_value(iter.next().ok_or(
         CssStyleTransformOriginParseError::WrongNumberOfComponents {
@@ -3174,7 +3166,7 @@ pub fn parse_style_perspective_origin<'a>(
     input: &'a str,
 ) -> Result<StylePerspectiveOrigin, CssStylePerspectiveOriginParseError<'a>> {
     let input = input.trim();
-    let mut iter = input.split(",");
+    let mut iter = input.split(',');
 
     let x = parse_pixel_value(iter.next().ok_or(
         CssStylePerspectiveOriginParseError::WrongNumberOfComponents {
@@ -3247,11 +3239,11 @@ pub fn parse_style_background_position<'a>(
     }
 
     let horizontal =
-        parse_background_position_horizontal(first).map_err(|e| FirstComponentWrong(e))?;
+        parse_background_position_horizontal(first).map_err(FirstComponentWrong)?;
 
     let vertical = match second {
         Some(second) => {
-            parse_background_position_vertical(second).map_err(|e| SecondComponentWrong(e))?
+            parse_background_position_vertical(second).map_err(SecondComponentWrong)?
         }
         None => BackgroundPositionVertical::Center,
     };
@@ -3300,18 +3292,18 @@ fn split_string_respect_comma<'a>(input: &'a str) -> Vec<&'a str> {
     }
 
     let mut comma_separated_items = Vec::<&str>::new();
-    let mut current_input = &input[..];
+    let mut current_input = input;
 
     'outer: loop {
         let (skip_next_braces_result, character_was_found) =
-            match skip_next_braces(&current_input, ',') {
+            match skip_next_braces(current_input, ',') {
                 Some(s) => s,
                 None => break 'outer,
             };
         let new_push_item = if character_was_found {
             &current_input[..skip_next_braces_result]
         } else {
-            &current_input[..]
+            current_input
         };
         let new_current_input = &current_input[(skip_next_braces_result + 1)..];
         comma_separated_items.push(new_push_item);
@@ -3348,7 +3340,7 @@ pub fn parse_gradient<'a>(
     let is_radial_gradient = background_type == GradientType::RadialGradient
         || background_type == GradientType::RepeatingRadialGradient;
 
-    let is_conic_gradient = background_type == GradientType::ConicGradient
+    let _is_conic_gradient = background_type == GradientType::ConicGradient
         || background_type == GradientType::RepeatingConicGradient;
 
     if is_linear_gradient {
@@ -3360,7 +3352,7 @@ pub fn parse_gradient<'a>(
             linear_gradient_stops.push(parse_linear_color_stop(first_brace_item)?);
         }
         linear_gradient.extend_mode = background_type.get_extend_mode();
-        while let Some(next_brace_item) = brace_iterator.next() {
+        for next_brace_item in brace_iterator.by_ref() {
             linear_gradient_stops.push(parse_linear_color_stop(next_brace_item)?);
         }
         linear_gradient.stops =
@@ -3375,7 +3367,7 @@ pub fn parse_gradient<'a>(
             radial_gradient_stops.push(parse_linear_color_stop(first_brace_item)?);
         }
         radial_gradient.extend_mode = background_type.get_extend_mode();
-        while let Some(next_brace_item) = brace_iterator.next() {
+        for next_brace_item in brace_iterator.by_ref() {
             radial_gradient_stops.push(parse_linear_color_stop(next_brace_item)?);
         }
         radial_gradient.stops =
@@ -3391,7 +3383,7 @@ pub fn parse_gradient<'a>(
             conic_gradient_stops.push(parse_radial_color_stop(first_brace_item)?);
         }
         conic_gradient.extend_mode = background_type.get_extend_mode();
-        while let Some(next_brace_item) = brace_iterator.next() {
+        for next_brace_item in brace_iterator {
             conic_gradient_stops.push(parse_radial_color_stop(next_brace_item)?);
         }
         conic_gradient.stops =
@@ -3441,13 +3433,13 @@ pub fn strip_quotes<'a>(input: &'a str) -> Result<QuoteStripped<'a>, UnclosedQuo
         if !quote_contents.ends_with('"') {
             return Err(UnclosedQuotesError(quote_contents));
         }
-        Ok(QuoteStripped(quote_contents.trim_end_matches("\"")))
+        Ok(QuoteStripped(quote_contents.trim_end_matches('\"')))
     } else if first_single_quote.is_some() {
         let quote_contents = first_single_quote.unwrap();
         if !quote_contents.ends_with('\'') {
             return Err(UnclosedQuotesError(input));
         }
-        Ok(QuoteStripped(quote_contents.trim_end_matches("'")))
+        Ok(QuoteStripped(quote_contents.trim_end_matches('\'')))
     } else {
         Err(UnclosedQuotesError(input))
     }
@@ -3509,7 +3501,7 @@ pub fn parse_linear_color_stop<'a>(
     let offset = match percentage_str {
         None => OptionPercentageValue::None,
         Some(s) => {
-            OptionPercentageValue::Some(parse_percentage_value(s).map_err(|e| Percentage(e))?)
+            OptionPercentageValue::Some(parse_percentage_value(s).map_err(Percentage)?)
         }
     };
 
@@ -3551,7 +3543,7 @@ pub fn parse_radial_color_stop<'a>(
     let color = parse_css_color(color_str)?;
     let offset = match percentage_str {
         None => OptionAngleValue::None,
-        Some(s) => OptionAngleValue::Some(parse_angle_value(s).map_err(|e| Angle(e))?),
+        Some(s) => OptionAngleValue::Some(parse_angle_value(s).map_err(Angle)?),
     };
 
     Ok(RadialColorStop { offset, color })
@@ -3618,7 +3610,7 @@ pub fn parse_direction<'a>(input: &'a str) -> Result<Direction, CssDirectionPars
         .next()
         .ok_or(CssDirectionParseError::Error(input))?;
 
-    if let Some(angle) = parse_angle_value(first_input).ok() {
+    if let Ok(angle) = parse_angle_value(first_input) {
         Ok(Direction::Angle(angle))
     } else {
         // the input is not an angle
@@ -3716,7 +3708,7 @@ pub fn parse_angle_value<'a>(input: &'a str) -> Result<AngleValue, CssAngleValue
 
     match input.parse::<f32>() {
         Ok(o) => Ok(AngleValue::from_metric(AngleMetric::Percent, o * 100.0)),
-        Err(e) => Err(CssAngleValueParseError::InvalidAngle(input)),
+        Err(_e) => Err(CssAngleValueParseError::InvalidAngle(input)),
     }
 }
 
@@ -3832,11 +3824,11 @@ pub fn parse_layout_flex_shrink<'a>(
 }
 
 pub fn parse_style_tab_width(input: &str) -> Result<StyleTabWidth, PercentageParseError> {
-    parse_percentage_value(input).and_then(|e| Ok(StyleTabWidth { inner: e }))
+    parse_percentage_value(input).map(|e| StyleTabWidth { inner: e })
 }
 
 pub fn parse_style_line_height(input: &str) -> Result<StyleLineHeight, PercentageParseError> {
-    parse_percentage_value(input).and_then(|e| Ok(StyleLineHeight { inner: e }))
+    parse_percentage_value(input).map(|e| StyleLineHeight { inner: e })
 }
 
 typed_pixel_value_parser!(parse_style_font_size, StyleFontSize);
@@ -3852,8 +3844,7 @@ impl_display! {OpacityParseError<'a>, {
 
 pub fn parse_style_opacity<'a>(input: &'a str) -> Result<StyleOpacity, OpacityParseError<'a>> {
     parse_percentage_value(input)
-        .map_err(|e| OpacityParseError::ParsePercentage(e, input))
-        .and_then(|e| Ok(StyleOpacity { inner: e }))
+        .map_err(|e| OpacityParseError::ParsePercentage(e, input)).map(|e| StyleOpacity { inner: e })
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -3902,7 +3893,7 @@ pub fn parse_style_font_family<'a>(
         let font = font.trim_matches('\'');
         let font = font.trim_matches('\"');
         let font = font.trim();
-        fonts.push(StyleFontFamily::System(font.to_string().into()));
+        fonts.push(StyleFontFamily::System(font.to_string()));
     }
 
     Ok(fonts.into())
@@ -4188,7 +4179,7 @@ multi_type_parser!(
 
 #[cfg(test)]
 mod css_tests {
-    use azul_css::{NormalizedLinearColorStop, NormalizedRadialColorStop};
+    use azul_css::{NormalizedLinearColorStop, NormalizedRadialColorStop, RadialGradientSize};
 
     use super::*;
 
