@@ -50,24 +50,20 @@ macro_rules! impl_display {
 macro_rules! impl_debug_as_display {
     // For a type with a lifetime
     ($enum:ident<$lt:lifetime>) => {
-
         impl<$lt> ::core::fmt::Debug for $enum<$lt> {
             fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
                 write!(f, "{}", self)
             }
         }
-
     };
 
     // For a type without a lifetime
     ($enum:ident) => {
-
         impl ::core::fmt::Debug for $enum {
             fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
                 write!(f, "{}", self)
             }
         }
-
     };
 }
 

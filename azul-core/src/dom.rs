@@ -1,40 +1,28 @@
-use core::{
-    fmt,
-    mem,
-    sync::atomic::{AtomicUsize, Ordering},
-    iter::FromIterator,
-    hash::{Hash, Hasher},
+use crate::{
+    app_resources::{ImageCallback, ImageMask, RendererResources},
+    app_resources::{ImageRef, ImageRefHash},
+    callbacks::{Callback, CallbackType, IFrameCallback, IFrameCallbackType, OptionRefAny, RefAny},
+    id_tree::{NodeDataContainer, NodeDataContainerRef, NodeDataContainerRefMut},
+    styled_dom::{
+        CssPropertyCache, CssPropertyCachePtr, StyleFontFamilyHash, StyledNode, StyledNodeState,
+    },
+    styled_dom::{NodeHierarchyItemId, StyledDom},
+    window::{Menu, OptionVirtualKeyCodeCombo},
 };
 use alloc::boxed::Box;
-use alloc::vec::Vec;
-use alloc::string::String;
 use alloc::collections::btree_map::BTreeMap;
-use crate::{
-    app_resources::{ImageRef, ImageRefHash},
-    styled_dom::{
-        CssPropertyCache, CssPropertyCachePtr,
-        StyleFontFamilyHash,
-        StyledNodeState, StyledNode
-    },
-    callbacks::{
-        Callback, CallbackType,
-        IFrameCallback, IFrameCallbackType,
-        RefAny, OptionRefAny,
-    },
-    app_resources::{ImageMask, RendererResources, ImageCallback},
-    id_tree::{
-        NodeDataContainer, NodeDataContainerRef,
-        NodeDataContainerRefMut
-    },
-    window::{Menu, OptionVirtualKeyCodeCombo},
-    styled_dom::{StyledDom, NodeHierarchyItemId},
-};
-use azul_css::{
-    FontRef, Css, OptionAzString,
-    AzString, NodeTypeTag, CssProperty
+use alloc::string::String;
+use alloc::vec::Vec;
+use azul_css::{AzString, Css, CssProperty, FontRef, NodeTypeTag, OptionAzString};
+use core::{
+    fmt,
+    hash::{Hash, Hasher},
+    iter::FromIterator,
+    mem,
+    sync::atomic::{AtomicUsize, Ordering},
 };
 
-pub use crate::id_tree::{NodeHierarchy, Node, NodeId};
+pub use crate::id_tree::{Node, NodeHierarchy, NodeId};
 
 static TAG_ID: AtomicUsize = AtomicUsize::new(1);
 
@@ -135,7 +123,7 @@ impl NodeType {
             IFrame(i) => IFrame(IFrameNode {
                 callback: i.callback,
                 data: i.data.clone(),
-            })
+            }),
         }
     }
 
@@ -293,7 +281,7 @@ impl EventFilter {
 /// }
 /// ```
 macro_rules! get_single_enum_type {
-    ($fn_name:ident, $enum_name:ident::$variant:ident($return_type:ty)) => (
+    ($fn_name:ident, $enum_name:ident::$variant:ident($return_type:ty)) => {
         pub fn $fn_name(&self) -> Option<$return_type> {
             use self::$enum_name::*;
             match self {
@@ -301,41 +289,44 @@ macro_rules! get_single_enum_type {
                 _ => None,
             }
         }
-    )
+    };
 }
 
 impl EventFilter {
     get_single_enum_type!(as_hover_event_filter, EventFilter::Hover(HoverEventFilter));
     get_single_enum_type!(as_focus_event_filter, EventFilter::Focus(FocusEventFilter));
     get_single_enum_type!(as_not_event_filter, EventFilter::Not(NotEventFilter));
-    get_single_enum_type!(as_window_event_filter, EventFilter::Window(WindowEventFilter));
+    get_single_enum_type!(
+        as_window_event_filter,
+        EventFilter::Window(WindowEventFilter)
+    );
 }
 
 impl From<On> for EventFilter {
     fn from(input: On) -> EventFilter {
         use self::On::*;
         match input {
-            MouseOver            => EventFilter::Hover(HoverEventFilter::MouseOver),
-            MouseDown            => EventFilter::Hover(HoverEventFilter::MouseDown),
-            LeftMouseDown        => EventFilter::Hover(HoverEventFilter::LeftMouseDown),
-            MiddleMouseDown      => EventFilter::Hover(HoverEventFilter::MiddleMouseDown),
-            RightMouseDown       => EventFilter::Hover(HoverEventFilter::RightMouseDown),
-            MouseUp              => EventFilter::Hover(HoverEventFilter::MouseUp),
-            LeftMouseUp          => EventFilter::Hover(HoverEventFilter::LeftMouseUp),
-            MiddleMouseUp        => EventFilter::Hover(HoverEventFilter::MiddleMouseUp),
-            RightMouseUp         => EventFilter::Hover(HoverEventFilter::RightMouseUp),
+            MouseOver => EventFilter::Hover(HoverEventFilter::MouseOver),
+            MouseDown => EventFilter::Hover(HoverEventFilter::MouseDown),
+            LeftMouseDown => EventFilter::Hover(HoverEventFilter::LeftMouseDown),
+            MiddleMouseDown => EventFilter::Hover(HoverEventFilter::MiddleMouseDown),
+            RightMouseDown => EventFilter::Hover(HoverEventFilter::RightMouseDown),
+            MouseUp => EventFilter::Hover(HoverEventFilter::MouseUp),
+            LeftMouseUp => EventFilter::Hover(HoverEventFilter::LeftMouseUp),
+            MiddleMouseUp => EventFilter::Hover(HoverEventFilter::MiddleMouseUp),
+            RightMouseUp => EventFilter::Hover(HoverEventFilter::RightMouseUp),
 
-            MouseEnter           => EventFilter::Hover(HoverEventFilter::MouseEnter),
-            MouseLeave           => EventFilter::Hover(HoverEventFilter::MouseLeave),
-            Scroll               => EventFilter::Hover(HoverEventFilter::Scroll),
-            TextInput            => EventFilter::Focus(FocusEventFilter::TextInput),            // focus!
-            VirtualKeyDown       => EventFilter::Window(WindowEventFilter::VirtualKeyDown),     // window!
-            VirtualKeyUp         => EventFilter::Window(WindowEventFilter::VirtualKeyUp),       // window!
-            HoveredFile          => EventFilter::Hover(HoverEventFilter::HoveredFile),
-            DroppedFile          => EventFilter::Hover(HoverEventFilter::DroppedFile),
+            MouseEnter => EventFilter::Hover(HoverEventFilter::MouseEnter),
+            MouseLeave => EventFilter::Hover(HoverEventFilter::MouseLeave),
+            Scroll => EventFilter::Hover(HoverEventFilter::Scroll),
+            TextInput => EventFilter::Focus(FocusEventFilter::TextInput), // focus!
+            VirtualKeyDown => EventFilter::Window(WindowEventFilter::VirtualKeyDown), // window!
+            VirtualKeyUp => EventFilter::Window(WindowEventFilter::VirtualKeyUp), // window!
+            HoveredFile => EventFilter::Hover(HoverEventFilter::HoveredFile),
+            DroppedFile => EventFilter::Hover(HoverEventFilter::DroppedFile),
             HoveredFileCancelled => EventFilter::Hover(HoverEventFilter::HoveredFileCancelled),
-            FocusReceived        => EventFilter::Focus(FocusEventFilter::FocusReceived),        // focus!
-            FocusLost            => EventFilter::Focus(FocusEventFilter::FocusLost),            // focus!
+            FocusReceived => EventFilter::Focus(FocusEventFilter::FocusReceived), // focus!
+            FocusLost => EventFilter::Focus(FocusEventFilter::FocusLost),         // focus!
         }
     }
 }
@@ -523,7 +514,7 @@ impl WindowEventFilter {
             WindowEventFilter::CloseRequested => None,
             WindowEventFilter::ThemeChanged => None,
             WindowEventFilter::WindowFocusReceived => None, // specific to window!
-            WindowEventFilter::WindowFocusLost => None, // specific to window!
+            WindowEventFilter::WindowFocusLost => None,     // specific to window!
         }
     }
 }
@@ -574,11 +565,15 @@ impl_vec_hash!(CallbackData, CallbackDataVec);
 impl CallbackDataVec {
     #[inline]
     pub fn as_container<'a>(&'a self) -> NodeDataContainerRef<'a, CallbackData> {
-        NodeDataContainerRef { internal: self.as_ref() }
+        NodeDataContainerRef {
+            internal: self.as_ref(),
+        }
     }
     #[inline]
     pub fn as_container_mut<'a>(&'a mut self) -> NodeDataContainerRefMut<'a, CallbackData> {
-        NodeDataContainerRefMut { internal: self.as_mut() }
+        NodeDataContainerRefMut {
+            internal: self.as_mut(),
+        }
     }
 }
 
@@ -626,53 +621,57 @@ pub enum NodeDataInlineCssProperty {
 
 macro_rules! parse_from_str {
     ($s:expr, $prop_type:ident) => {{
-        use azul_css::{CssKeyMap, CssDeclaration};
+        use azul_css::{CssDeclaration, CssKeyMap};
         use azul_css_parser::ErrorLocation;
 
         let s = $s.trim();
         let css_key_map = CssKeyMap::get();
 
-        let v = s.split(";")
-        .filter_map(|kv| {
+        let v = s
+            .split(";")
+            .filter_map(|kv| {
+                let mut kv_iter = kv.split(":");
+                let key = kv_iter.next()?;
+                let value = kv_iter.next()?;
+                let mut declarations = Vec::new();
+                let mut warnings = Vec::new();
 
-            let mut kv_iter = kv.split(":");
-            let key = kv_iter.next()?;
-            let value = kv_iter.next()?;
-            let mut declarations = Vec::new();
-            let mut warnings = Vec::new();
+                azul_css_parser::parse_css_declaration(
+                    key,
+                    value,
+                    (ErrorLocation::default(), ErrorLocation::default()),
+                    &css_key_map,
+                    &mut warnings,
+                    &mut declarations,
+                )
+                .ok()?;
 
-            azul_css_parser::parse_css_declaration(
-                key,
-                value,
-                (ErrorLocation::default(), ErrorLocation::default()),
-                &css_key_map,
-                &mut warnings,
-                &mut declarations
-            ).ok()?;
+                let declarations = declarations
+                    .iter()
+                    .filter_map(|c| match c {
+                        CssDeclaration::Static(d) => {
+                            Some(NodeDataInlineCssProperty::$prop_type(d.clone()))
+                        }
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>();
 
-            let declarations = declarations.iter().filter_map(|c| match c {
-                CssDeclaration::Static(d) => Some(NodeDataInlineCssProperty::$prop_type(d.clone())),
-                _ => None
-            }).collect::<Vec<_>>();
+                if declarations.is_empty() {
+                    None
+                } else {
+                    Some(declarations)
+                }
+            })
+            .collect::<Vec<Vec<NodeDataInlineCssProperty>>>();
 
-            if declarations.is_empty() {
-                None
-            } else {
-                Some(declarations)
-            }
-        })
-        .collect::<Vec<Vec<NodeDataInlineCssProperty>>>();
-
-        v
-        .into_iter()
-        .flat_map(|k| k.into_iter())
-        .collect::<Vec<_>>()
-        .into()
+        v.into_iter()
+            .flat_map(|k| k.into_iter())
+            .collect::<Vec<_>>()
+            .into()
     }};
 }
 
 impl NodeDataInlineCssPropertyVec {
-
     // given "flex-directin: row", returns vec![NodeDataInlineCssProperty::Normal(FlexDirection::Row)]
     pub fn parse_normal(s: &str) -> Self {
         return parse_from_str!(s, Normal);
@@ -713,11 +712,19 @@ impl fmt::Debug for NodeDataInlineCssProperty {
     }
 }
 
-impl_vec!(NodeDataInlineCssProperty, NodeDataInlineCssPropertyVec, NodeDataInlineCssPropertyVecDestructor);
+impl_vec!(
+    NodeDataInlineCssProperty,
+    NodeDataInlineCssPropertyVec,
+    NodeDataInlineCssPropertyVecDestructor
+);
 impl_vec_debug!(NodeDataInlineCssProperty, NodeDataInlineCssPropertyVec);
 impl_vec_partialord!(NodeDataInlineCssProperty, NodeDataInlineCssPropertyVec);
 impl_vec_ord!(NodeDataInlineCssProperty, NodeDataInlineCssPropertyVec);
-impl_vec_clone!(NodeDataInlineCssProperty, NodeDataInlineCssPropertyVec, NodeDataInlineCssPropertyVecDestructor);
+impl_vec_clone!(
+    NodeDataInlineCssProperty,
+    NodeDataInlineCssPropertyVec,
+    NodeDataInlineCssPropertyVecDestructor
+);
 impl_vec_partialeq!(NodeDataInlineCssProperty, NodeDataInlineCssPropertyVec);
 impl_vec_eq!(NodeDataInlineCssProperty, NodeDataInlineCssPropertyVec);
 impl_vec_hash!(NodeDataInlineCssProperty, NodeDataInlineCssPropertyVec);
@@ -748,7 +755,6 @@ pub struct NodeData {
 
 impl Hash for NodeData {
     fn hash<H: Hasher>(&self, state: &mut H) {
-
         self.node_type.hash(state);
         self.dataset.hash(state);
         self.ids_and_classes.as_ref().hash(state);
@@ -761,17 +767,23 @@ impl Hash for NodeData {
             callback.data.get_type_id().hash(state);
         }
 
-
         self.inline_css_props.as_ref().hash(state);
         if let Some(ext) = self.extra.as_ref() {
-            if let Some(c) = ext.clip_mask.as_ref() { c.hash(state); }
-            if let Some(c) = ext.accessibility.as_ref() { c.hash(state); }
-            if let Some(c) = ext.menu_bar.as_ref() { c.hash(state); }
-            if let Some(c) = ext.context_menu.as_ref() { c.hash(state); }
+            if let Some(c) = ext.clip_mask.as_ref() {
+                c.hash(state);
+            }
+            if let Some(c) = ext.accessibility.as_ref() {
+                c.hash(state);
+            }
+            if let Some(c) = ext.menu_bar.as_ref() {
+                c.hash(state);
+            }
+            if let Some(c) = ext.context_menu.as_ref() {
+                c.hash(state);
+            }
         }
     }
 }
-
 
 /// NOTE: NOT EXPOSED IN THE API! Stores extra,
 /// not commonly used information for the NodeData.
@@ -786,7 +798,6 @@ pub struct NodeDataExt {
     pub(crate) menu_bar: Option<Box<Menu>>,
     /// Context menu that should be opened when the item is left-clicked
     pub(crate) context_menu: Option<Box<Menu>>,
-
     // ... insert further API extensions here...
 }
 
@@ -911,8 +922,16 @@ pub enum AccessibilityState {
     Protected,
 }
 
-impl_vec!(AccessibilityState, AccessibilityStateVec, AccessibilityStateVecDestructor);
-impl_vec_clone!(AccessibilityState, AccessibilityStateVec, AccessibilityStateVecDestructor);
+impl_vec!(
+    AccessibilityState,
+    AccessibilityStateVec,
+    AccessibilityStateVecDestructor
+);
+impl_vec_clone!(
+    AccessibilityState,
+    AccessibilityStateVec,
+    AccessibilityStateVecDestructor
+);
 impl_vec_debug!(AccessibilityState, AccessibilityStateVec);
 impl_vec_partialeq!(AccessibilityState, AccessibilityStateVec);
 impl_vec_partialord!(AccessibilityState, AccessibilityStateVec);
@@ -950,18 +969,21 @@ impl_vec_eq!(NodeData, NodeDataVec);
 impl_vec_hash!(NodeData, NodeDataVec);
 
 impl NodeDataVec {
-
     #[inline]
     pub fn as_container<'a>(&'a self) -> NodeDataContainerRef<'a, NodeData> {
-        NodeDataContainerRef { internal: self.as_ref() }
+        NodeDataContainerRef {
+            internal: self.as_ref(),
+        }
     }
     #[inline]
     pub fn as_container_mut<'a>(&'a mut self) -> NodeDataContainerRefMut<'a, NodeData> {
-        NodeDataContainerRefMut { internal: self.as_mut() }
+        NodeDataContainerRefMut {
+            internal: self.as_mut(),
+        }
     }
 }
 
-unsafe impl Send for NodeData { }
+unsafe impl Send for NodeData {}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 #[repr(C, u8)]
@@ -994,7 +1016,11 @@ pub enum TabIndex {
     NoKeyboardFocus,
 }
 
-impl_option!(TabIndex, OptionTabIndex, [Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash]);
+impl_option!(
+    TabIndex,
+    OptionTabIndex,
+    [Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash]
+);
 
 impl TabIndex {
     /// Returns the HTML-compatible number of the `tabindex` element
@@ -1030,30 +1056,42 @@ impl fmt::Debug for NodeData {
 
 impl fmt::Display for NodeData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
         let html_type = self.node_type.get_path();
         let attributes_string = node_data_to_string(&self);
 
         match self.node_type.format() {
-            Some(content) => write!(f, "<{}{}>{}</{}>", html_type, attributes_string, content, html_type),
-            None => write!(f, "<{}{}/>", html_type, attributes_string)
+            Some(content) => write!(
+                f,
+                "<{}{}>{}</{}>",
+                html_type, attributes_string, content, html_type
+            ),
+            None => write!(f, "<{}{}/>", html_type, attributes_string),
         }
     }
 }
 
 fn node_data_to_string(node_data: &NodeData) -> String {
-
     let mut id_string = String::new();
-    let ids = node_data.ids_and_classes.as_ref().iter()
-    .filter_map(|s| s.as_id()).collect::<Vec<_>>().join(" ");
+    let ids = node_data
+        .ids_and_classes
+        .as_ref()
+        .iter()
+        .filter_map(|s| s.as_id())
+        .collect::<Vec<_>>()
+        .join(" ");
 
     if !ids.is_empty() {
         id_string = format!(" id=\"{}\" ", ids);
     }
 
     let mut class_string = String::new();
-    let classes = node_data.ids_and_classes.as_ref().iter()
-    .filter_map(|s| s.as_class()).collect::<Vec<_>>().join(" ");
+    let classes = node_data
+        .ids_and_classes
+        .as_ref()
+        .iter()
+        .filter_map(|s| s.as_class())
+        .collect::<Vec<_>>()
+        .join(" ");
 
     if !classes.is_empty() {
         class_string = format!(" class=\"{}\" ", classes);
@@ -1068,7 +1106,6 @@ fn node_data_to_string(node_data: &NodeData) -> String {
 }
 
 impl NodeData {
-
     /// Creates a new `NodeData` instance from a given `NodeType`
     #[inline]
     pub const fn new(node_type: NodeType) -> Self {
@@ -1115,7 +1152,10 @@ impl NodeData {
 
     #[inline(always)]
     pub fn iframe(data: RefAny, callback: IFrameCallbackType) -> Self {
-        Self::new(NodeType::IFrame(IFrameNode { callback: IFrameCallback { cb: callback }, data }))
+        Self::new(NodeType::IFrame(IFrameNode {
+            callback: IFrameCallback { cb: callback },
+            data,
+        }))
     }
 
     /// Checks whether this node is of the given node type (div, image, text)
@@ -1126,16 +1166,23 @@ impl NodeData {
 
     /// Checks whether this node has the searched ID attached
     pub fn has_id(&self, id: &str) -> bool {
-        self.ids_and_classes.iter().any(|id_or_class| id_or_class.as_id() == Some(id))
+        self.ids_and_classes
+            .iter()
+            .any(|id_or_class| id_or_class.as_id() == Some(id))
     }
 
     /// Checks whether this node has the searched class attached
     pub fn has_class(&self, class: &str) -> bool {
-        self.ids_and_classes.iter().any(|id_or_class| id_or_class.as_class() == Some(class))
+        self.ids_and_classes
+            .iter()
+            .any(|id_or_class| id_or_class.as_class() == Some(class))
     }
 
     pub fn has_context_menu(&self) -> bool {
-        self.extra.as_ref().map(|m| m.context_menu.is_some()).unwrap_or(false)
+        self.extra
+            .as_ref()
+            .map(|m| m.context_menu.is_some())
+            .unwrap_or(false)
     }
 
     pub fn is_text_node(&self) -> bool {
@@ -1149,60 +1196,98 @@ impl NodeData {
     // in the future (which is why the fields are all private).
 
     #[inline(always)]
-    pub const fn get_node_type(&self) -> &NodeType { &self.node_type }
+    pub const fn get_node_type(&self) -> &NodeType {
+        &self.node_type
+    }
     #[inline(always)]
-    pub fn get_dataset_mut(&mut self) -> &mut OptionRefAny { &mut self.dataset }
+    pub fn get_dataset_mut(&mut self) -> &mut OptionRefAny {
+        &mut self.dataset
+    }
     #[inline(always)]
-    pub const fn get_dataset(&self) -> &OptionRefAny { &self.dataset }
+    pub const fn get_dataset(&self) -> &OptionRefAny {
+        &self.dataset
+    }
     #[inline(always)]
-    pub const fn get_ids_and_classes(&self) -> &IdOrClassVec { &self.ids_and_classes }
+    pub const fn get_ids_and_classes(&self) -> &IdOrClassVec {
+        &self.ids_and_classes
+    }
     #[inline(always)]
-    pub const fn get_callbacks(&self) -> &CallbackDataVec { &self.callbacks }
+    pub const fn get_callbacks(&self) -> &CallbackDataVec {
+        &self.callbacks
+    }
     #[inline(always)]
-    pub const fn get_inline_css_props(&self) -> &NodeDataInlineCssPropertyVec { &self.inline_css_props }
+    pub const fn get_inline_css_props(&self) -> &NodeDataInlineCssPropertyVec {
+        &self.inline_css_props
+    }
 
     #[inline]
-    pub fn get_clip_mask(&self) -> Option<&ImageMask> { self.extra.as_ref().and_then(|e| e.clip_mask.as_ref()) }
-    #[inline]
-    pub fn get_tab_index(&self) -> Option<&TabIndex> { self.tab_index.as_ref() }
-    #[inline]
-    pub fn get_accessibility_info(&self) -> Option<&Box<AccessibilityInfo>> { self.extra.as_ref().and_then(|e| e.accessibility.as_ref()) }
-    #[inline]
-    pub fn get_menu_bar(&self) -> Option<&Box<Menu>> { self.extra.as_ref().and_then(|e| e.menu_bar.as_ref()) }
-    #[inline]
-    pub fn get_context_menu(&self) -> Option<&Box<Menu>> { self.extra.as_ref().and_then(|e| e.context_menu.as_ref()) }
-
-    #[inline(always)]
-    pub fn set_node_type(&mut self, node_type: NodeType) { self.node_type = node_type; }
-    #[inline(always)]
-    pub fn set_dataset(&mut self, data: OptionRefAny) { self.dataset = data; }
-    #[inline(always)]
-    pub fn set_ids_and_classes(&mut self, ids_and_classes: IdOrClassVec) { self.ids_and_classes = ids_and_classes; }
-    #[inline(always)]
-    pub fn set_callbacks(&mut self, callbacks: CallbackDataVec) { self.callbacks = callbacks; }
-    #[inline(always)]
-    pub fn set_inline_css_props(&mut self, inline_css_props: NodeDataInlineCssPropertyVec) { self.inline_css_props = inline_css_props; }
-    #[inline]
-    pub fn set_clip_mask(&mut self, clip_mask: ImageMask) {
-        self.extra.get_or_insert_with(|| Box::new(NodeDataExt::default()))
-        .clip_mask = Some(clip_mask);
+    pub fn get_clip_mask(&self) -> Option<&ImageMask> {
+        self.extra.as_ref().and_then(|e| e.clip_mask.as_ref())
     }
     #[inline]
-    pub fn set_tab_index(&mut self, tab_index: TabIndex) { self.tab_index = Some(tab_index).into(); }
+    pub fn get_tab_index(&self) -> Option<&TabIndex> {
+        self.tab_index.as_ref()
+    }
+    #[inline]
+    pub fn get_accessibility_info(&self) -> Option<&Box<AccessibilityInfo>> {
+        self.extra.as_ref().and_then(|e| e.accessibility.as_ref())
+    }
+    #[inline]
+    pub fn get_menu_bar(&self) -> Option<&Box<Menu>> {
+        self.extra.as_ref().and_then(|e| e.menu_bar.as_ref())
+    }
+    #[inline]
+    pub fn get_context_menu(&self) -> Option<&Box<Menu>> {
+        self.extra.as_ref().and_then(|e| e.context_menu.as_ref())
+    }
+
+    #[inline(always)]
+    pub fn set_node_type(&mut self, node_type: NodeType) {
+        self.node_type = node_type;
+    }
+    #[inline(always)]
+    pub fn set_dataset(&mut self, data: OptionRefAny) {
+        self.dataset = data;
+    }
+    #[inline(always)]
+    pub fn set_ids_and_classes(&mut self, ids_and_classes: IdOrClassVec) {
+        self.ids_and_classes = ids_and_classes;
+    }
+    #[inline(always)]
+    pub fn set_callbacks(&mut self, callbacks: CallbackDataVec) {
+        self.callbacks = callbacks;
+    }
+    #[inline(always)]
+    pub fn set_inline_css_props(&mut self, inline_css_props: NodeDataInlineCssPropertyVec) {
+        self.inline_css_props = inline_css_props;
+    }
+    #[inline]
+    pub fn set_clip_mask(&mut self, clip_mask: ImageMask) {
+        self.extra
+            .get_or_insert_with(|| Box::new(NodeDataExt::default()))
+            .clip_mask = Some(clip_mask);
+    }
+    #[inline]
+    pub fn set_tab_index(&mut self, tab_index: TabIndex) {
+        self.tab_index = Some(tab_index).into();
+    }
     #[inline]
     pub fn set_accessibility_info(&mut self, accessibility_info: AccessibilityInfo) {
-        self.extra.get_or_insert_with(|| Box::new(NodeDataExt::default()))
-        .accessibility = Some(Box::new(accessibility_info));
+        self.extra
+            .get_or_insert_with(|| Box::new(NodeDataExt::default()))
+            .accessibility = Some(Box::new(accessibility_info));
     }
     #[inline]
     pub fn set_menu_bar(&mut self, menu_bar: Menu) {
-        self.extra.get_or_insert_with(|| Box::new(NodeDataExt::default()))
-        .menu_bar = Some(Box::new(menu_bar));
+        self.extra
+            .get_or_insert_with(|| Box::new(NodeDataExt::default()))
+            .menu_bar = Some(Box::new(menu_bar));
     }
     #[inline]
     pub fn set_context_menu(&mut self, context_menu: Menu) {
-        self.extra.get_or_insert_with(|| Box::new(NodeDataExt::default()))
-        .context_menu = Some(Box::new(context_menu));
+        self.extra
+            .get_or_insert_with(|| Box::new(NodeDataExt::default()))
+            .context_menu = Some(Box::new(context_menu));
     }
 
     #[inline]
@@ -1216,7 +1301,11 @@ impl NodeData {
         let mut v: CallbackDataVec = Vec::new().into();
         mem::swap(&mut v, &mut self.callbacks);
         let mut v = v.into_library_owned_vec();
-        v.push(CallbackData { event, data, callback: Callback { cb: callback } });
+        v.push(CallbackData {
+            event,
+            data,
+            callback: Callback { cb: callback },
+        });
         self.callbacks = v.into();
     }
     #[inline]
@@ -1270,23 +1359,38 @@ impl NodeData {
 
     /// Calculates a deterministic node hash for this node
     pub fn calculate_node_data_hash(&self) -> DomNodeHash {
-        use highway::{HighwayHasher, HighwayHash, Key};
-        let mut hasher = HighwayHasher::new(Key([0;4]));
+        use highway::{HighwayHash, HighwayHasher, Key};
+        let mut hasher = HighwayHasher::new(Key([0; 4]));
         self.hash(&mut hasher);
         let h = hasher.finalize64();
         DomNodeHash(h)
     }
 
     #[inline(always)]
-    pub fn with_tab_index(mut self, tab_index: TabIndex) -> Self { self.set_tab_index(tab_index); self }
+    pub fn with_tab_index(mut self, tab_index: TabIndex) -> Self {
+        self.set_tab_index(tab_index);
+        self
+    }
     #[inline(always)]
-    pub fn with_dataset(mut self, data: OptionRefAny) -> Self { self.dataset = data; self }
+    pub fn with_dataset(mut self, data: OptionRefAny) -> Self {
+        self.dataset = data;
+        self
+    }
     #[inline(always)]
-    pub fn with_ids_and_classes(mut self, ids_and_classes: IdOrClassVec) -> Self { self.ids_and_classes = ids_and_classes; self }
+    pub fn with_ids_and_classes(mut self, ids_and_classes: IdOrClassVec) -> Self {
+        self.ids_and_classes = ids_and_classes;
+        self
+    }
     #[inline(always)]
-    pub fn with_callbacks(mut self, callbacks: CallbackDataVec) -> Self { self.callbacks = callbacks; self }
+    pub fn with_callbacks(mut self, callbacks: CallbackDataVec) -> Self {
+        self.callbacks = callbacks;
+        self
+    }
     #[inline(always)]
-    pub fn with_inline_css_props(mut self, inline_css_props: NodeDataInlineCssPropertyVec) -> Self { self.inline_css_props = inline_css_props; self }
+    pub fn with_inline_css_props(mut self, inline_css_props: NodeDataInlineCssPropertyVec) -> Self {
+        self.inline_css_props = inline_css_props;
+        self
+    }
 
     #[inline(always)]
     pub fn swap_with_default(&mut self) -> Self {
@@ -1313,10 +1417,11 @@ impl NodeData {
 
     pub fn is_focusable(&self) -> bool {
         // TODO: do some better analysis of next / first / item
-        self.get_tab_index().is_some() ||
-        self.get_callbacks().iter().any(|cb| {
-            cb.event.is_focus_callback()
-        })
+        self.get_tab_index().is_some()
+            || self
+                .get_callbacks()
+                .iter()
+                .any(|cb| cb.event.is_focus_callback())
     }
 
     pub fn get_iframe_node(&mut self) -> Option<&mut IFrameNode> {
@@ -1326,17 +1431,24 @@ impl NodeData {
         }
     }
 
-    pub fn get_render_image_callback_node<'a>(&'a mut self) -> Option<(&'a mut ImageCallback, ImageRefHash)> {
+    pub fn get_render_image_callback_node<'a>(
+        &'a mut self,
+    ) -> Option<(&'a mut ImageCallback, ImageRefHash)> {
         match &mut self.node_type {
             NodeType::Image(img) => {
                 let hash = img.get_hash();
                 img.get_image_callback_mut().map(|r| (r, hash))
-            },
+            }
             _ => None,
         }
     }
 
-    pub fn debug_print_start(&self, css_cache: &CssPropertyCache, node_id: &NodeId, node_state: &StyledNodeState) -> String {
+    pub fn debug_print_start(
+        &self,
+        css_cache: &CssPropertyCache,
+        node_id: &NodeId,
+        node_state: &StyledNodeState,
+    ) -> String {
         let html_type = self.node_type.get_path();
         let attributes_string = node_data_to_string(&self);
         let style = css_cache.get_computed_css_style_string(&self, node_id, node_state);
@@ -1360,7 +1472,12 @@ pub struct Dom {
     estimated_total_children: usize,
 }
 
-impl_option!(Dom, OptionDom, copy = false, [Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash]);
+impl_option!(
+    Dom,
+    OptionDom,
+    copy = false,
+    [Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash]
+);
 
 impl_vec!(Dom, DomVec, DomVecDestructor);
 impl_vec_clone!(Dom, DomVec, DomVecDestructor);
@@ -1373,7 +1490,6 @@ impl_vec_eq!(Dom, DomVec);
 impl_vec_hash!(Dom, DomVec);
 
 impl Dom {
-
     // ----- DOM CONSTRUCTORS
 
     /// Creates an empty DOM with a give `NodeType`. Note: This is a `const fn` and
@@ -1387,20 +1503,30 @@ impl Dom {
         }
     }
     #[inline(always)]
-    pub fn div() -> Self { Self::new(NodeType::Div) }
+    pub fn div() -> Self {
+        Self::new(NodeType::Div)
+    }
     #[inline(always)]
-    pub fn body() -> Self { Self::new(NodeType::Body) }
+    pub fn body() -> Self {
+        Self::new(NodeType::Body)
+    }
     #[inline(always)]
-    pub fn br() -> Self { Self::new(NodeType::Br) }
+    pub fn br() -> Self {
+        Self::new(NodeType::Br)
+    }
     #[inline(always)]
-    pub fn text<S: Into<String>>(value: S) -> Self { Self::new(NodeType::Text(value.into())) }
+    pub fn text<S: Into<String>>(value: S) -> Self {
+        Self::new(NodeType::Text(value.into()))
+    }
     #[inline(always)]
-    pub fn image(image: ImageRef) -> Self { Self::new(NodeType::Image(image)) }
+    pub fn image(image: ImageRef) -> Self {
+        Self::new(NodeType::Image(image))
+    }
     #[inline(always)]
     pub fn iframe(data: RefAny, callback: IFrameCallbackType) -> Self {
         Self::new(NodeType::IFrame(IFrameNode {
             callback: IFrameCallback { cb: callback },
-            data
+            data,
         }))
     }
 
@@ -1428,7 +1554,10 @@ impl Dom {
 
     #[inline(always)]
     pub fn set_children(&mut self, children: DomVec) {
-        let children_estimated = children.iter().map(|s| s.estimated_total_children + 1).sum();
+        let children_estimated = children
+            .iter()
+            .map(|s| s.estimated_total_children + 1)
+            .sum();
         self.children = children;
         self.estimated_total_children = children_estimated;
     }
@@ -1448,22 +1577,48 @@ impl Dom {
         StyledDom::new(self, css)
     }
     #[inline(always)]
-    pub fn with_children(mut self, children: DomVec) -> Self { self.children = children; self }
+    pub fn with_children(mut self, children: DomVec) -> Self {
+        self.children = children;
+        self
+    }
     #[inline(always)]
-    pub fn with_child(&mut self, child: Self) -> Self { let mut dom = self.swap_with_default(); dom.add_child(child); dom }
+    pub fn with_child(&mut self, child: Self) -> Self {
+        let mut dom = self.swap_with_default();
+        dom.add_child(child);
+        dom
+    }
     #[inline(always)]
-    pub fn with_tab_index(mut self, tab_index: TabIndex) -> Self { self.root.set_tab_index(tab_index); self }
+    pub fn with_tab_index(mut self, tab_index: TabIndex) -> Self {
+        self.root.set_tab_index(tab_index);
+        self
+    }
     #[inline(always)]
-    pub fn with_dataset(mut self, data: OptionRefAny) -> Self { self.root.dataset = data; self }
+    pub fn with_dataset(mut self, data: OptionRefAny) -> Self {
+        self.root.dataset = data;
+        self
+    }
     #[inline(always)]
-    pub fn with_ids_and_classes(mut self, ids_and_classes: IdOrClassVec) -> Self { self.root.ids_and_classes = ids_and_classes; self }
+    pub fn with_ids_and_classes(mut self, ids_and_classes: IdOrClassVec) -> Self {
+        self.root.ids_and_classes = ids_and_classes;
+        self
+    }
     #[inline(always)]
-    pub fn with_callbacks(mut self, callbacks: CallbackDataVec) -> Self { self.root.callbacks = callbacks; self }
+    pub fn with_callbacks(mut self, callbacks: CallbackDataVec) -> Self {
+        self.root.callbacks = callbacks;
+        self
+    }
     #[inline(always)]
-    pub fn with_inline_css_props(mut self, inline_css_props: NodeDataInlineCssPropertyVec) -> Self { self.root.inline_css_props = inline_css_props; self }
+    pub fn with_inline_css_props(mut self, inline_css_props: NodeDataInlineCssPropertyVec) -> Self {
+        self.root.inline_css_props = inline_css_props;
+        self
+    }
 
     pub fn set_inline_style(&mut self, style: &str) {
-        self.root.set_inline_css_props(self.root.get_inline_css_props().with_append(NodeDataInlineCssPropertyVec::parse_normal(style)))
+        self.root.set_inline_css_props(
+            self.root
+                .get_inline_css_props()
+                .with_append(NodeDataInlineCssPropertyVec::parse_normal(style)),
+        )
     }
 
     pub fn with_inline_style(mut self, style: &str) -> Self {
@@ -1481,19 +1636,26 @@ impl Dom {
         if self.children.is_empty() {
             self.estimated_total_children = 0;
         } else {
-            self.estimated_total_children = self.children.iter_mut().map(|s| s.fixup_children_estimated() + 1).sum();
+            self.estimated_total_children = self
+                .children
+                .iter_mut()
+                .map(|s| s.fixup_children_estimated() + 1)
+                .sum();
         }
         return self.estimated_total_children;
     }
 }
 
 impl core::iter::FromIterator<Dom> for Dom {
-    fn from_iter<I: IntoIterator<Item=Dom>>(iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item = Dom>>(iter: I) -> Self {
         let mut estimated_total_children = 0;
-        let children = iter.into_iter().map(|c| {
-            estimated_total_children += c.estimated_total_children + 1;
-            c
-        }).collect::<Vec<Dom>>();
+        let children = iter
+            .into_iter()
+            .map(|c| {
+                estimated_total_children += c.estimated_total_children + 1;
+                c
+            })
+            .collect::<Vec<Dom>>();
 
         Dom {
             root: NodeData::div(),
@@ -1505,11 +1667,14 @@ impl core::iter::FromIterator<Dom> for Dom {
 
 impl fmt::Debug for Dom {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
         fn print_dom(d: &Dom, f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "Dom {{\r\n")?;
             write!(f, "\troot: {:#?}\r\n", d.root)?;
-            write!(f, "\testimated_total_children: {:#?}\r\n", d.estimated_total_children)?;
+            write!(
+                f,
+                "\testimated_total_children: {:#?}\r\n",
+                d.estimated_total_children
+            )?;
             write!(f, "\tchildren: [\r\n")?;
             for c in d.children.iter() {
                 print_dom(c, f)?;
@@ -1546,7 +1711,6 @@ impl From<Dom> for CompactDom {
 }
 
 fn convert_dom_into_compact_dom(mut dom: Dom) -> CompactDom {
-
     // note: somehow convert this into a non-recursive form later on!
     fn convert_dom_into_compact_dom_internal(
         dom: &mut Dom,
@@ -1554,9 +1718,8 @@ fn convert_dom_into_compact_dom(mut dom: Dom) -> CompactDom {
         node_data: &mut Vec<NodeData>,
         parent_node_id: NodeId,
         node: Node,
-        cur_node_id: &mut usize
+        cur_node_id: &mut usize,
     ) {
-
         // - parent [0]
         //    - child [1]
         //    - child [2]
@@ -1597,7 +1760,14 @@ fn convert_dom_into_compact_dom(mut dom: Dom) -> CompactDom {
             };
             previous_sibling_id = Some(child_node_id);
             // recurse BEFORE adding the next child
-            convert_dom_into_compact_dom_internal(child_dom, node_hierarchy, node_data, child_node_id, child_node, cur_node_id);
+            convert_dom_into_compact_dom_internal(
+                child_dom,
+                node_hierarchy,
+                node_data,
+                child_node_id,
+                child_node,
+                cur_node_id,
+            );
         }
     }
 
@@ -1622,11 +1792,22 @@ fn convert_dom_into_compact_dom(mut dom: Dom) -> CompactDom {
         },
     };
 
-    convert_dom_into_compact_dom_internal(&mut dom, &mut node_hierarchy, &mut node_data, root_node_id, root_node, &mut cur_node_id);
+    convert_dom_into_compact_dom_internal(
+        &mut dom,
+        &mut node_hierarchy,
+        &mut node_data,
+        root_node_id,
+        root_node,
+        &mut cur_node_id,
+    );
 
     CompactDom {
-        node_hierarchy: NodeHierarchy { internal: node_hierarchy },
-        node_data: NodeDataContainer { internal: node_data },
+        node_hierarchy: NodeHierarchy {
+            internal: node_hierarchy,
+        },
+        node_data: NodeDataContainer {
+            internal: node_data,
+        },
         root: root_node_id,
     }
 }

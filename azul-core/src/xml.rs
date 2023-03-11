@@ -1,25 +1,18 @@
 //! XML structure definitions
 
-use core::fmt;
-use alloc::collections::BTreeMap;
-use azul_css::{
-    AzString, Css, U8Vec, OptionAzString,
-    NodeTypeTag, CssPathSelector, CssRuleBlock,
-    CssPath, CssPathPseudoSelector,
-    StyleBackgroundSizeVec,
-    StyleBackgroundRepeatVec,
-    StyleBackgroundContentVec,
-    StyleBackgroundPositionVec,
-    StyleTransformVec,
-    StyleFontFamilyVec,
-    NormalizedLinearColorStopVec,
-    NormalizedRadialColorStopVec,
-};
-use crate::window::{AzStringPair, StringPairVec};
-use crate::styled_dom::StyledDom;
 use crate::css::VecContents;
 use crate::dom::Dom;
-use azul_css_parser::{CssParseError, CssApiWrapper};
+use crate::styled_dom::StyledDom;
+use crate::window::{AzStringPair, StringPairVec};
+use alloc::collections::BTreeMap;
+use azul_css::{
+    AzString, Css, CssPath, CssPathPseudoSelector, CssPathSelector, CssRuleBlock, NodeTypeTag,
+    NormalizedLinearColorStopVec, NormalizedRadialColorStopVec, OptionAzString,
+    StyleBackgroundContentVec, StyleBackgroundPositionVec, StyleBackgroundRepeatVec,
+    StyleBackgroundSizeVec, StyleFontFamilyVec, StyleTransformVec, U8Vec,
+};
+use azul_css_parser::{CssApiWrapper, CssParseError};
+use core::fmt;
 
 /// Error that can happen during hot-reload -
 /// stringified, since it is only used for printing and is not exposed in the public API
@@ -34,23 +27,24 @@ pub type XmlAttributeMap = StringPairVec;
 pub type ComponentArgumentName = String;
 pub type ComponentArgumentType = String;
 pub type ComponentArgumentOrder = usize;
-pub type ComponentArgumentsMap = BTreeMap<ComponentArgumentName, (ComponentArgumentType, ComponentArgumentOrder)>;
+pub type ComponentArgumentsMap =
+    BTreeMap<ComponentArgumentName, (ComponentArgumentType, ComponentArgumentOrder)>;
 pub type ComponentName = String;
 pub type CompiledComponent = String;
 pub type FilteredComponentArguments = ComponentArguments;
 
-pub const DEFAULT_ARGS: [&str;7] = [
+pub const DEFAULT_ARGS: [&str; 7] = [
     "id",
     "class",
     "tabindex",
     "focusable",
     "accepts_text",
     "name",
-    "args"
+    "args",
 ];
 
 #[allow(non_camel_case_types)]
-pub enum c_void { }
+pub enum c_void {}
 
 #[repr(C)]
 pub enum XmlNodeType {
@@ -72,7 +66,6 @@ pub struct XmlQualifiedName {
 pub struct Xml {
     pub root: XmlNodeVec,
 }
-
 
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
 #[repr(C)]
@@ -142,12 +135,32 @@ impl fmt::Display for XmlStreamError {
         match self {
             UnexpectedEndOfStream => write!(f, "Unexpected end of stream"),
             InvalidName => write!(f, "Invalid name"),
-            NonXmlChar(nx) => write!(f, "Non-XML character: {:?} at {}", core::char::from_u32(nx.ch), nx.pos),
-            InvalidChar(ic) => write!(f, "Invalid character: expected: {}, got: {} at {}", ic.expected as char, ic.got as char, ic.pos),
-            InvalidCharMultiple(imc) => write!(f, "Multiple invalid characters: expected: {}, got: {:?} at {}", imc.expected, imc.got.as_ref(), imc.pos),
+            NonXmlChar(nx) => write!(
+                f,
+                "Non-XML character: {:?} at {}",
+                core::char::from_u32(nx.ch),
+                nx.pos
+            ),
+            InvalidChar(ic) => write!(
+                f,
+                "Invalid character: expected: {}, got: {} at {}",
+                ic.expected as char, ic.got as char, ic.pos
+            ),
+            InvalidCharMultiple(imc) => write!(
+                f,
+                "Multiple invalid characters: expected: {}, got: {:?} at {}",
+                imc.expected,
+                imc.got.as_ref(),
+                imc.pos
+            ),
             InvalidQuote(iq) => write!(f, "Invalid quote: got {} at {}", iq.got as char, iq.pos),
             InvalidSpace(is) => write!(f, "Invalid space: got {} at {}", is.got as char, is.pos),
-            InvalidString(ise) => write!(f, "Invalid string: got \"{}\" at {}", ise.got.as_str(), ise.pos),
+            InvalidString(ise) => write!(
+                f,
+                "Invalid string: got \"{}\" at {}",
+                ise.got.as_str(),
+                ise.pos
+            ),
             InvalidReference => write!(f, "Invalid reference"),
             InvalidExternalID => write!(f, "Invalid external ID"),
             InvalidCommentData => write!(f, "Invalid comment data"),
@@ -174,7 +187,7 @@ impl fmt::Display for XmlTextPos {
 #[repr(C)]
 pub struct XmlTextError {
     pub stream_error: XmlStreamError,
-    pub pos: XmlTextPos
+    pub pos: XmlTextPos,
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
@@ -196,9 +209,15 @@ impl fmt::Display for XmlParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::XmlParseError::*;
         match self {
-            InvalidDeclaration(e) => write!(f, "Invalid declaraction: {} at {}", e.stream_error, e.pos),
+            InvalidDeclaration(e) => {
+                write!(f, "Invalid declaraction: {} at {}", e.stream_error, e.pos)
+            }
             InvalidComment(e) => write!(f, "Invalid comment: {} at {}", e.stream_error, e.pos),
-            InvalidPI(e) => write!(f, "Invalid processing instruction: {} at {}", e.stream_error, e.pos),
+            InvalidPI(e) => write!(
+                f,
+                "Invalid processing instruction: {} at {}",
+                e.stream_error, e.pos
+            ),
             InvalidDoctype(e) => write!(f, "Invalid doctype: {} at {}", e.stream_error, e.pos),
             InvalidEntity(e) => write!(f, "Invalid entity: {} at {}", e.stream_error, e.pos),
             InvalidElement(e) => write!(f, "Invalid element: {} at {}", e.stream_error, e.pos),
@@ -210,7 +229,13 @@ impl fmt::Display for XmlParseError {
     }
 }
 
-impl_result!(Xml, XmlError, ResultXmlXmlError, copy = false, [Debug, PartialEq, PartialOrd, Clone]);
+impl_result!(
+    Xml,
+    XmlError,
+    ResultXmlXmlError,
+    copy = false,
+    [Debug, PartialEq, PartialOrd, Clone]
+);
 
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
 #[repr(C)]
@@ -277,24 +302,84 @@ impl fmt::Display for XmlError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::XmlError::*;
         match self {
-            NoParserAvailable => write!(f, "Library was compiled without XML parser (XML parser not available)"),
-            InvalidXmlPrefixUri(pos) => write!(f, "Invalid XML Prefix URI at line {}:{}", pos.row, pos.col),
-            UnexpectedXmlUri(pos) => write!(f, "Unexpected XML URI at at line {}:{}", pos.row, pos.col),
-            UnexpectedXmlnsUri(pos) => write!(f, "Unexpected XML namespace URI at line {}:{}", pos.row, pos.col),
-            InvalidElementNamePrefix(pos) => write!(f, "Invalid element name prefix at line {}:{}", pos.row, pos.col),
-            DuplicatedNamespace(ns) => write!(f, "Duplicated namespace: \"{}\" at {}", ns.ns.as_str(), ns.pos),
-            UnknownNamespace(uns) => write!(f, "Unknown namespace: \"{}\" at {}", uns.ns.as_str(), uns.pos),
-            UnexpectedCloseTag(ct) => write!(f, "Unexpected close tag: expected \"{}\", got \"{}\" at {}", ct.expected.as_str(), ct.actual.as_str(), ct.pos),
-            UnexpectedEntityCloseTag(pos) => write!(f, "Unexpected entity close tag at line {}:{}", pos.row, pos.col),
-            UnknownEntityReference(uer) => write!(f, "Unexpected entity reference: \"{}\" at {}", uer.entity, uer.pos),
-            MalformedEntityReference(pos) => write!(f, "Malformed entity reference at line {}:{}", pos.row, pos.col),
-            EntityReferenceLoop(pos) => write!(f, "Entity reference loop (recursive entity reference) at line {}:{}", pos.row, pos.col),
-            InvalidAttributeValue(pos) => write!(f, "Invalid attribute value at line {}:{}", pos.row, pos.col),
-            DuplicatedAttribute(ae) => write!(f, "Duplicated attribute \"{}\" at line {}:{}", ae.attribute.as_str(), ae.pos.row, ae.pos.col),
+            NoParserAvailable => write!(
+                f,
+                "Library was compiled without XML parser (XML parser not available)"
+            ),
+            InvalidXmlPrefixUri(pos) => {
+                write!(f, "Invalid XML Prefix URI at line {}:{}", pos.row, pos.col)
+            }
+            UnexpectedXmlUri(pos) => {
+                write!(f, "Unexpected XML URI at at line {}:{}", pos.row, pos.col)
+            }
+            UnexpectedXmlnsUri(pos) => write!(
+                f,
+                "Unexpected XML namespace URI at line {}:{}",
+                pos.row, pos.col
+            ),
+            InvalidElementNamePrefix(pos) => write!(
+                f,
+                "Invalid element name prefix at line {}:{}",
+                pos.row, pos.col
+            ),
+            DuplicatedNamespace(ns) => write!(
+                f,
+                "Duplicated namespace: \"{}\" at {}",
+                ns.ns.as_str(),
+                ns.pos
+            ),
+            UnknownNamespace(uns) => write!(
+                f,
+                "Unknown namespace: \"{}\" at {}",
+                uns.ns.as_str(),
+                uns.pos
+            ),
+            UnexpectedCloseTag(ct) => write!(
+                f,
+                "Unexpected close tag: expected \"{}\", got \"{}\" at {}",
+                ct.expected.as_str(),
+                ct.actual.as_str(),
+                ct.pos
+            ),
+            UnexpectedEntityCloseTag(pos) => write!(
+                f,
+                "Unexpected entity close tag at line {}:{}",
+                pos.row, pos.col
+            ),
+            UnknownEntityReference(uer) => write!(
+                f,
+                "Unexpected entity reference: \"{}\" at {}",
+                uer.entity, uer.pos
+            ),
+            MalformedEntityReference(pos) => write!(
+                f,
+                "Malformed entity reference at line {}:{}",
+                pos.row, pos.col
+            ),
+            EntityReferenceLoop(pos) => write!(
+                f,
+                "Entity reference loop (recursive entity reference) at line {}:{}",
+                pos.row, pos.col
+            ),
+            InvalidAttributeValue(pos) => {
+                write!(f, "Invalid attribute value at line {}:{}", pos.row, pos.col)
+            }
+            DuplicatedAttribute(ae) => write!(
+                f,
+                "Duplicated attribute \"{}\" at line {}:{}",
+                ae.attribute.as_str(),
+                ae.pos.row,
+                ae.pos.col
+            ),
             NoRootNode => write!(f, "No root node found"),
             SizeLimit => write!(f, "XML file too large (size limit reached)"),
             DtdDetected => write!(f, "Document type descriptor detected"),
-            MalformedHierarchy(expected, got) => write!(f, "Malformed hierarchy: expected <{}/> closing tag, got <{}/>", expected.as_str(), got.as_str()),
+            MalformedHierarchy(expected, got) => write!(
+                f,
+                "Malformed hierarchy: expected <{}/> closing tag, got <{}/>",
+                expected.as_str(),
+                got.as_str()
+            ),
             ParserError(p) => write!(f, "{}", p),
         }
     }
@@ -350,10 +435,8 @@ impl ComponentArguments {
     }
 }
 
-
 /// Specifies a component that reacts to a parsed XML node
 pub trait XmlComponent {
-
     /// Should return all arguments that this component can take - for example if you have a
     /// component called `Calendar`, which can take a `selectedDate` argument:
     ///
@@ -407,9 +490,19 @@ pub trait XmlComponent {
     /// data format.
     fn get_available_arguments(&self) -> ComponentArguments;
     /// Given a root node and a list of possible arguments, returns a DOM or a syntax error
-    fn render_dom<'a>(&'a self, components: &'a XmlComponentMap, arguments: &FilteredComponentArguments, content: &XmlTextContent) -> Result<StyledDom, RenderDomError<'a>>;
+    fn render_dom<'a>(
+        &'a self,
+        components: &'a XmlComponentMap,
+        arguments: &FilteredComponentArguments,
+        content: &XmlTextContent,
+    ) -> Result<StyledDom, RenderDomError<'a>>;
     /// Used to compile the XML component to Rust code - input
-    fn compile_to_rust_code(&self, components: &XmlComponentMap, attributes: &FilteredComponentArguments, content: &XmlTextContent) -> Result<String, CompileError>;
+    fn compile_to_rust_code(
+        &self,
+        components: &XmlComponentMap,
+        attributes: &FilteredComponentArguments,
+        content: &XmlTextContent,
+    ) -> Result<String, CompileError>;
     /// Returns the XML node for this component (necessary to compile the component into a function
     /// during the Rust compilation stage)
     fn get_xml_node<'a>(&'a self) -> &'a XmlNode;
@@ -450,7 +543,10 @@ pub struct XmlNode {
 
 impl XmlNode {
     pub fn new<I: Into<XmlTagName>>(node_type: I) -> Self {
-        XmlNode { node_type: node_type.into(), .. Default::default() }
+        XmlNode {
+            node_type: node_type.into(),
+            ..Default::default()
+        }
     }
 }
 
@@ -471,10 +567,11 @@ pub struct XmlComponentMap {
     components: BTreeMap<String, (Box<dyn XmlComponent>, bool)>,
 }
 
-
 impl Default for XmlComponentMap {
     fn default() -> Self {
-        let mut map = Self { components: BTreeMap::new() };
+        let mut map = Self {
+            components: BTreeMap::new(),
+        };
         map.register_component("body", Box::new(BodyRenderer::new()), true);
         map.register_component("div", Box::new(DivRenderer::new()), true);
         map.register_component("p", Box::new(TextRenderer::new()), true);
@@ -487,12 +584,10 @@ impl XmlComponentMap {
         &mut self,
         id: &str,
         component: Box<dyn XmlComponent>,
-        inherit_variables: bool
+        inherit_variables: bool,
     ) {
-        self.components.insert(
-            normalize_casing(id),
-            (component, inherit_variables)
-        );
+        self.components
+            .insert(normalize_casing(id), (component, inherit_variables));
     }
 }
 
@@ -663,18 +758,33 @@ impl<'a> fmt::Display for ComponentParseError<'a> {
         use self::ComponentParseError::*;
         match self {
             NotAComponent => write!(f, "Expected <component/> node, found no such node"),
-            UnnamedComponent => write!(f, "Found <component/> tag with out a \"name\" attribute, component must have a name"),
-            MissingName(arg_pos) => write!(f, "Argument at position {} is either empty or has no name", arg_pos),
-            MissingType(arg_pos, arg_name) => write!(f, "Argument \"{}\" at position {} doesn't have a `: type`", arg_pos, arg_name),
+            UnnamedComponent => write!(
+                f,
+                "Found <component/> tag with out a \"name\" attribute, component must have a name"
+            ),
+            MissingName(arg_pos) => write!(
+                f,
+                "Argument at position {} is either empty or has no name",
+                arg_pos
+            ),
+            MissingType(arg_pos, arg_name) => write!(
+                f,
+                "Argument \"{}\" at position {} doesn't have a `: type`",
+                arg_pos, arg_name
+            ),
             WhiteSpaceInComponentName(arg_pos, arg_name_unparsed) => {
-                write!(f, "Missing `:` between the name and the type in argument {} (around \"{}\")", arg_pos, arg_name_unparsed)
-            },
+                write!(
+                    f,
+                    "Missing `:` between the name and the type in argument {} (around \"{}\")",
+                    arg_pos, arg_name_unparsed
+                )
+            }
             WhiteSpaceInComponentType(arg_pos, arg_name, arg_type_unparsed) => {
                 write!(f,
                        "Missing `,` between two arguments (in argument {}, position {}, around \"{}\")",
                        arg_name, arg_pos, arg_type_unparsed
                 )
-            },
+            }
             CssError(lsf) => write!(f, "Error parsing <style> tag: {}", lsf),
         }
     }
@@ -685,10 +795,12 @@ impl fmt::Display for ComponentError {
         use self::ComponentError::*;
         match self {
             UselessFunctionArgument(k, v, available_args) => {
-                write!(f, "Useless component argument \"{}\": \"{}\" - available args are: {:#?}",
+                write!(
+                    f,
+                    "Useless component argument \"{}\": \"{}\" - available args are: {:#?}",
                     k, v, available_args
                 )
-            },
+            }
             UnknownComponent(name) => write!(f, "Unknown component: \"{}\"", name),
         }
     }
@@ -704,7 +816,6 @@ impl<'a> fmt::Display for RenderDomError<'a> {
     }
 }
 
-
 // --- Renderers for various built-in types
 
 /// Render for a `div` component
@@ -715,25 +826,38 @@ pub struct DivRenderer {
 
 impl DivRenderer {
     pub fn new() -> Self {
-        Self { node: XmlNode::new("div") }
+        Self {
+            node: XmlNode::new("div"),
+        }
     }
 }
 
 impl XmlComponent for DivRenderer {
-
     fn get_available_arguments(&self) -> ComponentArguments {
         ComponentArguments::new()
     }
 
-    fn render_dom(&self, _: &XmlComponentMap, _: &FilteredComponentArguments, _: &XmlTextContent) -> Result<StyledDom, RenderDomError> {
+    fn render_dom(
+        &self,
+        _: &XmlComponentMap,
+        _: &FilteredComponentArguments,
+        _: &XmlTextContent,
+    ) -> Result<StyledDom, RenderDomError> {
         Ok(Dom::div().style(CssApiWrapper::empty()))
     }
 
-    fn compile_to_rust_code(&self, _: &XmlComponentMap, _: &FilteredComponentArguments, _: &XmlTextContent) -> Result<String, CompileError> {
+    fn compile_to_rust_code(
+        &self,
+        _: &XmlComponentMap,
+        _: &FilteredComponentArguments,
+        _: &XmlTextContent,
+    ) -> Result<String, CompileError> {
         Ok("Dom::div()".into())
     }
 
-    fn get_xml_node<'a>(&'a self) -> &'a XmlNode { &self.node }
+    fn get_xml_node<'a>(&'a self) -> &'a XmlNode {
+        &self.node
+    }
 }
 
 /// Render for a `body` component
@@ -744,25 +868,38 @@ pub struct BodyRenderer {
 
 impl BodyRenderer {
     pub fn new() -> Self {
-        Self { node: XmlNode::new("body") }
+        Self {
+            node: XmlNode::new("body"),
+        }
     }
 }
 
 impl XmlComponent for BodyRenderer {
-
     fn get_available_arguments(&self) -> ComponentArguments {
         ComponentArguments::new()
     }
 
-    fn render_dom(&self, _: &XmlComponentMap, _: &FilteredComponentArguments, _: &XmlTextContent) -> Result<StyledDom, RenderDomError> {
+    fn render_dom(
+        &self,
+        _: &XmlComponentMap,
+        _: &FilteredComponentArguments,
+        _: &XmlTextContent,
+    ) -> Result<StyledDom, RenderDomError> {
         Ok(Dom::body().style(CssApiWrapper::empty()))
     }
 
-    fn compile_to_rust_code(&self, _: &XmlComponentMap, _: &FilteredComponentArguments, _: &XmlTextContent) -> Result<String, CompileError> {
+    fn compile_to_rust_code(
+        &self,
+        _: &XmlComponentMap,
+        _: &FilteredComponentArguments,
+        _: &XmlTextContent,
+    ) -> Result<String, CompileError> {
         Ok("Dom::body()".into())
     }
 
-    fn get_xml_node<'a>(&'a self) -> &'a XmlNode { &self.node }
+    fn get_xml_node<'a>(&'a self) -> &'a XmlNode {
+        &self.node
+    }
 }
 
 /// Render for a `p` component
@@ -773,12 +910,13 @@ pub struct TextRenderer {
 
 impl TextRenderer {
     pub fn new() -> Self {
-        Self { node: XmlNode::new("p") }
+        Self {
+            node: XmlNode::new("p"),
+        }
     }
 }
 
 impl XmlComponent for TextRenderer {
-
     fn get_available_arguments(&self) -> ComponentArguments {
         ComponentArguments {
             args: ComponentArgumentsMap::default(),
@@ -786,27 +924,42 @@ impl XmlComponent for TextRenderer {
         }
     }
 
-    fn render_dom(&self, _: &XmlComponentMap, _: &FilteredComponentArguments, content: &XmlTextContent) -> Result<StyledDom, RenderDomError> {
-        let content = content.as_ref().map(|s| prepare_string(&s)).unwrap_or_default();
+    fn render_dom(
+        &self,
+        _: &XmlComponentMap,
+        _: &FilteredComponentArguments,
+        content: &XmlTextContent,
+    ) -> Result<StyledDom, RenderDomError> {
+        let content = content
+            .as_ref()
+            .map(|s| prepare_string(&s))
+            .unwrap_or_default();
         Ok(Dom::text(content).style(CssApiWrapper::empty()))
     }
 
-    fn compile_to_rust_code(&self, _: &XmlComponentMap, args: &FilteredComponentArguments, content: &XmlTextContent) -> Result<String, CompileError> {
+    fn compile_to_rust_code(
+        &self,
+        _: &XmlComponentMap,
+        args: &FilteredComponentArguments,
+        content: &XmlTextContent,
+    ) -> Result<String, CompileError> {
         Ok(String::from("Dom::text(text)"))
     }
 
-    fn get_xml_node<'a>(&'a self) -> &'a XmlNode { &self.node }
+    fn get_xml_node<'a>(&'a self) -> &'a XmlNode {
+        &self.node
+    }
 }
 
 /// Compiles a XML `args="a: String, b: bool"` into a `["a" => "String", "b" => "bool"]` map
-pub fn parse_component_arguments<'a>(input: &'a str) -> Result<ComponentArgumentsMap, ComponentParseError<'a>> {
-
+pub fn parse_component_arguments<'a>(
+    input: &'a str,
+) -> Result<ComponentArgumentsMap, ComponentParseError<'a>> {
     use self::ComponentParseError::*;
 
     let mut args = ComponentArgumentsMap::default();
 
     for (arg_idx, arg) in input.split(",").enumerate() {
-
         let mut colon_iterator = arg.split(":");
 
         let arg_name = colon_iterator.next().ok_or(MissingName(arg_idx))?;
@@ -819,7 +972,9 @@ pub fn parse_component_arguments<'a>(input: &'a str) -> Result<ComponentArgument
             return Err(WhiteSpaceInComponentName(arg_idx, arg_name.into()));
         }
 
-        let arg_type = colon_iterator.next().ok_or(MissingType(arg_idx, arg_name.into()))?;
+        let arg_type = colon_iterator
+            .next()
+            .ok_or(MissingType(arg_idx, arg_name.into()))?;
         let arg_type = arg_type.trim();
 
         if arg_type.is_empty() {
@@ -827,7 +982,11 @@ pub fn parse_component_arguments<'a>(input: &'a str) -> Result<ComponentArgument
         }
 
         if arg_type.chars().any(char::is_whitespace) {
-            return Err(WhiteSpaceInComponentType(arg_idx, arg_name.into(), arg_type.into()));
+            return Err(WhiteSpaceInComponentType(
+                arg_idx,
+                arg_name.into(),
+                arg_type.into(),
+            ));
         }
 
         let arg_name = normalize_casing(arg_name);
@@ -840,9 +999,10 @@ pub fn parse_component_arguments<'a>(input: &'a str) -> Result<ComponentArgument
 }
 
 /// Filters the XML attributes of a component given XmlAttributeMap
-pub fn validate_and_filter_component_args(xml_attributes: &XmlAttributeMap, valid_args: &ComponentArguments)
--> Result<FilteredComponentArguments, ComponentError> {
-
+pub fn validate_and_filter_component_args(
+    xml_attributes: &XmlAttributeMap,
+    valid_args: &ComponentArguments,
+) -> Result<FilteredComponentArguments, ComponentError> {
     let mut map = FilteredComponentArguments {
         args: ComponentArgumentsMap::default(),
         accepts_text: valid_args.accepts_text,
@@ -851,19 +1011,23 @@ pub fn validate_and_filter_component_args(xml_attributes: &XmlAttributeMap, vali
     for AzStringPair { key, value } in xml_attributes.as_ref().iter() {
         let xml_attribute_name = key;
         let xml_attribute_value = value;
-        if let Some((valid_arg_type, valid_arg_index)) = valid_args.args.get(xml_attribute_name.as_str()) {
-            map.args.insert(xml_attribute_name.clone().into_library_owned_string(), (valid_arg_type.clone(), *valid_arg_index));
+        if let Some((valid_arg_type, valid_arg_index)) =
+            valid_args.args.get(xml_attribute_name.as_str())
+        {
+            map.args.insert(
+                xml_attribute_name.clone().into_library_owned_string(),
+                (valid_arg_type.clone(), *valid_arg_index),
+            );
         } else if DEFAULT_ARGS.contains(&xml_attribute_name.as_str()) {
             // no error, but don't insert the attribute name
         } else {
             // key was not expected for this component
             let keys = valid_args.args.keys().cloned().collect();
             return Err(ComponentError::UselessFunctionArgument(
-                    xml_attribute_name.clone(),
-                    xml_attribute_value.clone(),
-                    keys
-                )
-            );
+                xml_attribute_name.clone(),
+                xml_attribute_value.clone(),
+                keys,
+            ));
         }
     }
 
@@ -873,13 +1037,14 @@ pub fn validate_and_filter_component_args(xml_attributes: &XmlAttributeMap, vali
 /// Find the one and only `<body>` node, return error if
 /// there is no app node or there are multiple app nodes
 pub fn get_html_node<'a>(root_nodes: &'a [XmlNode]) -> Result<&'a XmlNode, DomXmlParseError> {
-
     let mut html_node_iterator = root_nodes.iter().filter(|node| {
         let node_type_normalized = normalize_casing(&node.node_type);
         &node_type_normalized == "html"
     });
 
-    let html_node = html_node_iterator.next().ok_or(DomXmlParseError::NoHtmlNode)?;
+    let html_node = html_node_iterator
+        .next()
+        .ok_or(DomXmlParseError::NoHtmlNode)?;
     if html_node_iterator.next().is_some() {
         Err(DomXmlParseError::MultipleHtmlRootNodes)
     } else {
@@ -890,13 +1055,14 @@ pub fn get_html_node<'a>(root_nodes: &'a [XmlNode]) -> Result<&'a XmlNode, DomXm
 /// Find the one and only `<body>` node, return error if
 /// there is no app node or there are multiple app nodes
 pub fn get_body_node<'a>(root_nodes: &'a [XmlNode]) -> Result<&'a XmlNode, DomXmlParseError> {
-
     let mut body_node_iterator = root_nodes.iter().filter(|node| {
         let node_type_normalized = normalize_casing(&node.node_type);
         &node_type_normalized == "body"
     });
 
-    let body_node = body_node_iterator.next().ok_or(DomXmlParseError::NoBodyInHtml)?;
+    let body_node = body_node_iterator
+        .next()
+        .ok_or(DomXmlParseError::NoBodyInHtml)?;
     if body_node_iterator.next().is_some() {
         Err(DomXmlParseError::MultipleBodyNodes)
     } else {
@@ -909,16 +1075,20 @@ static DEFAULT_STR: &str = "";
 /// Searches in the the `root_nodes` for a `node_type`, convenience function in order to
 /// for example find the first <blah /> node in all these nodes.
 pub fn find_node_by_type<'a>(root_nodes: &'a [XmlNode], node_type: &str) -> Option<&'a XmlNode> {
-    root_nodes.iter().find(|n| normalize_casing(&n.node_type).as_str() == node_type)
+    root_nodes
+        .iter()
+        .find(|n| normalize_casing(&n.node_type).as_str() == node_type)
 }
 
 pub fn find_attribute<'a>(node: &'a XmlNode, attribute: &str) -> Option<&'a AzString> {
-    node.attributes.iter().find(|n| normalize_casing(&n.key.as_str()).as_str() == attribute).map(|s| &s.value)
+    node.attributes
+        .iter()
+        .find(|n| normalize_casing(&n.key.as_str()).as_str() == attribute)
+        .map(|s| &s.value)
 }
 
 /// Normalizes input such as `abcDef`, `AbcDef`, `abc-def` to the normalized form of `abc_def`
 pub fn normalize_casing(input: &str) -> String {
-
     let mut words: Vec<String> = Vec::new();
     let mut cur_str = Vec::new();
 
@@ -944,7 +1114,6 @@ pub fn normalize_casing(input: &str) -> String {
     words.join("_")
 }
 
-
 /// Given a root node, traverses along the hierarchy, and returns a
 /// mutable reference to the last child node of the root node
 pub fn get_item<'a>(hierarchy: &[usize], root_node: &'a mut XmlNode) -> Option<&'a mut XmlNode> {
@@ -962,28 +1131,25 @@ pub fn get_item<'a>(hierarchy: &[usize], root_node: &'a mut XmlNode) -> Option<&
     Some(unsafe { &mut *mut_node_ptr }) // safe because we hold a &'a mut XmlNode
 }
 
-
 /// Parses an XML string and returns a `StyledDom` with the components instantiated in the `<app></app>`
 pub fn str_to_dom<'a>(
     root_nodes: &'a [XmlNode],
-    component_map: &'a mut XmlComponentMap
+    component_map: &'a mut XmlComponentMap,
 ) -> Result<StyledDom, DomXmlParseError<'a>> {
-
     let html_node = get_html_node(root_nodes)?;
     let body_node = get_body_node(html_node.children.as_ref())?;
 
     let mut global_style = None;
 
     if let Some(head_node) = find_node_by_type(html_node.children.as_ref(), "head") {
-
         // parse all dynamic XML components from the head node
         for node in head_node.children.as_ref() {
             match DynamicXmlComponent::new(node) {
                 Ok(node) => {
                     let node_name = node.name.clone();
                     component_map.register_component(node_name.as_str(), Box::new(node), false);
-                },
-                Err(ComponentParseError::NotAComponent) => { }, // not a <component /> node, ignore
+                }
+                Err(ComponentParseError::NotAComponent) => {} // not a <component /> node, ignore
                 Err(e) => return Err(e.into()), // Error during parsing the XML component, bail
             }
         }
@@ -997,11 +1163,7 @@ pub fn str_to_dom<'a>(
         }
     }
 
-    render_dom_from_body_node(
-        &body_node,
-        global_style,
-        component_map,
-    ).map_err(|e| e.into())
+    render_dom_from_body_node(&body_node, global_style, component_map).map_err(|e| e.into())
 }
 
 /// Parses an XML string and returns a `String`, which contains the Rust source code
@@ -1009,21 +1171,25 @@ pub fn str_to_dom<'a>(
 pub fn str_to_rust_code<'a>(
     root_nodes: &'a [XmlNode],
     imports: &str,
-    component_map: &'a mut XmlComponentMap
+    component_map: &'a mut XmlComponentMap,
 ) -> Result<String, CompileError<'a>> {
-
     let html_node = get_html_node(&root_nodes)?;
     let body_node = get_body_node(html_node.children.as_ref())?;
     let mut global_style = Css::empty();
 
-    if let Some(head_node) = html_node.children.as_ref().iter().find(|n| normalize_casing(&n.node_type).as_str() == "head") {
+    if let Some(head_node) = html_node
+        .children
+        .as_ref()
+        .iter()
+        .find(|n| normalize_casing(&n.node_type).as_str() == "head")
+    {
         for node in head_node.children.as_ref() {
             match DynamicXmlComponent::new(node) {
                 Ok(node) => {
                     let node_name = node.name.clone();
                     component_map.register_component(node_name.as_str(), Box::new(node), false);
-                },
-                Err(ComponentParseError::NotAComponent) => { }, // not a <component /> node, ignore
+                }
+                Err(ComponentParseError::NotAComponent) => {} // not a <component /> node, ignore
                 Err(e) => return Err(CompileError::Xml(e.into())), // Error during parsing the XML component, bail
             }
         }
@@ -1050,14 +1216,14 @@ pub fn str_to_rust_code<'a>(
             path: Vec::new(),
             indices_in_parent: vec![0],
             children_length: vec![body_node.children.as_ref().len()],
-        }
+        },
     )?;
 
     let app_source = app_source
-    .lines()
-    .map(|l| format!("        {}", l))
-    .collect::<Vec<String>>()
-    .join("\r\n");
+        .lines()
+        .map(|l| format!("        {}", l))
+        .collect::<Vec<String>>()
+        .join("\r\n");
 
     let t = "    ";
     let css_blocks = css_blocks.iter().map(|(k, v)| {
@@ -1130,9 +1296,15 @@ fn main() {
 
 // Compile all components to source code
 pub fn compile_components(
-    components: BTreeMap<ComponentName, (CompiledComponent, FilteredComponentArguments, BTreeMap<String, String>)>
+    components: BTreeMap<
+        ComponentName,
+        (
+            CompiledComponent,
+            FilteredComponentArguments,
+            BTreeMap<String, String>,
+        ),
+    >,
 ) -> String {
-
     let cs = components.iter().map(|(name, (function_body, function_args, css_blocks))| {
         let f = compile_component(name, function_args, function_body)
         .lines()
@@ -1147,23 +1319,32 @@ pub fn compile_components(
     .join("\r\n\r\n");
 
     let cs = cs
-    .lines()
-    .map(|l| format!("    {}", l))
-    .collect::<Vec<String>>()
-    .join("\r\n");
+        .lines()
+        .map(|l| format!("    {}", l))
+        .collect::<Vec<String>>()
+        .join("\r\n");
 
-    if cs.is_empty() { cs } else { format!("pub mod components {{\r\n{}\r\n}}", cs)}
+    if cs.is_empty() {
+        cs
+    } else {
+        format!("pub mod components {{\r\n{}\r\n}}", cs)
+    }
 }
 
 pub fn format_component_args(component_args: &ComponentArgumentsMap) -> String {
-
-    let mut args = component_args.iter().map(|(arg_name, (arg_type, arg_index))| {
-        (*arg_index, format!("{}: {}", arg_name, arg_type))
-    }).collect::<Vec<(usize, String)>>();
+    let mut args = component_args
+        .iter()
+        .map(|(arg_name, (arg_type, arg_index))| {
+            (*arg_index, format!("{}: {}", arg_name, arg_type))
+        })
+        .collect::<Vec<(usize, String)>>();
 
     args.sort_by(|(_, a), (_, b)| b.cmp(&a));
 
-    args.iter().map(|(k, v)| v.clone()).collect::<Vec<String>>().join(", ")
+    args.iter()
+        .map(|(k, v)| v.clone())
+        .collect::<Vec<String>>()
+        .join(", ")
 }
 
 pub fn compile_component(
@@ -1171,16 +1352,27 @@ pub fn compile_component(
     component_args: &ComponentArguments,
     component_function_body: &str,
 ) -> String {
-
     let function_args = format_component_args(&component_args.args);
-    let component_function_body = component_function_body.lines().map(|l| format!("    {}", l)).collect::<Vec<String>>().join("\r\n");
+    let component_function_body = component_function_body
+        .lines()
+        .map(|l| format!("    {}", l))
+        .collect::<Vec<String>>()
+        .join("\r\n");
     let should_inline = component_function_body.lines().count() == 1;
     format!(
         "{}pub fn render({}{}{}) -> Dom {{\r\n{}\r\n}}",
         if should_inline { "#[inline]\r\n" } else { "" },
         // pass the text content as the first
-        if component_args.accepts_text { "text: AzString" } else { "" },
-        if function_args.is_empty() || !component_args.accepts_text { "" } else { ", " },
+        if component_args.accepts_text {
+            "text: AzString"
+        } else {
+            ""
+        },
+        if function_args.is_empty() || !component_args.accepts_text {
+            ""
+        } else {
+            ", "
+        },
         function_args,
         component_function_body,
     )
@@ -1189,14 +1381,17 @@ pub fn compile_component(
 pub fn render_dom_from_body_node<'a>(
     body_node: &'a XmlNode,
     mut global_css: Option<CssApiWrapper>,
-    component_map: &'a XmlComponentMap
+    component_map: &'a XmlComponentMap,
 ) -> Result<StyledDom, RenderDomError<'a>> {
-
     // Don't actually render the <body></body> node itself
     let mut dom = StyledDom::default();
 
     for child_node in body_node.children.as_ref() {
-        dom.append_child(render_dom_from_body_node_inner(child_node, component_map, &FilteredComponentArguments::default())?);
+        dom.append_child(render_dom_from_body_node_inner(
+            child_node,
+            component_map,
+            &FilteredComponentArguments::default(),
+        )?);
     }
 
     if let Some(global_css) = global_css.clone() {
@@ -1212,19 +1407,26 @@ pub fn render_dom_from_body_node_inner<'a>(
     component_map: &'a XmlComponentMap,
     parent_xml_attributes: &FilteredComponentArguments,
 ) -> Result<StyledDom, RenderDomError<'a>> {
-
     let component_name = normalize_casing(&xml_node.node_type);
 
-    let (renderer, inherit_variables) = component_map.components.get(&component_name)
-        .ok_or(ComponentError::UnknownComponent(component_name.clone().into()))?;
+    let (renderer, inherit_variables) =
+        component_map
+            .components
+            .get(&component_name)
+            .ok_or(ComponentError::UnknownComponent(
+                component_name.clone().into(),
+            ))?;
 
     // Arguments of the current node
     let available_function_args = renderer.get_available_arguments();
-    let mut filtered_xml_attributes = validate_and_filter_component_args(&xml_node.attributes, &available_function_args)?;
+    let mut filtered_xml_attributes =
+        validate_and_filter_component_args(&xml_node.attributes, &available_function_args)?;
 
     if *inherit_variables {
         // Append all variables that are in scope for the parent node
-        filtered_xml_attributes.args.extend(parent_xml_attributes.args.clone().into_iter());
+        filtered_xml_attributes
+            .args
+            .extend(parent_xml_attributes.args.clone().into_iter());
     }
 
     // Instantiate the parent arguments in the current child arguments
@@ -1232,23 +1434,32 @@ pub fn render_dom_from_body_node_inner<'a>(
         v.0 = format_args_dynamic(&v.0, &parent_xml_attributes.args).to_string();
     }
 
-    let text = xml_node.text.as_ref()
-    .map(|t| AzString::from(format_args_dynamic(t, &filtered_xml_attributes.args)));
+    let text = xml_node
+        .text
+        .as_ref()
+        .map(|t| AzString::from(format_args_dynamic(t, &filtered_xml_attributes.args)));
 
     let mut dom = renderer.render_dom(component_map, &filtered_xml_attributes, &text.into())?;
     set_attributes(&mut dom, &xml_node.attributes, &filtered_xml_attributes);
 
     for child_node in xml_node.children.as_ref() {
-        dom.append_child(render_dom_from_body_node_inner(child_node, component_map, &filtered_xml_attributes)?);
+        dom.append_child(render_dom_from_body_node_inner(
+            child_node,
+            component_map,
+            &filtered_xml_attributes,
+        )?);
     }
 
     Ok(dom)
 }
 
-pub fn set_attributes(dom: &mut StyledDom, xml_attributes: &XmlAttributeMap, filtered_xml_attributes: &FilteredComponentArguments) {
-
+pub fn set_attributes(
+    dom: &mut StyledDom,
+    xml_attributes: &XmlAttributeMap,
+    filtered_xml_attributes: &FilteredComponentArguments,
+) {
+    use crate::dom::IdOrClass::{Class, Id};
     use crate::dom::TabIndex;
-    use crate::dom::IdOrClass::{Id, Class};
 
     let mut ids_and_classes = Vec::new();
     let dom_root = match dom.root.into_crate_internal() {
@@ -1259,19 +1470,24 @@ pub fn set_attributes(dom: &mut StyledDom, xml_attributes: &XmlAttributeMap, fil
 
     if let Some(ids) = xml_attributes.get_key("id") {
         for id in ids.split_whitespace() {
-            ids_and_classes.push(Id(format_args_dynamic(id, &filtered_xml_attributes.args).into()));
+            ids_and_classes.push(Id(
+                format_args_dynamic(id, &filtered_xml_attributes.args).into()
+            ));
         }
     }
 
     if let Some(classes) = xml_attributes.get_key("class") {
         for class in classes.split_whitespace() {
-            ids_and_classes.push(Class(format_args_dynamic(class, &filtered_xml_attributes.args).into()));
+            ids_and_classes.push(Class(
+                format_args_dynamic(class, &filtered_xml_attributes.args).into(),
+            ));
         }
     }
 
     node_data.set_ids_and_classes(ids_and_classes.into());
 
-    if let Some(focusable) = xml_attributes.get_key("focusable")
+    if let Some(focusable) = xml_attributes
+        .get_key("focusable")
         .map(|f| format_args_dynamic(f.as_str(), &filtered_xml_attributes.args))
         .and_then(|f| parse_bool(&f))
     {
@@ -1281,7 +1497,8 @@ pub fn set_attributes(dom: &mut StyledDom, xml_attributes: &XmlAttributeMap, fil
         }
     }
 
-    if let Some(tab_index) = xml_attributes.get_key("tabindex")
+    if let Some(tab_index) = xml_attributes
+        .get_key("tabindex")
         .map(|val| format_args_dynamic(val, &filtered_xml_attributes.args))
         .and_then(|val| val.parse::<isize>().ok())
     {
@@ -1299,19 +1516,34 @@ pub fn set_stringified_attributes(
     filtered_xml_attributes: &ComponentArgumentsMap,
     tabs: usize,
 ) {
-
     let t0 = String::from("    ").repeat(tabs);
     let t = String::from("    ").repeat(tabs + 1);
 
     // push ids and classes
     let mut ids_and_classes = String::new();
 
-    for id in xml_attributes.get_key("id").map(|s| s.split_whitespace().collect::<Vec<_>>()).unwrap_or_default() {
-        ids_and_classes.push_str(&format!("{}    Id(AzString::from_const_str(\"{}\")),\r\n", t0, format_args_dynamic(id, &filtered_xml_attributes)));
+    for id in xml_attributes
+        .get_key("id")
+        .map(|s| s.split_whitespace().collect::<Vec<_>>())
+        .unwrap_or_default()
+    {
+        ids_and_classes.push_str(&format!(
+            "{}    Id(AzString::from_const_str(\"{}\")),\r\n",
+            t0,
+            format_args_dynamic(id, &filtered_xml_attributes)
+        ));
     }
 
-    for class in xml_attributes.get_key("class").map(|s| s.split_whitespace().collect::<Vec<_>>()).unwrap_or_default() {
-        ids_and_classes.push_str(&format!("{}    Class(AzString::from_const_str(\"{}\")),\r\n", t0, format_args_dynamic(class, &filtered_xml_attributes)));
+    for class in xml_attributes
+        .get_key("class")
+        .map(|s| s.split_whitespace().collect::<Vec<_>>())
+        .unwrap_or_default()
+    {
+        ids_and_classes.push_str(&format!(
+            "{}    Class(AzString::from_const_str(\"{}\")),\r\n",
+            t0,
+            format_args_dynamic(class, &filtered_xml_attributes)
+        ));
     }
 
     if !ids_and_classes.is_empty() {
@@ -1326,24 +1558,35 @@ pub fn set_stringified_attributes(
         ));
     }
 
-    if let Some(focusable) = xml_attributes.get_key("focusable")
+    if let Some(focusable) = xml_attributes
+        .get_key("focusable")
         .map(|f| format_args_dynamic(f, &filtered_xml_attributes))
         .and_then(|f| parse_bool(&f))
     {
         match focusable {
             true => dom_string.push_str(&format!("\r\n{}.with_tab_index(TabIndex::Auto)", t)),
-            false => dom_string.push_str(&format!("\r\n{}.with_tab_index(TabIndex::NoKeyboardFocus)", t)),
+            false => dom_string.push_str(&format!(
+                "\r\n{}.with_tab_index(TabIndex::NoKeyboardFocus)",
+                t
+            )),
         }
     }
 
-    if let Some(tab_index) = xml_attributes.get_key("tabindex")
+    if let Some(tab_index) = xml_attributes
+        .get_key("tabindex")
         .map(|val| format_args_dynamic(val, &filtered_xml_attributes))
         .and_then(|val| val.parse::<isize>().ok())
     {
         match tab_index {
             0 => dom_string.push_str(&format!("\r\n{}.with_tab_index(TabIndex::Auto)", t)),
-            i if i > 0 => dom_string.push_str(&format!("\r\n{}.with_tab_index(TabIndex::OverrideInParent({}))", t, i as usize)),
-            _ => dom_string.push_str(&format!("\r\n{}.with_tab_index(TabIndex::NoKeyboardFocus)", t)),
+            i if i > 0 => dom_string.push_str(&format!(
+                "\r\n{}.with_tab_index(TabIndex::OverrideInParent({}))",
+                t, i as usize
+            )),
+            _ => dom_string.push_str(&format!(
+                "\r\n{}.with_tab_index(TabIndex::NoKeyboardFocus)",
+                t
+            )),
         }
     }
 }
@@ -1373,7 +1616,6 @@ pub enum DynamicItem {
 /// assert_eq!(output, split);
 /// ```
 pub fn split_dynamic_string(input: &str) -> Vec<DynamicItem> {
-
     use self::DynamicItem::*;
 
     let input: Vec<char> = input.chars().collect();
@@ -1387,13 +1629,15 @@ pub fn split_dynamic_string(input: &str) -> Vec<DynamicItem> {
         let c = input[current_idx];
         match c {
             '{' if input.get(current_idx + 1).copied() != Some('{') => {
-
                 // variable start, search until next closing brace or whitespace or end of string
                 let mut start_offset = 1;
                 let mut has_found_variable = false;
                 while let Some(c) = input.get(current_idx + start_offset) {
-                    if c.is_whitespace() { break; }
-                    if *c == '}' && input.get(current_idx + start_offset + 1).copied() != Some('}') {
+                    if c.is_whitespace() {
+                        break;
+                    }
+                    if *c == '}' && input.get(current_idx + start_offset + 1).copied() != Some('}')
+                    {
                         start_offset += 1;
                         has_found_variable = true;
                         break;
@@ -1405,20 +1649,24 @@ pub fn split_dynamic_string(input: &str) -> Vec<DynamicItem> {
                 // on fail, set cursor to end
                 // set last_idx accordingly
                 if has_found_variable {
-
                     if last_idx != current_idx {
                         items.push(Str(input[last_idx..current_idx].iter().collect()));
                     }
 
                     // subtract 1 from start for opening brace, one from end for closing brace
-                    items.push(Var(input[(current_idx + 1)..(current_idx + start_offset - 1)].iter().collect()));
+                    items.push(Var(input
+                        [(current_idx + 1)..(current_idx + start_offset - 1)]
+                        .iter()
+                        .collect()));
                     current_idx = current_idx + start_offset;
                     last_idx = current_idx;
                 } else {
                     current_idx += start_offset;
                 }
-            },
-            _ => { current_idx += 1; },
+            }
+            _ => {
+                current_idx += 1;
+            }
         }
     }
 
@@ -1441,7 +1689,10 @@ pub fn split_dynamic_string(input: &str) -> Vec<DynamicItem> {
 /// let variables = btreemap!{ "a" => "value1", "b" => "value2" };
 /// [Str("hello "), Var("a"), Str(", "), Var("b"), Str("{ "), Var("c"), Str(" }}")]
 /// => "hello value1, valuec{ {c} }"
-pub fn combine_and_replace_dynamic_items(input: &[DynamicItem], variables: &ComponentArgumentsMap) -> String {
+pub fn combine_and_replace_dynamic_items(
+    input: &[DynamicItem],
+    variables: &ComponentArgumentsMap,
+) -> String {
     let mut s = String::new();
 
     for item in input {
@@ -1449,14 +1700,16 @@ pub fn combine_and_replace_dynamic_items(input: &[DynamicItem], variables: &Comp
             DynamicItem::Var(v) => {
                 let variable_name = normalize_casing(v.trim());
                 match variables.get(&variable_name) {
-                    Some((resolved_var, _)) => { s.push_str(&resolved_var); },
+                    Some((resolved_var, _)) => {
+                        s.push_str(&resolved_var);
+                    }
                     None => {
                         s.push('{');
                         s.push_str(v);
                         s.push('}');
-                    },
+                    }
                 }
-            },
+            }
             DynamicItem::Str(dynamic_str) => {
                 s.push_str(&dynamic_str);
             }
@@ -1490,7 +1743,6 @@ pub fn format_args_dynamic(input: &str, variables: &ComponentArgumentsMap) -> St
 
 // NOTE: Two sequential returns count as a single return, while single returns get ignored.
 pub fn prepare_string(input: &str) -> String {
-
     const SPACE: &str = " ";
     const RETURN: &str = "\n";
 
@@ -1508,7 +1760,6 @@ pub fn prepare_string(input: &str) -> String {
     let mut last_line_was_empty = false;
 
     for line in input.lines() {
-
         let line = line.trim();
         let line = line.replace("&nbsp;", " ");
         let current_line_is_empty = line.is_empty();
@@ -1545,14 +1796,20 @@ pub fn parse_bool(input: &str) -> Option<bool> {
 }
 
 pub fn render_component_inner<'a>(
-    map: &mut BTreeMap<ComponentName, (CompiledComponent, FilteredComponentArguments, BTreeMap<String, String>)>,
+    map: &mut BTreeMap<
+        ComponentName,
+        (
+            CompiledComponent,
+            FilteredComponentArguments,
+            BTreeMap<String, String>,
+        ),
+    >,
     component_name: String,
     (renderer, inherit_variables): &'a (Box<dyn XmlComponent>, bool),
     component_map: &'a XmlComponentMap,
     parent_xml_attributes: &FilteredComponentArguments,
     tabs: usize,
 ) -> Result<(), CompileError<'a>> {
-
     let t = String::from("    ").repeat(tabs - 1);
     let t1 = String::from("    ").repeat(tabs);
 
@@ -1560,7 +1817,8 @@ pub fn render_component_inner<'a>(
     let xml_node = renderer.get_xml_node();
 
     let mut css = match find_node_by_type(xml_node.children.as_ref(), "style")
-    .and_then(|style_node| style_node.text.as_ref().map(|s| s.as_str())) {
+        .and_then(|style_node| style_node.text.as_ref().map(|s| s.as_str()))
+    {
         Some(text) => azul_css_parser::new_from_str(&text)?,
         None => Css::empty(),
     };
@@ -1573,7 +1831,9 @@ pub fn render_component_inner<'a>(
 
     if *inherit_variables {
         // Append all variables that are in scope for the parent node
-        filtered_xml_attributes.args.extend(parent_xml_attributes.args.clone().into_iter());
+        filtered_xml_attributes
+            .args
+            .extend(parent_xml_attributes.args.clone().into_iter());
     }
 
     // Instantiate the parent arguments in the current child arguments
@@ -1581,11 +1841,19 @@ pub fn render_component_inner<'a>(
         v.0 = format_args_dynamic(&v.0, &parent_xml_attributes.args).to_string();
     }
 
-    let text = xml_node.text.as_ref()
-    .map(|t| AzString::from(format_args_dynamic(t, &filtered_xml_attributes.args)));
+    let text = xml_node
+        .text
+        .as_ref()
+        .map(|t| AzString::from(format_args_dynamic(t, &filtered_xml_attributes.args)));
 
-    let mut dom_string = renderer.compile_to_rust_code(component_map, &filtered_xml_attributes, &text.into())?;
-    set_stringified_attributes(&mut dom_string, &xml_node.attributes, &filtered_xml_attributes.args, tabs);
+    let mut dom_string =
+        renderer.compile_to_rust_code(component_map, &filtered_xml_attributes, &text.into())?;
+    set_stringified_attributes(
+        &mut dom_string,
+        &xml_node.attributes,
+        &filtered_xml_attributes.args,
+        tabs,
+    );
 
     // TODO
     let matcher = CssMatcher {
@@ -1597,15 +1865,20 @@ pub fn render_component_inner<'a>(
     let mut css_blocks = BTreeMap::new();
     let mut extra_blocks = VecContents::default();
     if !xml_node.children.as_ref().is_empty() {
-        dom_string.push_str(&format!("\r\n{}.with_children(DomVec::from_vec(vec![\r\n", t));
+        dom_string.push_str(&format!(
+            "\r\n{}.with_children(DomVec::from_vec(vec![\r\n",
+            t
+        ));
         for (child_idx, child_node) in xml_node.children.as_ref().iter().enumerate() {
-
             let mut matcher = matcher.clone();
             matcher.indices_in_parent.push(child_idx);
-            matcher.children_length.push(xml_node.children.as_ref().len());
+            matcher
+                .children_length
+                .push(xml_node.children.as_ref().len());
 
-            dom_string.push_str(
-                &format!("{}{},", t1,
+            dom_string.push_str(&format!(
+                "{}{},",
+                t1,
                 compile_node_to_rust_code_inner(
                     child_node,
                     component_map,
@@ -1615,24 +1888,34 @@ pub fn render_component_inner<'a>(
                     &mut css_blocks,
                     &css,
                     matcher,
-                )?));
+                )?
+            ));
         }
         dom_string.push_str(&format!("\r\n{}]))", t));
     }
 
-    map.insert(component_name, (dom_string, filtered_xml_attributes, css_blocks));
+    map.insert(
+        component_name,
+        (dom_string, filtered_xml_attributes, css_blocks),
+    );
 
     Ok(())
 }
 
 /// Takes all components and generates the source code function from them
 pub fn compile_components_to_rust_code(
-    components: &XmlComponentMap
-) -> Result<BTreeMap<
-    ComponentName,
-    (CompiledComponent, FilteredComponentArguments, BTreeMap<String, String>)
->, CompileError> {
-
+    components: &XmlComponentMap,
+) -> Result<
+    BTreeMap<
+        ComponentName,
+        (
+            CompiledComponent,
+            FilteredComponentArguments,
+            BTreeMap<String, String>,
+        ),
+    >,
+    CompileError,
+> {
     let mut map = BTreeMap::new();
 
     for (xml_node_name, xml_component) in &components.components {
@@ -1658,10 +1941,10 @@ pub struct CssMatcher {
 
 impl CssMatcher {
     fn get_hash(&self) -> u64 {
+        use highway::{HighwayHash, HighwayHasher, Key};
         use std::hash::Hash;
-        use highway::{HighwayHasher, HighwayHash, Key};
 
-        let mut hasher = HighwayHasher::new(Key([0;4]));
+        let mut hasher = HighwayHasher::new(Key([0; 4]));
         for p in self.path.iter() {
             p.hash(&mut hasher);
         }
@@ -1671,24 +1954,35 @@ impl CssMatcher {
 
 impl CssMatcher {
     fn matches(&self, path: &CssPath) -> bool {
-
-        use azul_css::CssPathSelector::*;
         use crate::style::{CssGroupIterator, CssGroupSplitReason};
+        use azul_css::CssPathSelector::*;
 
-        if self.path.is_empty() { return false; }
-        if path.selectors.as_ref().is_empty() { return false; }
+        if self.path.is_empty() {
+            return false;
+        }
+        if path.selectors.as_ref().is_empty() {
+            return false;
+        }
 
         // self_matcher is only ever going to contain "Children" selectors, never "DirectChildren"
         let mut path_groups = CssGroupIterator::new(path.selectors.as_ref()).collect::<Vec<_>>();
         path_groups.reverse();
 
-        if path_groups.is_empty() { return false; }
+        if path_groups.is_empty() {
+            return false;
+        }
         let mut self_groups = CssGroupIterator::new(self.path.as_ref()).collect::<Vec<_>>();
         self_groups.reverse();
-        if self_groups.is_empty() { return false; }
+        if self_groups.is_empty() {
+            return false;
+        }
 
-        if self.indices_in_parent.len() != self_groups.len() { return false; }
-        if self.children_length.len() != self_groups.len() { return false; }
+        if self.indices_in_parent.len() != self_groups.len() {
+            return false;
+        }
+        if self.children_length.len() != self_groups.len() {
+            return false;
+        }
 
         // self_groups = [ // HTML
         //     "body",
@@ -1713,7 +2007,6 @@ impl CssMatcher {
 
             // scan all remaining path groups
             for (id, cg) in self_groups[cur_selfgroup_scan..].iter().enumerate() {
-
                 let gm = group_matches(
                     &path_group.0,
                     &self_groups[cur_selfgroup_scan + id].0,
@@ -1741,7 +2034,7 @@ impl CssMatcher {
                         cur_selfgroup_scan += n;
                         path_group = path_groups[cur_pathgroup_scan].clone();
                     }
-                },
+                }
                 None => return false, // group was not found in remaining items
             }
         }
@@ -1757,49 +2050,65 @@ fn group_matches(
     a: &[&CssPathSelector],
     b: &[&CssPathSelector],
     idx_in_parent: usize,
-    parent_children: usize
+    parent_children: usize,
 ) -> bool {
-
-    use azul_css::CssPathSelector::*;
-    use azul_css::CssPathPseudoSelector;
     use azul_css::CssNthChildSelector;
+    use azul_css::CssPathPseudoSelector;
+    use azul_css::CssPathSelector::*;
 
     for selector in a {
         match selector {
-
             // always matches
-            Global => { }
-            PseudoSelector(CssPathPseudoSelector::Hover) => { },
-            PseudoSelector(CssPathPseudoSelector::Active) => { },
-            PseudoSelector(CssPathPseudoSelector::Focus) => { },
+            Global => {}
+            PseudoSelector(CssPathPseudoSelector::Hover) => {}
+            PseudoSelector(CssPathPseudoSelector::Active) => {}
+            PseudoSelector(CssPathPseudoSelector::Focus) => {}
 
             Type(tag) => {
-                if !b.iter().any(|t| **t == Type(tag.clone())) { return false; }
-            },
+                if !b.iter().any(|t| **t == Type(tag.clone())) {
+                    return false;
+                }
+            }
             Class(class) => {
-                if !b.iter().any(|t| **t == Class(class.clone())) { return false; }
-            },
+                if !b.iter().any(|t| **t == Class(class.clone())) {
+                    return false;
+                }
+            }
             Id(id) => {
-                if !b.iter().any(|t| **t == Id(id.clone())) { return false; }
-            },
+                if !b.iter().any(|t| **t == Id(id.clone())) {
+                    return false;
+                }
+            }
             PseudoSelector(CssPathPseudoSelector::First) => {
-                if idx_in_parent != 0 { return false; }
-            },
+                if idx_in_parent != 0 {
+                    return false;
+                }
+            }
             PseudoSelector(CssPathPseudoSelector::Last) => {
-                if idx_in_parent != parent_children.saturating_sub(1) { return false; }
-            },
+                if idx_in_parent != parent_children.saturating_sub(1) {
+                    return false;
+                }
+            }
             PseudoSelector(CssPathPseudoSelector::NthChild(CssNthChildSelector::Number(i))) => {
-                if idx_in_parent != *i as usize { return false; }
-            },
+                if idx_in_parent != *i as usize {
+                    return false;
+                }
+            }
             PseudoSelector(CssPathPseudoSelector::NthChild(CssNthChildSelector::Even)) => {
-                if idx_in_parent % 2 != 0 { return false; }
-            },
+                if idx_in_parent % 2 != 0 {
+                    return false;
+                }
+            }
             PseudoSelector(CssPathPseudoSelector::NthChild(CssNthChildSelector::Odd)) => {
-                if idx_in_parent % 2 == 0 { return false; }
-            },
+                if idx_in_parent % 2 == 0 {
+                    return false;
+                }
+            }
             PseudoSelector(CssPathPseudoSelector::NthChild(CssNthChildSelector::Pattern(p))) => {
-                if idx_in_parent.saturating_sub(p.offset as usize) % p.repeat as usize != 0 { return false; }
-            },
+                if idx_in_parent.saturating_sub(p.offset as usize) % p.repeat as usize != 0 {
+                    return false;
+                }
+            }
 
             _ => return false, // can't happen
         }
@@ -1821,7 +2130,6 @@ pub fn compile_body_node_to_rust_code<'a>(
     css: &Css,
     mut matcher: CssMatcher,
 ) -> Result<String, CompileError<'a>> {
-
     use azul_css::CssDeclaration;
 
     let t = "";
@@ -1830,46 +2138,80 @@ pub fn compile_body_node_to_rust_code<'a>(
     let node_type = CssPathSelector::Type(NodeTypeTag::Body);
     matcher.path.push(node_type);
 
-    let ids = body_node.attributes.get_key("id").map(|s| s.split_whitespace().collect::<Vec<_>>()).unwrap_or_default();
-    matcher.path.extend(ids.into_iter().map(|id| CssPathSelector::Id(id.to_string().into())));
-    let classes = body_node.attributes.get_key("class").map(|s| s.split_whitespace().collect::<Vec<_>>()).unwrap_or_default();
-    matcher.path.extend(classes.into_iter().map(|class| CssPathSelector::Class(class.to_string().into())));
+    let ids = body_node
+        .attributes
+        .get_key("id")
+        .map(|s| s.split_whitespace().collect::<Vec<_>>())
+        .unwrap_or_default();
+    matcher.path.extend(
+        ids.into_iter()
+            .map(|id| CssPathSelector::Id(id.to_string().into())),
+    );
+    let classes = body_node
+        .attributes
+        .get_key("class")
+        .map(|s| s.split_whitespace().collect::<Vec<_>>())
+        .unwrap_or_default();
+    matcher.path.extend(
+        classes
+            .into_iter()
+            .map(|class| CssPathSelector::Class(class.to_string().into())),
+    );
 
     let matcher_hash = matcher.get_hash();
     let css_blocks_for_this_node = get_css_blocks(css, &matcher);
     if !css_blocks_for_this_node.is_empty() {
-
         use crate::css::format_static_css_prop;
 
-        let css_strings = css_blocks_for_this_node.iter().rev().map(|css_block| {
-
-            let wrapper = match css_block.ending {
-                Some(CssPathPseudoSelector::Hover) => "Hover",
-                Some(CssPathPseudoSelector::Active) => "Active",
-                Some(CssPathPseudoSelector::Focus) => "Focus",
-                _ => "Normal",
-            };
-
-            for declaration in css_block.block.declarations.as_ref().iter() {
-                let prop = match declaration {
-                    CssDeclaration::Static(s) => s,
-                    CssDeclaration::Dynamic(d) => &d.default_value,
+        let css_strings = css_blocks_for_this_node
+            .iter()
+            .rev()
+            .map(|css_block| {
+                let wrapper = match css_block.ending {
+                    Some(CssPathPseudoSelector::Hover) => "Hover",
+                    Some(CssPathPseudoSelector::Active) => "Active",
+                    Some(CssPathPseudoSelector::Focus) => "Focus",
+                    _ => "Normal",
                 };
-                extra_blocks.insert_from_css_property(prop);
-            }
 
-            let formatted = css_block.block.declarations.as_ref().iter().rev().map(|s| match &s {
-                CssDeclaration::Static(s) => format!("NodeDataInlineCssProperty::{}({})", wrapper, format_static_css_prop(s, 1)),
-                CssDeclaration::Dynamic(d) => format!("NodeDataInlineCssProperty::{}({})", wrapper, format_static_css_prop(&d.default_value, 1)),
-            }).collect::<Vec<String>>();
+                for declaration in css_block.block.declarations.as_ref().iter() {
+                    let prop = match declaration {
+                        CssDeclaration::Static(s) => s,
+                        CssDeclaration::Dynamic(d) => &d.default_value,
+                    };
+                    extra_blocks.insert_from_css_property(prop);
+                }
 
-            format!("// {}\r\n{}", css_block.block.path, formatted.join(",\r\n"))
-        })
-        .collect::<Vec<_>>()
-        .join(",\r\n");
+                let formatted = css_block
+                    .block
+                    .declarations
+                    .as_ref()
+                    .iter()
+                    .rev()
+                    .map(|s| match &s {
+                        CssDeclaration::Static(s) => format!(
+                            "NodeDataInlineCssProperty::{}({})",
+                            wrapper,
+                            format_static_css_prop(s, 1)
+                        ),
+                        CssDeclaration::Dynamic(d) => format!(
+                            "NodeDataInlineCssProperty::{}({})",
+                            wrapper,
+                            format_static_css_prop(&d.default_value, 1)
+                        ),
+                    })
+                    .collect::<Vec<String>>();
+
+                format!("// {}\r\n{}", css_block.block.path, formatted.join(",\r\n"))
+            })
+            .collect::<Vec<_>>()
+            .join(",\r\n");
 
         css_blocks.insert(format!("CSS_MATCH_{:09}", matcher_hash), css_strings);
-        dom_string.push_str(&format!("\r\n{}.with_inline_css_props(CSS_MATCH_{:09})", t2, matcher_hash));
+        dom_string.push_str(&format!(
+            "\r\n{}.with_inline_css_props(CSS_MATCH_{:09})",
+            t2, matcher_hash
+        ));
     }
 
     if !body_node.children.as_ref().is_empty() {
@@ -1878,22 +2220,25 @@ pub fn compile_body_node_to_rust_code<'a>(
         dom_string.push_str(&format!("\r\n.with_children(DomVec::from_vec(vec![\r\n"));
 
         for (child_idx, child_node) in body_node.children.as_ref().iter().enumerate() {
-
             let mut matcher = matcher.clone();
             matcher.path.push(CssPathSelector::Children);
             matcher.indices_in_parent.push(child_idx);
             matcher.children_length.push(body_node.children.len());
 
-            dom_string.push_str(&format!("{}{},\r\n", t, compile_node_to_rust_code_inner(
-                child_node,
-                component_map,
-                &FilteredComponentArguments::default(),
-                1,
-                extra_blocks,
-                css_blocks,
-                css,
-                matcher,
-            )?));
+            dom_string.push_str(&format!(
+                "{}{},\r\n",
+                t,
+                compile_node_to_rust_code_inner(
+                    child_node,
+                    component_map,
+                    &FilteredComponentArguments::default(),
+                    1,
+                    extra_blocks,
+                    css_blocks,
+                    css,
+                    matcher,
+                )?
+            ));
         }
         dom_string.push_str(&format!("\r\n{}]))", t));
     }
@@ -1903,7 +2248,6 @@ pub fn compile_body_node_to_rust_code<'a>(
 }
 
 fn get_css_blocks(css: &Css, matcher: &CssMatcher) -> Vec<CssBlock> {
-
     let mut blocks = Vec::new();
 
     for stylesheet in css.stylesheets.as_ref() {
@@ -1911,7 +2255,9 @@ fn get_css_blocks(css: &Css, matcher: &CssMatcher) -> Vec<CssBlock> {
             if matcher.matches(&css_block.path) {
                 let mut ending = None;
 
-                if let Some(CssPathSelector::PseudoSelector(p)) = css_block.path.selectors.as_ref().last() {
+                if let Some(CssPathSelector::PseudoSelector(p)) =
+                    css_block.path.selectors.as_ref().last()
+                {
                     ending = Some(*p);
                 }
 
@@ -1946,11 +2292,11 @@ fn compile_and_format_dynamic_items(input: &[DynamicItem]) -> String {
                     let variable_name = normalize_casing(v.trim());
                     formatted_str.push_str(&format!("{{{}}}", variable_name));
                     variables.push(variable_name.clone());
-                },
+                }
                 Str(s) => {
                     let s = s.replace("\"", "\\\"");
                     formatted_str.push_str(&s);
-                },
+                }
             }
         }
 
@@ -1980,7 +2326,6 @@ pub fn compile_node_to_rust_code_inner<'a>(
     css: &Css,
     mut matcher: CssMatcher,
 ) -> Result<String, CompileError<'a>> {
-
     use azul_css::CssDeclaration;
 
     let t = String::from("    ").repeat(tabs - 1);
@@ -1988,16 +2333,24 @@ pub fn compile_node_to_rust_code_inner<'a>(
 
     let component_name = normalize_casing(&node.node_type);
 
-    let (renderer, inherit_variables) = component_map.components.get(&component_name)
-        .ok_or(ComponentError::UnknownComponent(component_name.clone().into()))?;
+    let (renderer, inherit_variables) =
+        component_map
+            .components
+            .get(&component_name)
+            .ok_or(ComponentError::UnknownComponent(
+                component_name.clone().into(),
+            ))?;
 
     // Arguments of the current node
     let available_function_args = renderer.get_available_arguments();
-    let mut filtered_xml_attributes = validate_and_filter_component_args(&node.attributes, &available_function_args)?;
+    let mut filtered_xml_attributes =
+        validate_and_filter_component_args(&node.attributes, &available_function_args)?;
 
     if *inherit_variables {
         // Append all variables that are in scope for the parent node
-        filtered_xml_attributes.args.extend(parent_xml_attributes.args.clone().into_iter());
+        filtered_xml_attributes
+            .args
+            .extend(parent_xml_attributes.args.clone().into_iter());
     }
 
     // Instantiate the parent arguments in the current child arguments
@@ -2006,32 +2359,42 @@ pub fn compile_node_to_rust_code_inner<'a>(
     }
 
     let instantiated_function_arguments = {
-
-        let mut args = filtered_xml_attributes.args.iter()
-        .filter_map(|(xml_attribute_key, (_xml_attribute_type, xml_attribute_order))| {
-            match node.attributes.get_key(xml_attribute_key).cloned() {
-                Some(s) => Some((*xml_attribute_order, format_args_for_rust_code(&s))),
-                None => {
-                    // __TODO__
-                    // let node_text = format_args_for_rust_code(&xml_attribute_key);
-                    //   "{text}" => "text"
-                    //   "{href}" => "href"
-                    //   "{blah}_the_thing" => "format!(\"{blah}_the_thing\", blah)"
-                    None
-                }
-            }
-        })
-        .collect::<Vec<(usize, String)>>();
+        let mut args = filtered_xml_attributes
+            .args
+            .iter()
+            .filter_map(
+                |(xml_attribute_key, (_xml_attribute_type, xml_attribute_order))| {
+                    match node.attributes.get_key(xml_attribute_key).cloned() {
+                        Some(s) => Some((*xml_attribute_order, format_args_for_rust_code(&s))),
+                        None => {
+                            // __TODO__
+                            // let node_text = format_args_for_rust_code(&xml_attribute_key);
+                            //   "{text}" => "text"
+                            //   "{href}" => "href"
+                            //   "{blah}_the_thing" => "format!(\"{blah}_the_thing\", blah)"
+                            None
+                        }
+                    }
+                },
+            )
+            .collect::<Vec<(usize, String)>>();
 
         args.sort_by(|(_, a), (_, b)| a.cmp(&b));
 
-        args.into_iter().map(|(k, v)| v.clone()).collect::<Vec<String>>().join(", ")
+        args.into_iter()
+            .map(|(k, v)| v.clone())
+            .collect::<Vec<String>>()
+            .join(", ")
     };
 
     let text_as_first_arg = if filtered_xml_attributes.accepts_text {
         let node_text = node.text.clone().into_option().unwrap_or_default();
         let node_text = format_args_for_rust_code(node_text.trim());
-        let trailing_comma = if !instantiated_function_arguments.is_empty() { ", " } else { "" };
+        let trailing_comma = if !instantiated_function_arguments.is_empty() {
+            ", "
+        } else {
+            ""
+        };
 
         // __TODO__
         // let node_text = format_args_for_rust_code(&node_text, &parent_xml_attributes.args);
@@ -2050,77 +2413,133 @@ pub fn compile_node_to_rust_code_inner<'a>(
         "br" => NodeTypeTag::Br,
         "p" => NodeTypeTag::P,
         "img" => NodeTypeTag::Img,
-        other => return Err(CompileError::Dom(RenderDomError::Component(ComponentError::UnknownComponent(other.to_string().into())))),
+        other => {
+            return Err(CompileError::Dom(RenderDomError::Component(
+                ComponentError::UnknownComponent(other.to_string().into()),
+            )))
+        }
     });
 
     // The dom string is the function name
-    let mut dom_string = format!("{}{}::render({}{})", t2, component_name, text_as_first_arg, instantiated_function_arguments);
+    let mut dom_string = format!(
+        "{}{}::render({}{})",
+        t2, component_name, text_as_first_arg, instantiated_function_arguments
+    );
 
     matcher.path.push(node_type);
-    let ids = node.attributes.get_key("id").map(|s| s.split_whitespace().collect::<Vec<_>>()).unwrap_or_default();
-    matcher.path.extend(ids.into_iter().map(|id| CssPathSelector::Id(id.to_string().into())));
-    let classes = node.attributes.get_key("class").map(|s| s.split_whitespace().collect::<Vec<_>>()).unwrap_or_default();
-    matcher.path.extend(classes.into_iter().map(|class| CssPathSelector::Class(class.to_string().into())));
+    let ids = node
+        .attributes
+        .get_key("id")
+        .map(|s| s.split_whitespace().collect::<Vec<_>>())
+        .unwrap_or_default();
+    matcher.path.extend(
+        ids.into_iter()
+            .map(|id| CssPathSelector::Id(id.to_string().into())),
+    );
+    let classes = node
+        .attributes
+        .get_key("class")
+        .map(|s| s.split_whitespace().collect::<Vec<_>>())
+        .unwrap_or_default();
+    matcher.path.extend(
+        classes
+            .into_iter()
+            .map(|class| CssPathSelector::Class(class.to_string().into())),
+    );
 
     let matcher_hash = matcher.get_hash();
     let css_blocks_for_this_node = get_css_blocks(css, &matcher);
     if !css_blocks_for_this_node.is_empty() {
         use crate::css::format_static_css_prop;
 
-        let css_strings = css_blocks_for_this_node.iter().rev().map(|css_block| {
-
-            let wrapper = match css_block.ending {
-                Some(CssPathPseudoSelector::Hover) => "Hover",
-                Some(CssPathPseudoSelector::Active) => "Active",
-                Some(CssPathPseudoSelector::Focus) => "Focus",
-                _ => "Normal",
-            };
-
-            for declaration in css_block.block.declarations.as_ref().iter() {
-                let prop = match declaration {
-                    CssDeclaration::Static(s) => s,
-                    CssDeclaration::Dynamic(d) => &d.default_value,
+        let css_strings = css_blocks_for_this_node
+            .iter()
+            .rev()
+            .map(|css_block| {
+                let wrapper = match css_block.ending {
+                    Some(CssPathPseudoSelector::Hover) => "Hover",
+                    Some(CssPathPseudoSelector::Active) => "Active",
+                    Some(CssPathPseudoSelector::Focus) => "Focus",
+                    _ => "Normal",
                 };
-                extra_blocks.insert_from_css_property(prop);
-            }
 
-            let formatted = css_block.block.declarations.as_ref().iter().rev().map(|s| match &s {
-                CssDeclaration::Static(s) => format!("NodeDataInlineCssProperty::{}({})", wrapper, format_static_css_prop(s, 1)),
-                CssDeclaration::Dynamic(d) => format!("NodeDataInlineCssProperty::{}({})", wrapper, format_static_css_prop(&d.default_value, 1)),
-            }).collect::<Vec<String>>();
+                for declaration in css_block.block.declarations.as_ref().iter() {
+                    let prop = match declaration {
+                        CssDeclaration::Static(s) => s,
+                        CssDeclaration::Dynamic(d) => &d.default_value,
+                    };
+                    extra_blocks.insert_from_css_property(prop);
+                }
 
-            format!("// {}\r\n{}", css_block.block.path, formatted.join(",\r\n"))
-        })
-        .collect::<Vec<_>>()
-        .join(",\r\n");
+                let formatted = css_block
+                    .block
+                    .declarations
+                    .as_ref()
+                    .iter()
+                    .rev()
+                    .map(|s| match &s {
+                        CssDeclaration::Static(s) => format!(
+                            "NodeDataInlineCssProperty::{}({})",
+                            wrapper,
+                            format_static_css_prop(s, 1)
+                        ),
+                        CssDeclaration::Dynamic(d) => format!(
+                            "NodeDataInlineCssProperty::{}({})",
+                            wrapper,
+                            format_static_css_prop(&d.default_value, 1)
+                        ),
+                    })
+                    .collect::<Vec<String>>();
+
+                format!("// {}\r\n{}", css_block.block.path, formatted.join(",\r\n"))
+            })
+            .collect::<Vec<_>>()
+            .join(",\r\n");
 
         css_blocks.insert(format!("CSS_MATCH_{:09}", matcher_hash), css_strings);
-        dom_string.push_str(&format!("\r\n{}.with_inline_css_props(CSS_MATCH_{:09})", t2, matcher_hash));
+        dom_string.push_str(&format!(
+            "\r\n{}.with_inline_css_props(CSS_MATCH_{:09})",
+            t2, matcher_hash
+        ));
     }
 
-    set_stringified_attributes(&mut dom_string, &node.attributes, &filtered_xml_attributes.args, tabs);
+    set_stringified_attributes(
+        &mut dom_string,
+        &node.attributes,
+        &filtered_xml_attributes.args,
+        tabs,
+    );
 
-    let mut children_string = node.children.as_ref()
-    .iter()
-    .enumerate()
-    .map(|(child_idx, c)| {
+    let mut children_string = node
+        .children
+        .as_ref()
+        .iter()
+        .enumerate()
+        .map(|(child_idx, c)| {
+            let mut matcher = matcher.clone();
+            matcher.path.push(CssPathSelector::Children);
+            matcher.indices_in_parent.push(child_idx);
+            matcher.children_length.push(node.children.len());
 
-        let mut matcher = matcher.clone();
-        matcher.path.push(CssPathSelector::Children);
-        matcher.indices_in_parent.push(child_idx);
-        matcher.children_length.push(node.children.len());
-
-        compile_node_to_rust_code_inner(
-            c, component_map,
-            &filtered_xml_attributes, tabs + 1,
-            extra_blocks, css_blocks, css, matcher
-        )
-    })
-    .collect::<Result<Vec<_>, _>>()?
-    .join(&format!(",\r\n"));
+            compile_node_to_rust_code_inner(
+                c,
+                component_map,
+                &filtered_xml_attributes,
+                tabs + 1,
+                extra_blocks,
+                css_blocks,
+                css,
+                matcher,
+            )
+        })
+        .collect::<Result<Vec<_>, _>>()?
+        .join(&format!(",\r\n"));
 
     if !children_string.is_empty() {
-        dom_string.push_str(&format!("\r\n{}.with_children(DomVec::from_vec(vec![\r\n{}\r\n{}]))", t2, children_string, t2));
+        dom_string.push_str(&format!(
+            "\r\n{}.with_children(DomVec::from_vec(vec![\r\n{}\r\n{}]))",
+            t2, children_string, t2
+        ));
     }
 
     Ok(dom_string)
@@ -2138,18 +2557,24 @@ pub struct DynamicXmlComponent {
 }
 
 impl DynamicXmlComponent {
-
     /// Parses a `component` from an XML node
     pub fn new<'a>(root: &'a XmlNode) -> Result<Self, ComponentParseError<'a>> {
-
         let node_type = normalize_casing(&root.node_type);
 
         if node_type.as_str() != "component" {
             return Err(ComponentParseError::NotAComponent);
         }
 
-        let name = root.attributes.get_key("name").cloned().ok_or(ComponentParseError::NotAComponent)?;
-        let accepts_text = root.attributes.get_key("accepts_text").and_then(|p| parse_bool(p.as_str())).unwrap_or(false);
+        let name = root
+            .attributes
+            .get_key("name")
+            .cloned()
+            .ok_or(ComponentParseError::NotAComponent)?;
+        let accepts_text = root
+            .attributes
+            .get_key("accepts_text")
+            .and_then(|p| parse_bool(p.as_str()))
+            .unwrap_or(false);
 
         let args = match root.attributes.get_key("args") {
             Some(s) => parse_component_arguments(s)?,
@@ -2158,17 +2583,13 @@ impl DynamicXmlComponent {
 
         Ok(Self {
             name: normalize_casing(&name),
-            arguments: ComponentArguments {
-                args,
-                accepts_text,
-            },
+            arguments: ComponentArguments { args, accepts_text },
             root: root.clone(),
         })
     }
 }
 
 impl XmlComponent for DynamicXmlComponent {
-
     fn get_available_arguments(&self) -> ComponentArguments {
         self.arguments.clone()
     }
@@ -2183,7 +2604,6 @@ impl XmlComponent for DynamicXmlComponent {
         arguments: &FilteredComponentArguments,
         content: &XmlTextContent,
     ) -> Result<StyledDom, RenderDomError<'a>> {
-
         let mut component_css = match find_node_by_type(self.root.children.as_ref(), "style") {
             Some(style_node) => {
                 if let Some(text) = style_node.text.as_ref().map(|s| s.as_str()) {
@@ -2192,14 +2612,16 @@ impl XmlComponent for DynamicXmlComponent {
                 } else {
                     None
                 }
-            },
+            }
             None => None,
         };
 
         let mut dom = StyledDom::default();
 
         for child_node in self.root.children.as_ref() {
-            dom.append_child(render_dom_from_body_node_inner(child_node, components, arguments)?);
+            dom.append_child(render_dom_from_body_node_inner(
+                child_node, components, arguments,
+            )?);
         }
 
         if let Some(css) = component_css.clone() {
@@ -2407,13 +2829,9 @@ impl XmlComponent for DynamicXmlComponent {
 //         Hello,
 //         123
 
-
 //         Test Test2
 
 //         Test3
-
-
-
 
 //         Test4
 //         "#;

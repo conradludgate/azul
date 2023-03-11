@@ -3,14 +3,14 @@
 
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/maps4print/azul/master/assets/images/azul_logo_full_min.svg.png",
-    html_favicon_url = "https://raw.githubusercontent.com/maps4print/azul/master/assets/images/favicon.ico",
+    html_favicon_url = "https://raw.githubusercontent.com/maps4print/azul/master/assets/images/favicon.ico"
 )]
 
 #[macro_use]
 mod macros;
 
-mod css_parser;
 mod css;
+mod css_parser;
 
 pub use crate::css::*;
 pub use crate::css_parser::*;

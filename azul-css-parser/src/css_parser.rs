@@ -361,9 +361,7 @@ pub fn parse_css_property<'a>(
             BackfaceVisibility => parse_style_backface_visibility(value)?.into(),
 
             MixBlendMode => parse_style_mix_blend_mode(value)?.into(),
-            Filter => {
-                CssProperty::Filter(CssPropertyValue::Exact(parse_style_filter_vec(value)?))
-            }
+            Filter => CssProperty::Filter(CssPropertyValue::Exact(parse_style_filter_vec(value)?)),
             BackdropFilter => {
                 CssProperty::BackdropFilter(CssPropertyValue::Exact(parse_style_filter_vec(value)?))
             }
@@ -504,18 +502,8 @@ pub fn parse_combined_css_property<'a>(
     match value {
         "auto" => return Ok(keys.into_iter().map(CssProperty::auto).collect()),
         "none" => return Ok(keys.into_iter().map(CssProperty::none).collect()),
-        "initial" => {
-            return Ok(keys
-                .into_iter()
-                .map(CssProperty::initial)
-                .collect())
-        }
-        "inherit" => {
-            return Ok(keys
-                .into_iter()
-                .map(CssProperty::inherit)
-                .collect())
-        }
+        "initial" => return Ok(keys.into_iter().map(CssProperty::initial).collect()),
+        "inherit" => return Ok(keys.into_iter().map(CssProperty::inherit).collect()),
         _ => {}
     };
 
@@ -1562,8 +1550,7 @@ pub fn parse_color_hsl_components<'a>(
             return Err(CssColorParseError::MissingColorComponent(which));
         }
 
-        let parsed_percent =
-            parse_percentage(c).map_err(CssColorParseError::InvalidPercentage)?;
+        let parsed_percent = parse_percentage(c).map_err(CssColorParseError::InvalidPercentage)?;
 
         Ok(parsed_percent.get())
     }
@@ -1671,8 +1658,8 @@ pub fn parse_color_no_hash<'a>(input: &'a str) -> Result<ColorU, CssColorParseEr
             Ok(ColorU { r, g, b, a })
         }
         6 => {
-            let input = u32::from_str_radix(input, 16)
-                .map_err(CssColorParseError::IntValueParseErr)?;
+            let input =
+                u32::from_str_radix(input, 16).map_err(CssColorParseError::IntValueParseErr)?;
             Ok(ColorU {
                 r: ((input >> 16) & 255) as u8,
                 g: ((input >> 8) & 255) as u8,
@@ -1681,8 +1668,8 @@ pub fn parse_color_no_hash<'a>(input: &'a str) -> Result<ColorU, CssColorParseEr
             })
         }
         8 => {
-            let input = u32::from_str_radix(input, 16)
-                .map_err(CssColorParseError::IntValueParseErr)?;
+            let input =
+                u32::from_str_radix(input, 16).map_err(CssColorParseError::IntValueParseErr)?;
             Ok(ColorU {
                 r: ((input >> 24) & 255) as u8,
                 g: ((input >> 16) & 255) as u8,
@@ -1898,8 +1885,7 @@ pub fn parse_style_border<'a>(input: &'a str) -> Result<StyleBorderSide, CssBord
     match second_argument_end {
         None => {
             // First argument is the one and only argument, therefore has to be a style such as "double"
-            border_style =
-                parse_style_border_style(first_arg_str).map_err(InvalidBorderStyle)?;
+            border_style = parse_style_border_style(first_arg_str).map_err(InvalidBorderStyle)?;
             return Ok(StyleBorderSide {
                 border_style,
                 border_width: DEFAULT_BORDER_THICKNESS,
@@ -3238,13 +3224,10 @@ pub fn parse_style_background_position<'a>(
         return Err(TooManyComponents(input));
     }
 
-    let horizontal =
-        parse_background_position_horizontal(first).map_err(FirstComponentWrong)?;
+    let horizontal = parse_background_position_horizontal(first).map_err(FirstComponentWrong)?;
 
     let vertical = match second {
-        Some(second) => {
-            parse_background_position_vertical(second).map_err(SecondComponentWrong)?
-        }
+        Some(second) => parse_background_position_vertical(second).map_err(SecondComponentWrong)?,
         None => BackgroundPositionVertical::Center,
     };
 
@@ -3500,9 +3483,7 @@ pub fn parse_linear_color_stop<'a>(
     let color = parse_css_color(color_str)?;
     let offset = match percentage_str {
         None => OptionPercentageValue::None,
-        Some(s) => {
-            OptionPercentageValue::Some(parse_percentage_value(s).map_err(Percentage)?)
-        }
+        Some(s) => OptionPercentageValue::Some(parse_percentage_value(s).map_err(Percentage)?),
     };
 
     Ok(LinearColorStop { offset, color })
@@ -3844,7 +3825,8 @@ impl_display! {OpacityParseError<'a>, {
 
 pub fn parse_style_opacity<'a>(input: &'a str) -> Result<StyleOpacity, OpacityParseError<'a>> {
     parse_percentage_value(input)
-        .map_err(|e| OpacityParseError::ParsePercentage(e, input)).map(|e| StyleOpacity { inner: e })
+        .map_err(|e| OpacityParseError::ParsePercentage(e, input))
+        .map(|e| StyleOpacity { inner: e })
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -5565,9 +5547,8 @@ mod css_tests {
 
     #[test]
     fn test_parse_style_font_family_2() {
-        let fonts0: Vec<StyleFontFamily> = vec![StyleFontFamily::System(
-            "Webly Sleeky UI".to_string(),
-        )];
+        let fonts0: Vec<StyleFontFamily> =
+            vec![StyleFontFamily::System("Webly Sleeky UI".to_string())];
         let fonts0: StyleFontFamilyVec = fonts0.into();
         assert_eq!(parse_style_font_family("'Webly Sleeky UI'"), Ok(fonts0));
     }
