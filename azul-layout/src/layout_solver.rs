@@ -66,8 +66,6 @@ pub struct HeightConfig {
 
 fn precalculate_wh_config(styled_dom: &StyledDom) -> NodeDataContainer<WhConfig> {
 
-    use rayon::prelude::*;
-
     let css_property_cache = styled_dom.get_css_property_cache();
     let node_data_container = styled_dom.node_data.as_container();
 

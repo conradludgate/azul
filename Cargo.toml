@@ -1,15 +1,10 @@
 [workspace]
 members = [
-    "api/rust",
-    "azul-dll",
-    "azul-desktop",
-    "azulc",
     "azul-css",
     "azul-core",
-    "azul-layout",
+    # "azul-layout",
     "azul-text-layout",
     "azul-css-parser",
-    "examples",
 ]
 
 [profile.dev]

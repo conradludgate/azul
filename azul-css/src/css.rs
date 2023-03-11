@@ -605,7 +605,7 @@ fn test_specificity_sort() {
     use crate::NodeTypeTag::*;
     use alloc::string::ToString;
 
-    let input_style = Stylesheet {
+    let mut input_style = Stylesheet {
         rules: vec![
             // Rules are sorted from lowest-specificity to highest specificity
             CssRuleBlock { path: CssPath { selectors: vec![Global].into() }, declarations: Vec::new().into() },
@@ -614,7 +614,8 @@ fn test_specificity_sort() {
             CssRuleBlock { path: CssPath { selectors: vec![Global, Id("my_id".to_string().into())].into() }, declarations: Vec::new().into() },
             CssRuleBlock { path: CssPath { selectors: vec![Type(Div), Class("my_class".to_string().into()), Class("specific".to_string().into()), Id("my_id".to_string().into())].into() }, declarations: Vec::new().into() },
         ].into(),
-    }.sort_by_specificity();
+    };
+    input_style.sort_by_specificity();
 
     let expected_style = Stylesheet {
         rules: vec![

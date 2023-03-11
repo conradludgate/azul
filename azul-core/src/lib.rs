@@ -1,6 +1,5 @@
 //! Shared datatypes for azul-* crates
 
-#![cfg_attr(not(feature = "std"), no_std)]
 #![allow(warnings)]
 
 #[macro_use]
@@ -10,13 +9,9 @@ extern crate alloc;
 
 extern crate libm;
 
-#[cfg(feature = "multithreading")]
-extern crate rayon;
 #[macro_use]
 extern crate azul_css;
 extern crate gl_context_loader;
-#[cfg(feature = "css_parser")]
-extern crate azul_css_parser;
 
 /// Useful macros for implementing Azul APIs without duplicating code
 #[macro_use]

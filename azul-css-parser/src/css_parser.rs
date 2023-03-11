@@ -1,42 +1,32 @@
 //! Contains utilities to convert strings (CSS strings) to servo types
 
-use core::num::{ParseIntError, ParseFloatError};
 use core::fmt;
-use alloc::vec::Vec;
-use alloc::string::String;
+use core::num::{ParseFloatError, ParseIntError};
 
 use azul_css::{
-    CssPropertyType, CssProperty, CombinedCssPropertyType, CssPropertyValue,
-    LayoutOverflow, Shape, PixelValue, AngleValue, AngleMetric, PixelValueNoPercent,
-    PercentageValue, FloatValue, ColorU, LinearColorStop, LinearGradient,
-    RadialColorStop, RadialGradient, ConicGradient,
-    DirectionCorner, DirectionCorners, Direction,
-    StyleBoxShadow, StyleBorderSide, BorderStyle,
-    SizeMetric, BoxShadowClipMode, ExtendMode, OptionPercentageValue,
-    BackgroundPositionHorizontal, BackgroundPositionVertical, ScrollbarStyle,
-    RadialGradientSize, AzString, NormalizedLinearColorStop, NormalizedRadialColorStop,
-
-    StyleFilter, StyleMixBlendMode,
-    StyleTextColor, StyleFontSize, StyleFontFamily, StyleTextAlign,
-    StyleLetterSpacing, StyleLineHeight, StyleWordSpacing, StyleTabWidth,
-    StyleCursor, StyleBackgroundContent, StyleBackgroundPosition, StyleBackgroundSize,
-    StyleBackgroundRepeat, StyleBorderTopLeftRadius, StyleBorderTopRightRadius,
-    StyleBorderBottomLeftRadius, StyleBorderBottomRightRadius, StyleBorderTopColor,
-    StyleBorderRightColor, StyleBorderLeftColor, StyleBorderBottomColor,
-    StyleBorderTopStyle, StyleBorderRightStyle, StyleBorderLeftStyle,
-    StyleBorderBottomStyle, LayoutBorderTopWidth, LayoutBorderRightWidth,
-    LayoutBorderLeftWidth, LayoutBorderBottomWidth, StyleTransform, StyleTransformOrigin,
-    StylePerspectiveOrigin, StyleBackfaceVisibility, StyleOpacity, StyleTransformVec,
-    StyleBackgroundContentVec, StyleBackgroundPositionVec, StyleBackgroundSizeVec,
-    StyleBackgroundRepeatVec, StyleFontFamilyVec, StyleFilterVec,
-
-    LayoutDisplay, LayoutFloat, LayoutWidth, LayoutHeight, LayoutBoxSizing,
-    LayoutMinWidth, LayoutMinHeight, LayoutMaxWidth, LayoutMaxHeight,
-    LayoutPosition, LayoutTop, LayoutRight, LayoutLeft, LayoutBottom, LayoutFlexWrap,
-    LayoutFlexDirection, LayoutFlexGrow, LayoutFlexShrink, LayoutJustifyContent,
-    LayoutAlignItems, LayoutAlignContent, LayoutPaddingRight, LayoutPaddingBottom,
-    LayoutMarginTop, LayoutMarginLeft, LayoutMarginRight, LayoutMarginBottom,
-    LayoutPaddingTop, LayoutPaddingLeft,
+    AngleMetric, AngleValue, AzString, BackgroundPositionHorizontal, BackgroundPositionVertical,
+    BorderStyle, BoxShadowClipMode, ColorU, CombinedCssPropertyType, ConicGradient, CssProperty,
+    CssPropertyType, CssPropertyValue, Direction, DirectionCorner, DirectionCorners, ExtendMode,
+    FloatValue, LayoutAlignContent, LayoutAlignItems, LayoutBorderBottomWidth,
+    LayoutBorderLeftWidth, LayoutBorderRightWidth, LayoutBorderTopWidth, LayoutBottom,
+    LayoutBoxSizing, LayoutDisplay, LayoutFlexDirection, LayoutFlexGrow, LayoutFlexShrink,
+    LayoutFlexWrap, LayoutFloat, LayoutHeight, LayoutJustifyContent, LayoutLeft,
+    LayoutMarginBottom, LayoutMarginLeft, LayoutMarginRight, LayoutMarginTop, LayoutMaxHeight,
+    LayoutMaxWidth, LayoutMinHeight, LayoutMinWidth, LayoutOverflow, LayoutPaddingBottom,
+    LayoutPaddingLeft, LayoutPaddingRight, LayoutPaddingTop, LayoutPosition, LayoutRight,
+    LayoutTop, LayoutWidth, LinearColorStop, LinearGradient, OptionPercentageValue,
+    PercentageValue, PixelValue, PixelValueNoPercent, RadialColorStop, RadialGradient,
+    ScrollbarStyle, Shape, SizeMetric, StyleBackfaceVisibility, StyleBackgroundContent,
+    StyleBackgroundContentVec, StyleBackgroundPosition, StyleBackgroundPositionVec,
+    StyleBackgroundRepeat, StyleBackgroundRepeatVec, StyleBackgroundSize, StyleBackgroundSizeVec,
+    StyleBorderBottomColor, StyleBorderBottomLeftRadius, StyleBorderBottomRightRadius,
+    StyleBorderBottomStyle, StyleBorderLeftColor, StyleBorderLeftStyle, StyleBorderRightColor,
+    StyleBorderRightStyle, StyleBorderSide, StyleBorderTopColor, StyleBorderTopLeftRadius,
+    StyleBorderTopRightRadius, StyleBorderTopStyle, StyleBoxShadow, StyleCursor, StyleFilter,
+    StyleFilterVec, StyleFontFamily, StyleFontFamilyVec, StyleFontSize, StyleLetterSpacing,
+    StyleLineHeight, StyleMixBlendMode, StyleOpacity, StylePerspectiveOrigin, StyleTabWidth,
+    StyleTextAlign, StyleTextColor, StyleTransform, StyleTransformOrigin, StyleTransformVec,
+    StyleWordSpacing,
 };
 
 pub trait FormatAsCssValue {
@@ -70,15 +60,40 @@ impl FormatAsCssValue for PixelValue {
 impl FormatAsCssValue for StyleTransform {
     fn format_as_css_value(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            StyleTransform::Matrix(m) => write!(f, "matrix({}, {}, {}, {}, {}, {})", m.a, m.b, m.c, m.d, m.tx, m.ty),
-            StyleTransform::Matrix3D(m) => write!(f, "matrix3d({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})", m.m11, m.m12, m.m13, m.m14, m.m21, m.m22, m.m23, m.m24, m.m31, m.m32, m.m33, m.m34, m.m41, m.m42, m.m43, m.m44),
+            StyleTransform::Matrix(m) => write!(
+                f,
+                "matrix({}, {}, {}, {}, {}, {})",
+                m.a, m.b, m.c, m.d, m.tx, m.ty
+            ),
+            StyleTransform::Matrix3D(m) => write!(
+                f,
+                "matrix3d({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})",
+                m.m11,
+                m.m12,
+                m.m13,
+                m.m14,
+                m.m21,
+                m.m22,
+                m.m23,
+                m.m24,
+                m.m31,
+                m.m32,
+                m.m33,
+                m.m34,
+                m.m41,
+                m.m42,
+                m.m43,
+                m.m44
+            ),
             StyleTransform::Translate(t) => write!(f, "translate({}, {})", t.x, t.y),
             StyleTransform::Translate3D(t) => write!(f, "translate3d({}, {}, {})", t.x, t.y, t.z),
             StyleTransform::TranslateX(x) => write!(f, "translateX({})", x),
             StyleTransform::TranslateY(y) => write!(f, "translateY({})", y),
             StyleTransform::TranslateZ(z) => write!(f, "translateZ({})", z),
             StyleTransform::Rotate(r) => write!(f, "rotate({})", r),
-            StyleTransform::Rotate3D(r) => write!(f, "rotate3d({}, {}, {}, {})", r.x, r.y, r.z, r.angle),
+            StyleTransform::Rotate3D(r) => {
+                write!(f, "rotate3d({}, {}, {}, {})", r.x, r.y, r.z, r.angle)
+            }
             StyleTransform::RotateX(x) => write!(f, "rotateX({})", x),
             StyleTransform::RotateY(y) => write!(f, "rotateY({})", y),
             StyleTransform::RotateZ(z) => write!(f, "rotateZ({})", z),
@@ -171,14 +186,31 @@ macro_rules! typed_pixel_value_parser {
         }
     };
     ($fn:ident, $return:ident) => {
-        typed_pixel_value_parser!($fn, stringify!($fn), $return, stringify!($return),
+        typed_pixel_value_parser!(
+            $fn,
+            stringify!($fn),
+            $return,
+            stringify!($return),
             concat!(
-                "# extern crate azul_css;", "\r\n",
-                "# extern crate azul_css_parser;", "\r\n",
-                "# use azul_css_parser::", stringify!($fn), ";", "\r\n",
-                "# use azul_css::{PixelValue, ", stringify!($return), "};"
+                "# extern crate azul_css;",
+                "\r\n",
+                "# extern crate azul_css_parser;",
+                "\r\n",
+                "# use azul_css_parser::",
+                stringify!($fn),
+                ";",
+                "\r\n",
+                "# use azul_css::{PixelValue, ",
+                stringify!($return),
+                "};"
             ),
-            concat!("assert_eq!(", stringify!($fn), "(\"5px\"), Ok(", stringify!($return), " { inner: PixelValue::px(5.0) }));")
+            concat!(
+                "assert_eq!(",
+                stringify!($fn),
+                "(\"5px\"), Ok(",
+                stringify!($return),
+                " { inner: PixelValue::px(5.0) }));"
+            )
         );
     };
 }
@@ -197,7 +229,10 @@ macro_rules! typed_pixel_value_parser {
 ///     Ok(CssProperty::Width(CssPropertyValue::Exact(LayoutWidth { inner: PixelValue::px(500.0) })))
 /// )
 /// ```
-pub fn parse_css_property<'a>(key: CssPropertyType, value: &'a str) -> Result<CssProperty, CssParsingError<'a>> {
+pub fn parse_css_property<'a>(
+    key: CssPropertyType,
+    value: &'a str,
+) -> Result<CssProperty, CssParsingError<'a>> {
     use self::CssPropertyType::*;
     let value = value.trim();
     Ok(match value {
@@ -206,94 +241,144 @@ pub fn parse_css_property<'a>(key: CssPropertyType, value: &'a str) -> Result<Cs
         "initial" => CssProperty::initial(key).into(),
         "inherit" => CssProperty::inherit(key).into(),
         value => match key {
-            TextColor                   => parse_style_text_color(value)?.into(),
-            FontSize                    => parse_style_font_size(value)?.into(),
-            FontFamily                  => parse_style_font_family(value)?.into(),
-            TextAlign                   => parse_layout_text_align(value)?.into(),
-            LetterSpacing               => parse_style_letter_spacing(value)?.into(),
-            LineHeight                  => parse_style_line_height(value)?.into(),
-            WordSpacing                 => parse_style_word_spacing(value)?.into(),
-            TabWidth                    => parse_style_tab_width(value)?.into(),
-            Cursor                      => parse_style_cursor(value)?.into(),
+            TextColor => parse_style_text_color(value)?.into(),
+            FontSize => parse_style_font_size(value)?.into(),
+            FontFamily => parse_style_font_family(value)?.into(),
+            TextAlign => parse_layout_text_align(value)?.into(),
+            LetterSpacing => parse_style_letter_spacing(value)?.into(),
+            LineHeight => parse_style_line_height(value)?.into(),
+            WordSpacing => parse_style_word_spacing(value)?.into(),
+            TabWidth => parse_style_tab_width(value)?.into(),
+            Cursor => parse_style_cursor(value)?.into(),
 
-            Display                     => parse_layout_display(value)?.into(),
-            Float                       => parse_layout_float(value)?.into(),
-            BoxSizing                   => parse_layout_box_sizing(value)?.into(),
-            Width                       => parse_layout_width(value)?.into(),
-            Height                      => parse_layout_height(value)?.into(),
-            MinWidth                    => parse_layout_min_width(value)?.into(),
-            MinHeight                   => parse_layout_min_height(value)?.into(),
-            MaxWidth                    => parse_layout_max_width(value)?.into(),
-            MaxHeight                   => parse_layout_max_height(value)?.into(),
-            Position                    => parse_layout_position(value)?.into(),
-            Top                         => parse_layout_top(value)?.into(),
-            Right                       => parse_layout_right(value)?.into(),
-            Left                        => parse_layout_left(value)?.into(),
-            Bottom                      => parse_layout_bottom(value)?.into(),
-            FlexWrap                    => parse_layout_wrap(value)?.into(),
-            FlexDirection               => parse_layout_direction(value)?.into(),
-            FlexGrow                    => parse_layout_flex_grow(value)?.into(),
-            FlexShrink                  => parse_layout_flex_shrink(value)?.into(),
-            JustifyContent              => parse_layout_justify_content(value)?.into(),
-            AlignItems                  => parse_layout_align_items(value)?.into(),
-            AlignContent                => parse_layout_align_content(value)?.into(),
+            Display => parse_layout_display(value)?.into(),
+            Float => parse_layout_float(value)?.into(),
+            BoxSizing => parse_layout_box_sizing(value)?.into(),
+            Width => parse_layout_width(value)?.into(),
+            Height => parse_layout_height(value)?.into(),
+            MinWidth => parse_layout_min_width(value)?.into(),
+            MinHeight => parse_layout_min_height(value)?.into(),
+            MaxWidth => parse_layout_max_width(value)?.into(),
+            MaxHeight => parse_layout_max_height(value)?.into(),
+            Position => parse_layout_position(value)?.into(),
+            Top => parse_layout_top(value)?.into(),
+            Right => parse_layout_right(value)?.into(),
+            Left => parse_layout_left(value)?.into(),
+            Bottom => parse_layout_bottom(value)?.into(),
+            FlexWrap => parse_layout_wrap(value)?.into(),
+            FlexDirection => parse_layout_direction(value)?.into(),
+            FlexGrow => parse_layout_flex_grow(value)?.into(),
+            FlexShrink => parse_layout_flex_shrink(value)?.into(),
+            JustifyContent => parse_layout_justify_content(value)?.into(),
+            AlignItems => parse_layout_align_items(value)?.into(),
+            AlignContent => parse_layout_align_content(value)?.into(),
 
-            BackgroundContent           => parse_style_background_content_multiple(value)?.into(),
-            BackgroundPosition          => parse_style_background_position_multiple(value)?.into(),
-            BackgroundSize              => parse_style_background_size_multiple(value)?.into(),
-            BackgroundRepeat            => parse_style_background_repeat_multiple(value)?.into(),
+            BackgroundContent => parse_style_background_content_multiple(value)?.into(),
+            BackgroundPosition => parse_style_background_position_multiple(value)?.into(),
+            BackgroundSize => parse_style_background_size_multiple(value)?.into(),
+            BackgroundRepeat => parse_style_background_repeat_multiple(value)?.into(),
 
-            OverflowX                   => CssProperty::OverflowX(CssPropertyValue::Exact(parse_layout_overflow(value)?)).into(),
-            OverflowY                   => CssProperty::OverflowY(CssPropertyValue::Exact(parse_layout_overflow(value)?)).into(),
+            OverflowX => {
+                CssProperty::OverflowX(CssPropertyValue::Exact(parse_layout_overflow(value)?))
+                    .into()
+            }
+            OverflowY => {
+                CssProperty::OverflowY(CssPropertyValue::Exact(parse_layout_overflow(value)?))
+                    .into()
+            }
 
-            PaddingTop                  => parse_layout_padding_top(value)?.into(),
-            PaddingLeft                 => parse_layout_padding_left(value)?.into(),
-            PaddingRight                => parse_layout_padding_right(value)?.into(),
-            PaddingBottom               => parse_layout_padding_bottom(value)?.into(),
+            PaddingTop => parse_layout_padding_top(value)?.into(),
+            PaddingLeft => parse_layout_padding_left(value)?.into(),
+            PaddingRight => parse_layout_padding_right(value)?.into(),
+            PaddingBottom => parse_layout_padding_bottom(value)?.into(),
 
-            MarginTop                   => parse_layout_margin_top(value)?.into(),
-            MarginLeft                  => parse_layout_margin_left(value)?.into(),
-            MarginRight                 => parse_layout_margin_right(value)?.into(),
-            MarginBottom                => parse_layout_margin_bottom(value)?.into(),
+            MarginTop => parse_layout_margin_top(value)?.into(),
+            MarginLeft => parse_layout_margin_left(value)?.into(),
+            MarginRight => parse_layout_margin_right(value)?.into(),
+            MarginBottom => parse_layout_margin_bottom(value)?.into(),
 
-            BorderTopLeftRadius         => parse_style_border_top_left_radius(value)?.into(),
-            BorderTopRightRadius        => parse_style_border_top_right_radius(value)?.into(),
-            BorderBottomLeftRadius      => parse_style_border_bottom_left_radius(value)?.into(),
-            BorderBottomRightRadius     => parse_style_border_bottom_right_radius(value)?.into(),
+            BorderTopLeftRadius => parse_style_border_top_left_radius(value)?.into(),
+            BorderTopRightRadius => parse_style_border_top_right_radius(value)?.into(),
+            BorderBottomLeftRadius => parse_style_border_bottom_left_radius(value)?.into(),
+            BorderBottomRightRadius => parse_style_border_bottom_right_radius(value)?.into(),
 
-            BorderTopColor              => StyleBorderTopColor { inner: parse_css_color(value)? }.into(),
-            BorderRightColor            => StyleBorderRightColor { inner: parse_css_color(value)? }.into(),
-            BorderLeftColor             => StyleBorderLeftColor { inner: parse_css_color(value)? }.into(),
-            BorderBottomColor           => StyleBorderBottomColor { inner: parse_css_color(value)? }.into(),
+            BorderTopColor => StyleBorderTopColor {
+                inner: parse_css_color(value)?,
+            }
+            .into(),
+            BorderRightColor => StyleBorderRightColor {
+                inner: parse_css_color(value)?,
+            }
+            .into(),
+            BorderLeftColor => StyleBorderLeftColor {
+                inner: parse_css_color(value)?,
+            }
+            .into(),
+            BorderBottomColor => StyleBorderBottomColor {
+                inner: parse_css_color(value)?,
+            }
+            .into(),
 
-            BorderTopStyle              => StyleBorderTopStyle { inner: parse_style_border_style(value)? }.into(),
-            BorderRightStyle            => StyleBorderRightStyle { inner: parse_style_border_style(value)? }.into(),
-            BorderLeftStyle             => StyleBorderLeftStyle { inner: parse_style_border_style(value)? }.into(),
-            BorderBottomStyle           => StyleBorderBottomStyle { inner: parse_style_border_style(value)? }.into(),
+            BorderTopStyle => StyleBorderTopStyle {
+                inner: parse_style_border_style(value)?,
+            }
+            .into(),
+            BorderRightStyle => StyleBorderRightStyle {
+                inner: parse_style_border_style(value)?,
+            }
+            .into(),
+            BorderLeftStyle => StyleBorderLeftStyle {
+                inner: parse_style_border_style(value)?,
+            }
+            .into(),
+            BorderBottomStyle => StyleBorderBottomStyle {
+                inner: parse_style_border_style(value)?,
+            }
+            .into(),
 
-            BorderTopWidth              => parse_style_border_top_width(value)?.into(),
-            BorderRightWidth            => parse_style_border_right_width(value)?.into(),
-            BorderLeftWidth             => parse_style_border_left_width(value)?.into(),
-            BorderBottomWidth           => parse_style_border_bottom_width(value)?.into(),
+            BorderTopWidth => parse_style_border_top_width(value)?.into(),
+            BorderRightWidth => parse_style_border_right_width(value)?.into(),
+            BorderLeftWidth => parse_style_border_left_width(value)?.into(),
+            BorderBottomWidth => parse_style_border_bottom_width(value)?.into(),
 
-            BoxShadowLeft               => CssProperty::BoxShadowLeft(CssPropertyValue::Exact(parse_style_box_shadow(value)?)).into(),
-            BoxShadowRight              => CssProperty::BoxShadowRight(CssPropertyValue::Exact(parse_style_box_shadow(value)?)).into(),
-            BoxShadowTop                => CssProperty::BoxShadowTop(CssPropertyValue::Exact(parse_style_box_shadow(value)?)).into(),
-            BoxShadowBottom             => CssProperty::BoxShadowBottom(CssPropertyValue::Exact(parse_style_box_shadow(value)?)).into(),
+            BoxShadowLeft => {
+                CssProperty::BoxShadowLeft(CssPropertyValue::Exact(parse_style_box_shadow(value)?))
+                    .into()
+            }
+            BoxShadowRight => {
+                CssProperty::BoxShadowRight(CssPropertyValue::Exact(parse_style_box_shadow(value)?))
+                    .into()
+            }
+            BoxShadowTop => {
+                CssProperty::BoxShadowTop(CssPropertyValue::Exact(parse_style_box_shadow(value)?))
+                    .into()
+            }
+            BoxShadowBottom => CssProperty::BoxShadowBottom(CssPropertyValue::Exact(
+                parse_style_box_shadow(value)?,
+            ))
+            .into(),
 
-            ScrollbarStyle              => parse_scrollbar_style(value)?.into(), // TODO: stub - always returns default style
+            ScrollbarStyle => parse_scrollbar_style(value)?.into(), // TODO: stub - always returns default style
 
-            Opacity                     => parse_style_opacity(value)?.into(),
-            Transform                   => parse_style_transform_vec(value)?.into(),
-            TransformOrigin             => parse_style_transform_origin(value)?.into(),
-            PerspectiveOrigin           => parse_style_perspective_origin(value)?.into(),
-            BackfaceVisibility          => parse_style_backface_visibility(value)?.into(),
+            Opacity => parse_style_opacity(value)?.into(),
+            Transform => parse_style_transform_vec(value)?.into(),
+            TransformOrigin => parse_style_transform_origin(value)?.into(),
+            PerspectiveOrigin => parse_style_perspective_origin(value)?.into(),
+            BackfaceVisibility => parse_style_backface_visibility(value)?.into(),
 
-            MixBlendMode                => parse_style_mix_blend_mode(value)?.into(),
-            Filter                      => CssProperty::Filter(CssPropertyValue::Exact(parse_style_filter_vec(value)?)).into(),
-            BackdropFilter              => CssProperty::BackdropFilter(CssPropertyValue::Exact(parse_style_filter_vec(value)?)).into(),
-            TextShadow                  => CssProperty::TextShadow(CssPropertyValue::Exact(parse_style_box_shadow(value)?)).into(),
-        }
+            MixBlendMode => parse_style_mix_blend_mode(value)?.into(),
+            Filter => {
+                CssProperty::Filter(CssPropertyValue::Exact(parse_style_filter_vec(value)?)).into()
+            }
+            BackdropFilter => {
+                CssProperty::BackdropFilter(CssPropertyValue::Exact(parse_style_filter_vec(value)?))
+                    .into()
+            }
+            TextShadow => {
+                CssProperty::TextShadow(CssPropertyValue::Exact(parse_style_box_shadow(value)?))
+                    .into()
+            }
+        },
     })
 }
 
@@ -316,20 +401,25 @@ pub fn parse_css_property<'a>(key: CssPropertyType, value: &'a str) -> Result<Cs
 ///     ])
 /// )
 /// ```
-pub fn parse_combined_css_property<'a>(key: CombinedCssPropertyType, value: &'a str)
--> Result<Vec<CssProperty>, CssParsingError<'a>>
-{
+pub fn parse_combined_css_property<'a>(
+    key: CombinedCssPropertyType,
+    value: &'a str,
+) -> Result<Vec<CssProperty>, CssParsingError<'a>> {
     use self::CombinedCssPropertyType::*;
 
-    macro_rules! convert_value {($thing:expr, $prop_type:ident, $wrapper:ident) => (
-        match $thing {
-            PixelValueWithAuto::None => CssProperty::none(CssPropertyType::$prop_type),
-            PixelValueWithAuto::Initial => CssProperty::initial(CssPropertyType::$prop_type),
-            PixelValueWithAuto::Inherit => CssProperty::inherit(CssPropertyType::$prop_type),
-            PixelValueWithAuto::Auto => CssProperty::auto(CssPropertyType::$prop_type),
-            PixelValueWithAuto::Exact(x) => CssProperty::$prop_type($wrapper { inner: x }.into()),
-        }
-    )}
+    macro_rules! convert_value {
+        ($thing:expr, $prop_type:ident, $wrapper:ident) => {
+            match $thing {
+                PixelValueWithAuto::None => CssProperty::none(CssPropertyType::$prop_type),
+                PixelValueWithAuto::Initial => CssProperty::initial(CssPropertyType::$prop_type),
+                PixelValueWithAuto::Inherit => CssProperty::inherit(CssPropertyType::$prop_type),
+                PixelValueWithAuto::Auto => CssProperty::auto(CssPropertyType::$prop_type),
+                PixelValueWithAuto::Exact(x) => {
+                    CssProperty::$prop_type($wrapper { inner: x }.into())
+                }
+            }
+        };
+    }
 
     let keys = match key {
         BorderRadius => {
@@ -339,13 +429,10 @@ pub fn parse_combined_css_property<'a>(key: CombinedCssPropertyType, value: &'a 
                 CssPropertyType::BorderBottomLeftRadius,
                 CssPropertyType::BorderBottomRightRadius,
             ]
-        },
+        }
         Overflow => {
-            vec![
-                CssPropertyType::OverflowX,
-                CssPropertyType::OverflowY,
-            ]
-        },
+            vec![CssPropertyType::OverflowX, CssPropertyType::OverflowY]
+        }
         Padding => {
             vec![
                 CssPropertyType::PaddingTop,
@@ -353,7 +440,7 @@ pub fn parse_combined_css_property<'a>(key: CombinedCssPropertyType, value: &'a 
                 CssPropertyType::PaddingLeft,
                 CssPropertyType::PaddingRight,
             ]
-        },
+        }
         Margin => {
             vec![
                 CssPropertyType::MarginTop,
@@ -361,7 +448,7 @@ pub fn parse_combined_css_property<'a>(key: CombinedCssPropertyType, value: &'a 
                 CssPropertyType::MarginLeft,
                 CssPropertyType::MarginRight,
             ]
-        },
+        }
         Border => {
             vec![
                 CssPropertyType::BorderTopColor,
@@ -377,35 +464,35 @@ pub fn parse_combined_css_property<'a>(key: CombinedCssPropertyType, value: &'a 
                 CssPropertyType::BorderLeftWidth,
                 CssPropertyType::BorderBottomWidth,
             ]
-        },
+        }
         BorderLeft => {
             vec![
                 CssPropertyType::BorderLeftColor,
                 CssPropertyType::BorderLeftStyle,
                 CssPropertyType::BorderLeftWidth,
             ]
-        },
+        }
         BorderRight => {
             vec![
                 CssPropertyType::BorderRightColor,
                 CssPropertyType::BorderRightStyle,
                 CssPropertyType::BorderRightWidth,
             ]
-        },
+        }
         BorderTop => {
             vec![
                 CssPropertyType::BorderTopColor,
                 CssPropertyType::BorderTopStyle,
                 CssPropertyType::BorderTopWidth,
             ]
-        },
+        }
         BorderBottom => {
             vec![
                 CssPropertyType::BorderBottomColor,
                 CssPropertyType::BorderBottomStyle,
                 CssPropertyType::BorderBottomWidth,
             ]
-        },
+        }
         BoxShadow => {
             vec![
                 CssPropertyType::BoxShadowLeft,
@@ -413,44 +500,70 @@ pub fn parse_combined_css_property<'a>(key: CombinedCssPropertyType, value: &'a 
                 CssPropertyType::BoxShadowTop,
                 CssPropertyType::BoxShadowBottom,
             ]
-        },
+        }
         BackgroundColor => {
-            vec![
-                CssPropertyType::BackgroundContent,
-            ]
-        },
+            vec![CssPropertyType::BackgroundContent]
+        }
         BackgroundImage => {
-            vec![
-                CssPropertyType::BackgroundContent,
-            ]
+            vec![CssPropertyType::BackgroundContent]
         }
     };
 
     match value {
         "auto" => return Ok(keys.into_iter().map(|ty| CssProperty::auto(ty)).collect()),
         "none" => return Ok(keys.into_iter().map(|ty| CssProperty::none(ty)).collect()),
-        "initial" => return Ok(keys.into_iter().map(|ty| CssProperty::initial(ty)).collect()),
-        "inherit" => return Ok(keys.into_iter().map(|ty| CssProperty::inherit(ty)).collect()),
-        _ => { },
+        "initial" => {
+            return Ok(keys
+                .into_iter()
+                .map(|ty| CssProperty::initial(ty))
+                .collect())
+        }
+        "inherit" => {
+            return Ok(keys
+                .into_iter()
+                .map(|ty| CssProperty::inherit(ty))
+                .collect())
+        }
+        _ => {}
     };
 
     match key {
         BorderRadius => {
             let border_radius = parse_style_border_radius(value)?;
             Ok(vec![
-                CssProperty::BorderTopLeftRadius(StyleBorderTopLeftRadius { inner: border_radius.top_left }.into()),
-                CssProperty::BorderTopRightRadius(StyleBorderTopRightRadius { inner: border_radius.top_right }.into()),
-                CssProperty::BorderBottomLeftRadius(StyleBorderBottomLeftRadius { inner: border_radius.bottom_left }.into()),
-                CssProperty::BorderBottomRightRadius(StyleBorderBottomRightRadius { inner: border_radius.bottom_right }.into()),
+                CssProperty::BorderTopLeftRadius(
+                    StyleBorderTopLeftRadius {
+                        inner: border_radius.top_left,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderTopRightRadius(
+                    StyleBorderTopRightRadius {
+                        inner: border_radius.top_right,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderBottomLeftRadius(
+                    StyleBorderBottomLeftRadius {
+                        inner: border_radius.bottom_left,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderBottomRightRadius(
+                    StyleBorderBottomRightRadius {
+                        inner: border_radius.bottom_right,
+                    }
+                    .into(),
+                ),
             ])
-        },
+        }
         Overflow => {
             let overflow = parse_layout_overflow(value)?;
             Ok(vec![
                 CssProperty::OverflowX(overflow.into()),
                 CssProperty::OverflowY(overflow.into()),
             ])
-        },
+        }
         Padding => {
             let padding = parse_layout_padding(value)?;
             Ok(vec![
@@ -459,7 +572,7 @@ pub fn parse_combined_css_property<'a>(key: CombinedCssPropertyType, value: &'a 
                 convert_value!(padding.left, PaddingLeft, LayoutPaddingLeft),
                 convert_value!(padding.right, PaddingRight, LayoutPaddingRight),
             ])
-        },
+        }
         Margin => {
             let margin = parse_layout_margin(value)?;
             Ok(vec![
@@ -468,78 +581,194 @@ pub fn parse_combined_css_property<'a>(key: CombinedCssPropertyType, value: &'a 
                 convert_value!(margin.left, MarginLeft, LayoutMarginLeft),
                 convert_value!(margin.right, MarginRight, LayoutMarginRight),
             ])
-        },
+        }
         Border => {
             let border = parse_style_border(value)?;
             Ok(vec![
-               CssProperty::BorderTopColor(StyleBorderTopColor { inner: border.border_color }.into()),
-               CssProperty::BorderRightColor(StyleBorderRightColor { inner: border.border_color }.into()),
-               CssProperty::BorderLeftColor(StyleBorderLeftColor { inner: border.border_color }.into()),
-               CssProperty::BorderBottomColor(StyleBorderBottomColor { inner: border.border_color }.into()),
-               CssProperty::BorderTopStyle(StyleBorderTopStyle { inner: border.border_style }.into()),
-               CssProperty::BorderRightStyle(StyleBorderRightStyle { inner: border.border_style }.into()),
-               CssProperty::BorderLeftStyle(StyleBorderLeftStyle { inner: border.border_style }.into()),
-               CssProperty::BorderBottomStyle(StyleBorderBottomStyle { inner: border.border_style }.into()),
-               CssProperty::BorderTopWidth(LayoutBorderTopWidth { inner: border.border_width }.into()),
-               CssProperty::BorderRightWidth(LayoutBorderRightWidth { inner: border.border_width }.into()),
-               CssProperty::BorderLeftWidth(LayoutBorderLeftWidth { inner: border.border_width }.into()),
-               CssProperty::BorderBottomWidth(LayoutBorderBottomWidth { inner: border.border_width }.into()),
+                CssProperty::BorderTopColor(
+                    StyleBorderTopColor {
+                        inner: border.border_color,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderRightColor(
+                    StyleBorderRightColor {
+                        inner: border.border_color,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderLeftColor(
+                    StyleBorderLeftColor {
+                        inner: border.border_color,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderBottomColor(
+                    StyleBorderBottomColor {
+                        inner: border.border_color,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderTopStyle(
+                    StyleBorderTopStyle {
+                        inner: border.border_style,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderRightStyle(
+                    StyleBorderRightStyle {
+                        inner: border.border_style,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderLeftStyle(
+                    StyleBorderLeftStyle {
+                        inner: border.border_style,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderBottomStyle(
+                    StyleBorderBottomStyle {
+                        inner: border.border_style,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderTopWidth(
+                    LayoutBorderTopWidth {
+                        inner: border.border_width,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderRightWidth(
+                    LayoutBorderRightWidth {
+                        inner: border.border_width,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderLeftWidth(
+                    LayoutBorderLeftWidth {
+                        inner: border.border_width,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderBottomWidth(
+                    LayoutBorderBottomWidth {
+                        inner: border.border_width,
+                    }
+                    .into(),
+                ),
             ])
-        },
+        }
         BorderLeft => {
             let border = parse_style_border(value)?;
             Ok(vec![
-               CssProperty::BorderLeftColor(StyleBorderLeftColor { inner: border.border_color }.into()),
-               CssProperty::BorderLeftStyle(StyleBorderLeftStyle { inner: border.border_style }.into()),
-               CssProperty::BorderLeftWidth(LayoutBorderLeftWidth { inner: border.border_width }.into()),
+                CssProperty::BorderLeftColor(
+                    StyleBorderLeftColor {
+                        inner: border.border_color,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderLeftStyle(
+                    StyleBorderLeftStyle {
+                        inner: border.border_style,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderLeftWidth(
+                    LayoutBorderLeftWidth {
+                        inner: border.border_width,
+                    }
+                    .into(),
+                ),
             ])
-        },
+        }
         BorderRight => {
             let border = parse_style_border(value)?;
             Ok(vec![
-               CssProperty::BorderRightColor(StyleBorderRightColor { inner: border.border_color }.into()),
-               CssProperty::BorderRightStyle(StyleBorderRightStyle { inner: border.border_style }.into()),
-               CssProperty::BorderRightWidth(LayoutBorderRightWidth { inner: border.border_width }.into()),
+                CssProperty::BorderRightColor(
+                    StyleBorderRightColor {
+                        inner: border.border_color,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderRightStyle(
+                    StyleBorderRightStyle {
+                        inner: border.border_style,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderRightWidth(
+                    LayoutBorderRightWidth {
+                        inner: border.border_width,
+                    }
+                    .into(),
+                ),
             ])
-        },
+        }
         BorderTop => {
             let border = parse_style_border(value)?;
             Ok(vec![
-               CssProperty::BorderTopColor(StyleBorderTopColor { inner: border.border_color }.into()),
-               CssProperty::BorderTopStyle(StyleBorderTopStyle { inner: border.border_style }.into()),
-               CssProperty::BorderTopWidth(LayoutBorderTopWidth { inner: border.border_width }.into()),
+                CssProperty::BorderTopColor(
+                    StyleBorderTopColor {
+                        inner: border.border_color,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderTopStyle(
+                    StyleBorderTopStyle {
+                        inner: border.border_style,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderTopWidth(
+                    LayoutBorderTopWidth {
+                        inner: border.border_width,
+                    }
+                    .into(),
+                ),
             ])
-        },
+        }
         BorderBottom => {
             let border = parse_style_border(value)?;
             Ok(vec![
-               CssProperty::BorderBottomColor(StyleBorderBottomColor { inner: border.border_color }.into()),
-               CssProperty::BorderBottomStyle(StyleBorderBottomStyle { inner: border.border_style }.into()),
-               CssProperty::BorderBottomWidth(LayoutBorderBottomWidth { inner: border.border_width }.into()),
+                CssProperty::BorderBottomColor(
+                    StyleBorderBottomColor {
+                        inner: border.border_color,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderBottomStyle(
+                    StyleBorderBottomStyle {
+                        inner: border.border_style,
+                    }
+                    .into(),
+                ),
+                CssProperty::BorderBottomWidth(
+                    LayoutBorderBottomWidth {
+                        inner: border.border_width,
+                    }
+                    .into(),
+                ),
             ])
-        },
+        }
         BoxShadow => {
             let box_shadow = parse_style_box_shadow(value)?;
             Ok(vec![
-               CssProperty::BoxShadowLeft(CssPropertyValue::Exact(box_shadow)),
-               CssProperty::BoxShadowRight(CssPropertyValue::Exact(box_shadow)),
-               CssProperty::BoxShadowTop(CssPropertyValue::Exact(box_shadow)),
-               CssProperty::BoxShadowBottom(CssPropertyValue::Exact(box_shadow)),
+                CssProperty::BoxShadowLeft(CssPropertyValue::Exact(box_shadow)),
+                CssProperty::BoxShadowRight(CssPropertyValue::Exact(box_shadow)),
+                CssProperty::BoxShadowTop(CssPropertyValue::Exact(box_shadow)),
+                CssProperty::BoxShadowBottom(CssPropertyValue::Exact(box_shadow)),
             ])
-        },
+        }
         BackgroundColor => {
             let color = parse_css_color(value)?;
             let vec: StyleBackgroundContentVec = vec![StyleBackgroundContent::Color(color)].into();
-            Ok(vec![
-               CssProperty::BackgroundContent(vec.into()),
-            ])
-        },
+            Ok(vec![CssProperty::BackgroundContent(vec.into())])
+        }
         BackgroundImage => {
             let background_content = parse_style_background_content(value)?;
             let vec: StyleBackgroundContentVec = vec![background_content].into();
-            Ok(vec![
-                CssProperty::BackgroundContent(vec.into()),
-            ])
+            Ok(vec![CssProperty::BackgroundContent(vec.into())])
         }
     }
 }
@@ -573,7 +802,7 @@ pub enum CssParsingError<'a> {
 }
 
 impl_debug_as_display!(CssParsingError<'a>);
-impl_display!{ CssParsingError<'a>, {
+impl_display! { CssParsingError<'a>, {
     CssStyleBorderRadiusParseError(e) => format!("Invalid border-radius: {}", e),
     CssBorderParseError(e) => format!("Invalid border property: {}", e),
     CssShadowParseError(e) => format!("Invalid shadow: \"{}\"", e),
@@ -597,23 +826,62 @@ impl_display!{ CssParsingError<'a>, {
     Filter(e) => format!("{}", e),
 }}
 
-impl_from!(CssBorderParseError<'a>, CssParsingError::CssBorderParseError);
-impl_from!(CssShadowParseError<'a>, CssParsingError::CssShadowParseError);
+impl_from!(
+    CssBorderParseError<'a>,
+    CssParsingError::CssBorderParseError
+);
+impl_from!(
+    CssShadowParseError<'a>,
+    CssParsingError::CssShadowParseError
+);
 impl_from!(CssColorParseError<'a>, CssParsingError::CssColorParseError);
 impl_from!(InvalidValueErr<'a>, CssParsingError::InvalidValueErr);
-impl_from!(CssPixelValueParseError<'a>, CssParsingError::PixelParseError);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    CssParsingError::PixelParseError
+);
 impl_from!(CssImageParseError<'a>, CssParsingError::CssImageParseError);
-impl_from!(CssStyleFontFamilyParseError<'a>, CssParsingError::CssStyleFontFamilyParseError);
-impl_from!(CssBackgroundParseError<'a>, CssParsingError::CssBackgroundParseError);
-impl_from!(CssStyleBorderRadiusParseError<'a>, CssParsingError::CssStyleBorderRadiusParseError);
-impl_from!(LayoutPaddingParseError<'a>, CssParsingError::PaddingParseError);
-impl_from!(LayoutMarginParseError<'a>, CssParsingError::MarginParseError);
-impl_from!(FlexShrinkParseError<'a>, CssParsingError::FlexShrinkParseError);
+impl_from!(
+    CssStyleFontFamilyParseError<'a>,
+    CssParsingError::CssStyleFontFamilyParseError
+);
+impl_from!(
+    CssBackgroundParseError<'a>,
+    CssParsingError::CssBackgroundParseError
+);
+impl_from!(
+    CssStyleBorderRadiusParseError<'a>,
+    CssParsingError::CssStyleBorderRadiusParseError
+);
+impl_from!(
+    LayoutPaddingParseError<'a>,
+    CssParsingError::PaddingParseError
+);
+impl_from!(
+    LayoutMarginParseError<'a>,
+    CssParsingError::MarginParseError
+);
+impl_from!(
+    FlexShrinkParseError<'a>,
+    CssParsingError::FlexShrinkParseError
+);
 impl_from!(FlexGrowParseError<'a>, CssParsingError::FlexGrowParseError);
-impl_from!(CssBackgroundPositionParseError<'a>, CssParsingError::BackgroundPositionParseError);
-impl_from!(CssStyleTransformParseError<'a>, CssParsingError::TransformParseError);
-impl_from!(CssStyleTransformOriginParseError<'a>, CssParsingError::TransformOriginParseError);
-impl_from!(CssStylePerspectiveOriginParseError<'a>, CssParsingError::PerspectiveOriginParseError);
+impl_from!(
+    CssBackgroundPositionParseError<'a>,
+    CssParsingError::BackgroundPositionParseError
+);
+impl_from!(
+    CssStyleTransformParseError<'a>,
+    CssParsingError::TransformParseError
+);
+impl_from!(
+    CssStyleTransformOriginParseError<'a>,
+    CssParsingError::TransformOriginParseError
+);
+impl_from!(
+    CssStylePerspectiveOriginParseError<'a>,
+    CssParsingError::PerspectiveOriginParseError
+);
 impl_from!(OpacityParseError<'a>, CssParsingError::Opacity);
 impl_from!(CssScrollbarStyleParseError<'a>, CssParsingError::Scrollbar);
 impl_from!(CssStyleFilterParseError<'a>, CssParsingError::Filter);
@@ -635,12 +903,15 @@ pub enum CssStyleBorderRadiusParseError<'a> {
 }
 
 impl_debug_as_display!(CssStyleBorderRadiusParseError<'a>);
-impl_display!{ CssStyleBorderRadiusParseError<'a>, {
+impl_display! { CssStyleBorderRadiusParseError<'a>, {
     TooManyValues(val) => format!("Too many values: \"{}\"", val),
     CssPixelValueParseError(e) => format!("{}", e),
 }}
 
-impl_from!(CssPixelValueParseError<'a>, CssStyleBorderRadiusParseError::CssPixelValueParseError);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    CssStyleBorderRadiusParseError::CssPixelValueParseError
+);
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CssColorComponent {
@@ -671,7 +942,7 @@ pub enum CssColorParseError<'a> {
 }
 
 impl_debug_as_display!(CssColorParseError<'a>);
-impl_display!{CssColorParseError<'a>, {
+impl_display! {CssColorParseError<'a>, {
     InvalidColor(i) => format!("Invalid CSS color: \"{}\"", i),
     InvalidFunctionName(i) => format!("Invalid function name, expected one of: \"rgb\", \"rgba\", \"hsl\", \"hsla\" got: \"{}\"", i),
     InvalidColorComponent(i) => format!("Invalid color component when parsing CSS color: \"{}\"", i),
@@ -699,7 +970,10 @@ impl<'a> From<ParseFloatError> for CssColorParseError<'a> {
     }
 }
 
-impl_from!(CssDirectionParseError<'a>, CssColorParseError::DirectionParseError);
+impl_from!(
+    CssDirectionParseError<'a>,
+    CssColorParseError::DirectionParseError
+);
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum CssImageParseError<'a> {
@@ -707,7 +981,7 @@ pub enum CssImageParseError<'a> {
 }
 
 impl_debug_as_display!(CssImageParseError<'a>);
-impl_display!{CssImageParseError<'a>, {
+impl_display! {CssImageParseError<'a>, {
     UnclosedQuotes(e) => format!("Unclosed quotes: \"{}\"", e),
 }}
 
@@ -730,7 +1004,7 @@ pub enum CssBorderParseError<'a> {
     ColorParseError(CssColorParseError<'a>),
 }
 impl_debug_as_display!(CssBorderParseError<'a>);
-impl_display!{ CssBorderParseError<'a>, {
+impl_display! { CssBorderParseError<'a>, {
     MissingThickness(e) => format!("Missing border thickness: \"{}\"", e),
     InvalidBorderStyle(e) => format!("Invalid style: {}", e.0),
     InvalidBorderDeclaration(e) => format!("Invalid declaration: \"{}\"", e),
@@ -746,22 +1020,23 @@ pub enum CssShadowParseError<'a> {
     ColorParseError(CssColorParseError<'a>),
 }
 impl_debug_as_display!(CssShadowParseError<'a>);
-impl_display!{ CssShadowParseError<'a>, {
+impl_display! { CssShadowParseError<'a>, {
     InvalidSingleStatement(e) => format!("Invalid single statement: \"{}\"", e),
     TooManyComponents(e) => format!("Too many components: \"{}\"", e),
     ValueParseErr(e) => format!("Invalid value: {}", e),
     ColorParseError(e) => format!("Invalid color-value: {}", e),
 }}
 
-impl_from!(CssPixelValueParseError<'a>, CssShadowParseError::ValueParseErr);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    CssShadowParseError::ValueParseErr
+);
 impl_from!(CssColorParseError<'a>, CssShadowParseError::ColorParseError);
 
 #[derive(Debug, Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct StyleBorderRadius {
-
     // TODO: Should technically be PixelSize because the border radius doesn't have to be uniform
     // but the parsing for that is complicated...
-
     pub top_left: PixelValue,
     pub top_right: PixelValue,
     pub bottom_left: PixelValue,
@@ -775,7 +1050,6 @@ impl Default for StyleBorderRadius {
 }
 
 impl StyleBorderRadius {
-
     pub const fn zero() -> Self {
         Self::uniform(PixelValue::zero())
     }
@@ -791,9 +1065,9 @@ impl StyleBorderRadius {
 }
 
 /// parse the border-radius like "5px 10px" or "5px 10px 6px 10px"
-pub fn parse_style_border_radius<'a>(input: &'a str)
--> Result<StyleBorderRadius, CssStyleBorderRadiusParseError<'a>>
-{
+pub fn parse_style_border_radius<'a>(
+    input: &'a str,
+) -> Result<StyleBorderRadius, CssStyleBorderRadiusParseError<'a>> {
     let mut components = input.split_whitespace();
     let len = components.clone().count();
 
@@ -804,7 +1078,7 @@ pub fn parse_style_border_radius<'a>(input: &'a str)
 
             let uniform_radius = parse_pixel_value(components.next().unwrap())?;
             Ok(StyleBorderRadius::uniform(uniform_radius))
-        },
+        }
         2 => {
             // Two values - border-radius: 15px 50px;
             // (first value applies to top-left and bottom-right corners,
@@ -814,12 +1088,12 @@ pub fn parse_style_border_radius<'a>(input: &'a str)
             let top_right_bottom_left = parse_pixel_value(components.next().unwrap())?;
 
             Ok(StyleBorderRadius {
-                top_left:       top_left_bottom_right,
-                bottom_right:   top_left_bottom_right,
-                top_right:      top_right_bottom_left,
-                bottom_left:    top_right_bottom_left,
+                top_left: top_left_bottom_right,
+                bottom_right: top_left_bottom_right,
+                top_right: top_right_bottom_left,
+                bottom_left: top_right_bottom_left,
             })
-        },
+        }
         3 => {
             // Three values - border-radius: 15px 50px 30px;
             // (first value applies to top-left corner,
@@ -832,12 +1106,11 @@ pub fn parse_style_border_radius<'a>(input: &'a str)
             Ok(StyleBorderRadius {
                 top_left,
                 bottom_right,
-                top_right:  top_right_bottom_left,
+                top_right: top_right_bottom_left,
                 bottom_left: top_right_bottom_left,
             })
         }
         4 => {
-
             // Four values - border-radius: 15px 50px 30px 5px;
             //
             // first value applies to top-left corner,
@@ -856,13 +1129,10 @@ pub fn parse_style_border_radius<'a>(input: &'a str)
                 top_right,
                 bottom_left,
             })
-        },
-        _ => {
-            Err(CssStyleBorderRadiusParseError::TooManyValues(input))
         }
+        _ => Err(CssStyleBorderRadiusParseError::TooManyValues(input)),
     }
 }
-
 
 #[derive(Clone, PartialEq)]
 pub enum CssPixelValueParseError<'a> {
@@ -874,7 +1144,7 @@ pub enum CssPixelValueParseError<'a> {
 
 impl_debug_as_display!(CssPixelValueParseError<'a>);
 
-impl_display!{ CssPixelValueParseError<'a>, {
+impl_display! { CssPixelValueParseError<'a>, {
     EmptyString => format!("Missing [px / pt / em / %] value"),
     NoValueGiven(input, metric) => format!("Expected floating-point pixel value, got: \"{}{}\"", input, metric),
     ValueParseErr(err, number_str) => format!("Could not parse \"{}\" as floating-point value: \"{}\"", number_str, err),
@@ -882,9 +1152,10 @@ impl_display!{ CssPixelValueParseError<'a>, {
 }}
 
 /// parses an angle value like `30deg`, `1.64rad`, `100%`, etc.
-fn parse_pixel_value_inner<'a>(input: &'a str, match_values: &[(&'static str, SizeMetric)])
--> Result<PixelValue, CssPixelValueParseError<'a>>
-{
+fn parse_pixel_value_inner<'a>(
+    input: &'a str,
+    match_values: &[(&'static str, SizeMetric)],
+) -> Result<PixelValue, CssPixelValueParseError<'a>> {
     let input = input.trim();
 
     if input.is_empty() {
@@ -895,10 +1166,16 @@ fn parse_pixel_value_inner<'a>(input: &'a str, match_values: &[(&'static str, Si
         if input.ends_with(match_val) {
             let value = &input[..input.len() - match_val.len()];
             let value = value.trim();
-            if value.is_empty() { return Err(CssPixelValueParseError::NoValueGiven(input, *metric)); }
+            if value.is_empty() {
+                return Err(CssPixelValueParseError::NoValueGiven(input, *metric));
+            }
             match value.parse::<f32>() {
-                Ok(o) => { return Ok(PixelValue::from_metric(*metric, o)); },
-                Err(e) => { return Err(CssPixelValueParseError::ValueParseErr(e, value)); },
+                Ok(o) => {
+                    return Ok(PixelValue::from_metric(*metric, o));
+                }
+                Err(e) => {
+                    return Err(CssPixelValueParseError::ValueParseErr(e, value));
+                }
             }
         }
     }
@@ -906,25 +1183,30 @@ fn parse_pixel_value_inner<'a>(input: &'a str, match_values: &[(&'static str, Si
     Err(CssPixelValueParseError::InvalidPixelValue(input))
 }
 
-pub fn parse_pixel_value<'a>(input: &'a str)
--> Result<PixelValue, CssPixelValueParseError<'a>> {
-    parse_pixel_value_inner(input, &[
-        ("px", SizeMetric::Px),
-        ("em", SizeMetric::Em),
-        ("pt", SizeMetric::Pt),
-        ("%", SizeMetric::Percent),
-    ])
-}
-
-pub fn parse_pixel_value_no_percent<'a>(input: &'a str)
--> Result<PixelValueNoPercent, CssPixelValueParseError<'a>> {
-    Ok(PixelValueNoPercent {
-        inner:
-        parse_pixel_value_inner(input, &[
+pub fn parse_pixel_value<'a>(input: &'a str) -> Result<PixelValue, CssPixelValueParseError<'a>> {
+    parse_pixel_value_inner(
+        input,
+        &[
             ("px", SizeMetric::Px),
             ("em", SizeMetric::Em),
             ("pt", SizeMetric::Pt),
-        ])?
+            ("%", SizeMetric::Percent),
+        ],
+    )
+}
+
+pub fn parse_pixel_value_no_percent<'a>(
+    input: &'a str,
+) -> Result<PixelValueNoPercent, CssPixelValueParseError<'a>> {
+    Ok(PixelValueNoPercent {
+        inner: parse_pixel_value_inner(
+            input,
+            &[
+                ("px", SizeMetric::Px),
+                ("em", SizeMetric::Em),
+                ("pt", SizeMetric::Pt),
+            ],
+        )?,
     })
 }
 
@@ -945,9 +1227,7 @@ impl_display! { PercentageParseError, {
 }}
 
 // Parse "1.2" or "120%" (similar to parse_pixel_value)
-pub fn parse_percentage_value(input: &str)
--> Result<PercentageValue, PercentageParseError>
-{
+pub fn parse_percentage_value(input: &str) -> Result<PercentageValue, PercentageParseError> {
     let mut split_pos = 0;
     for (idx, ch) in input.char_indices() {
         if ch.is_numeric() || ch == '.' {
@@ -958,12 +1238,18 @@ pub fn parse_percentage_value(input: &str)
     split_pos += 1;
 
     let unit = &input[split_pos..];
-    let mut number = input[..split_pos].parse::<f32>().map_err(|e| PercentageParseError::ValueParseErr(e))?;
+    let mut number = input[..split_pos]
+        .parse::<f32>()
+        .map_err(|e| PercentageParseError::ValueParseErr(e))?;
 
     match unit {
-        "" => { number *= 100.0; }, // 0.5 => 50%
-        "%" => { }, // 50% => PercentageValue(50.0)
-        other => { return Err(PercentageParseError::InvalidUnit(other.to_string().into())); }
+        "" => {
+            number *= 100.0;
+        } // 0.5 => 50%
+        "%" => {} // 50% => PercentageValue(50.0)
+        other => {
+            return Err(PercentageParseError::InvalidUnit(other.to_string().into()));
+        }
     }
 
     Ok(PercentageValue::new(number))
@@ -973,9 +1259,7 @@ pub fn parse_percentage_value(input: &str)
 ///
 /// "blue" -> "00FF00" -> ColorF { r: 0, g: 255, b: 0 })
 /// "#00FF00" -> ColorF { r: 0, g: 255, b: 0 })
-pub fn parse_css_color<'a>(input: &'a str)
--> Result<ColorU, CssColorParseError<'a>>
-{
+pub fn parse_css_color<'a>(input: &'a str) -> Result<ColorU, CssColorParseError<'a>> {
     let input = input.trim();
     if input.starts_with('#') {
         parse_color_no_hash(&input[1..])
@@ -983,19 +1267,19 @@ pub fn parse_css_color<'a>(input: &'a str)
         use self::ParenthesisParseError::*;
 
         match parse_parentheses(input, &["rgba", "rgb", "hsla", "hsl"]) {
-            Ok((stopword, inner_value)) => {
-                match stopword {
-                    "rgba" => parse_color_rgb(inner_value, true),
-                    "rgb" => parse_color_rgb(inner_value, false),
-                    "hsla" => parse_color_hsl(inner_value, true),
-                    "hsl" => parse_color_hsl(inner_value, false),
-                    _ => unreachable!(),
-                }
+            Ok((stopword, inner_value)) => match stopword {
+                "rgba" => parse_color_rgb(inner_value, true),
+                "rgb" => parse_color_rgb(inner_value, false),
+                "hsla" => parse_color_hsl(inner_value, true),
+                "hsl" => parse_color_hsl(inner_value, false),
+                _ => unreachable!(),
             },
             Err(e) => match e {
                 UnclosedBraces => Err(CssColorParseError::UnclosedColor(input)),
                 EmptyInput => Err(CssColorParseError::EmptyInput),
-                StopWordNotFound(stopword) => Err(CssColorParseError::InvalidFunctionName(stopword)),
+                StopWordNotFound(stopword) => {
+                    Err(CssColorParseError::InvalidFunctionName(stopword))
+                }
                 NoClosingBraceFound => Err(CssColorParseError::UnclosedColor(input)),
                 NoOpeningBraceFound => parse_color_builtin(input),
             },
@@ -1006,188 +1290,194 @@ pub fn parse_css_color<'a>(input: &'a str)
 /// Formats a ColorU in hex format
 pub fn css_color_to_string(color: ColorU, prefix_hash: bool) -> String {
     let prefix = if prefix_hash { "#" } else { "" };
-    let alpha = if color.a == 255 { String::new() } else { format!("{:02x}", color.a) };
-    format!("{}{:02x}{:02x}{:02x}{}", prefix, color.r, color.g, color.b, alpha)
+    let alpha = if color.a == 255 {
+        String::new()
+    } else {
+        format!("{:02x}", color.a)
+    };
+    format!(
+        "{}{:02x}{:02x}{:02x}{}",
+        prefix, color.r, color.g, color.b, alpha
+    )
 }
 
-pub fn parse_float_value(input: &str)
--> Result<FloatValue, ParseFloatError>
-{
+pub fn parse_float_value(input: &str) -> Result<FloatValue, ParseFloatError> {
     Ok(FloatValue::new(input.trim().parse::<f32>()?))
 }
 
-pub fn parse_style_text_color<'a>(input: &'a str)
--> Result<StyleTextColor, CssColorParseError<'a>>
-{
+pub fn parse_style_text_color<'a>(
+    input: &'a str,
+) -> Result<StyleTextColor, CssColorParseError<'a>> {
     parse_css_color(input).and_then(|ok| Ok(StyleTextColor { inner: ok }))
 }
 
 /// Parse a built-in background color
 ///
 /// "blue" -> "00FF00" -> ColorF { r: 0, g: 255, b: 0 })
-pub fn parse_color_builtin<'a>(input: &'a str)
--> Result<ColorU, CssColorParseError<'a>>
-{
+pub fn parse_color_builtin<'a>(input: &'a str) -> Result<ColorU, CssColorParseError<'a>> {
     let (r, g, b, a) = match input {
-        "AliceBlue"             | "aliceblue"                 =>  (240, 248, 255, 255),
-        "AntiqueWhite"          | "antiquewhite"              =>  (250, 235, 215, 255),
-        "Aqua"                  | "aqua"                      =>  (  0, 255, 255, 255),
-        "Aquamarine"            | "aquamarine"                =>  (127, 255, 212, 255),
-        "Azure"                 | "azure"                     =>  (240, 255, 255, 255),
-        "Beige"                 | "beige"                     =>  (245, 245, 220, 255),
-        "Bisque"                | "bisque"                    =>  (255, 228, 196, 255),
-        "Black"                 | "black"                     =>  (  0,   0,   0, 255),
-        "BlanchedAlmond"        | "blanchedalmond"            =>  (255, 235, 205, 255),
-        "Blue"                  | "blue"                      =>  (  0,   0, 255, 255),
-        "BlueViolet"            | "blueviolet"                =>  (138,  43, 226, 255),
-        "Brown"                 | "brown"                     =>  (165,  42,  42, 255),
-        "BurlyWood"             | "burlywood"                 =>  (222, 184, 135, 255),
-        "CadetBlue"             | "cadetblue"                 =>  ( 95, 158, 160, 255),
-        "Chartreuse"            | "chartreuse"                =>  (127, 255,   0, 255),
-        "Chocolate"             | "chocolate"                 =>  (210, 105,  30, 255),
-        "Coral"                 | "coral"                     =>  (255, 127,  80, 255),
-        "CornflowerBlue"        | "cornflowerblue"            =>  (100, 149, 237, 255),
-        "Cornsilk"              | "cornsilk"                  =>  (255, 248, 220, 255),
-        "Crimson"               | "crimson"                   =>  (220,  20,  60, 255),
-        "Cyan"                  | "cyan"                      =>  (  0, 255, 255, 255),
-        "DarkBlue"              | "darkblue"                  =>  (  0,   0, 139, 255),
-        "DarkCyan"              | "darkcyan"                  =>  (  0, 139, 139, 255),
-        "DarkGoldenRod"         | "darkgoldenrod"            =>  (184, 134,  11, 255),
-        "DarkGray"              | "darkgray"                  =>  (169, 169, 169, 255),
-        "DarkGrey"              | "darkgrey"                  =>  (169, 169, 169, 255),
-        "DarkGreen"             | "darkgreen"                 =>  (  0, 100,   0, 255),
-        "DarkKhaki"             | "darkkhaki"                 =>  (189, 183, 107, 255),
-        "DarkMagenta"           | "darkmagenta"               =>  (139,   0, 139, 255),
-        "DarkOliveGreen"        | "darkolivegreen"           =>  ( 85, 107,  47, 255),
-        "DarkOrange"            | "darkorange"                =>  (255, 140,   0, 255),
-        "DarkOrchid"            | "darkorchid"                =>  (153,  50, 204, 255),
-        "DarkRed"               | "darkred"                   =>  (139,   0,   0, 255),
-        "DarkSalmon"            | "darksalmon"                =>  (233, 150, 122, 255),
-        "DarkSeaGreen"          | "darkseagreen"             =>  (143, 188, 143, 255),
-        "DarkSlateBlue"         | "darkslateblue"            =>  ( 72,  61, 139, 255),
-        "DarkSlateGray"         | "darkslategray"            =>  ( 47,  79,  79, 255),
-        "DarkSlateGrey"         | "darkslategrey"            =>  ( 47,  79,  79, 255),
-        "DarkTurquoise"         | "darkturquoise"             =>  (  0, 206, 209, 255),
-        "DarkViolet"            | "darkviolet"                =>  (148,   0, 211, 255),
-        "DeepPink"              | "deeppink"                  =>  (255,  20, 147, 255),
-        "DeepSkyBlue"           | "deepskyblue"              =>  (  0, 191, 255, 255),
-        "DimGray"               | "dimgray"                   =>  (105, 105, 105, 255),
-        "DimGrey"               | "dimgrey"                   =>  (105, 105, 105, 255),
-        "DodgerBlue"            | "dodgerblue"                =>  ( 30, 144, 255, 255),
-        "FireBrick"             | "firebrick"                 =>  (178,  34,  34, 255),
-        "FloralWhite"           | "floralwhite"               =>  (255, 250, 240, 255),
-        "ForestGreen"           | "forestgreen"               =>  ( 34, 139,  34, 255),
-        "Fuchsia"               | "fuchsia"                   =>  (255,   0, 255, 255),
-        "Gainsboro"             | "gainsboro"                 =>  (220, 220, 220, 255),
-        "GhostWhite"            | "ghostwhite"                =>  (248, 248, 255, 255),
-        "Gold"                  | "gold"                      =>  (255, 215,   0, 255),
-        "GoldenRod"             | "goldenrod"                 =>  (218, 165,  32, 255),
-        "Gray"                  | "gray"                      =>  (128, 128, 128, 255),
-        "Grey"                  | "grey"                      =>  (128, 128, 128, 255),
-        "Green"                 | "green"                     =>  (  0, 128,   0, 255),
-        "GreenYellow"           | "greenyellow"               =>  (173, 255,  47, 255),
-        "HoneyDew"              | "honeydew"                  =>  (240, 255, 240, 255),
-        "HotPink"               | "hotpink"                   =>  (255, 105, 180, 255),
-        "IndianRed"             | "indianred"                 =>  (205,  92,  92, 255),
-        "Indigo"                | "indigo"                    =>  ( 75,   0, 130, 255),
-        "Ivory"                 | "ivory"                     =>  (255, 255, 240, 255),
-        "Khaki"                 | "khaki"                     =>  (240, 230, 140, 255),
-        "Lavender"              | "lavender"                  =>  (230, 230, 250, 255),
-        "LavenderBlush"         | "lavenderblush"             =>  (255, 240, 245, 255),
-        "LawnGreen"             | "lawngreen"                 =>  (124, 252,   0, 255),
-        "LemonChiffon"          | "lemonchiffon"              =>  (255, 250, 205, 255),
-        "LightBlue"             | "lightblue"                 =>  (173, 216, 230, 255),
-        "LightCoral"            | "lightcoral"                =>  (240, 128, 128, 255),
-        "LightCyan"             | "lightcyan"                 =>  (224, 255, 255, 255),
-        "LightGoldenRodYellow"  | "lightgoldenrodyellow"    =>  (250, 250, 210, 255),
-        "LightGray"             | "lightgray"                 =>  (211, 211, 211, 255),
-        "LightGrey"             | "lightgrey"                 =>  (144, 238, 144, 255),
-        "LightGreen"            | "lightgreen"                =>  (211, 211, 211, 255),
-        "LightPink"             | "lightpink"                 =>  (255, 182, 193, 255),
-        "LightSalmon"           | "lightsalmon"               =>  (255, 160, 122, 255),
-        "LightSeaGreen"         | "lightseagreen"            =>  ( 32, 178, 170, 255),
-        "LightSkyBlue"          | "lightskyblue"             =>  (135, 206, 250, 255),
-        "LightSlateGray"        | "lightslategray"           =>  (119, 136, 153, 255),
-        "LightSlateGrey"        | "lightslategrey"           =>  (119, 136, 153, 255),
-        "LightSteelBlue"        | "lightsteelblue"           =>  (176, 196, 222, 255),
-        "LightYellow"           | "lightyellow"               =>  (255, 255, 224, 255),
-        "Lime"                  | "lime"                      =>  (  0, 255,   0, 255),
-        "LimeGreen"             | "limegreen"                 =>  ( 50, 205,  50, 255),
-        "Linen"                 | "linen"                     =>  (250, 240, 230, 255),
-        "Magenta"               | "magenta"                   =>  (255,   0, 255, 255),
-        "Maroon"                | "maroon"                    =>  (128,   0,   0, 255),
-        "MediumAquaMarine"      | "mediumaquamarine"         =>  (102, 205, 170, 255),
-        "MediumBlue"            | "mediumblue"                =>  (  0,   0, 205, 255),
-        "MediumOrchid"          | "mediumorchid"              =>  (186,  85, 211, 255),
-        "MediumPurple"          | "mediumpurple"              =>  (147, 112, 219, 255),
-        "MediumSeaGreen"        | "mediumseagreen"           =>  ( 60, 179, 113, 255),
-        "MediumSlateBlue"       | "mediumslateblue"          =>  (123, 104, 238, 255),
-        "MediumSpringGreen"     | "mediumspringgreen"        =>  (  0, 250, 154, 255),
-        "MediumTurquoise"       | "mediumturquoise"           =>  ( 72, 209, 204, 255),
-        "MediumVioletRed"       | "mediumvioletred"          =>  (199,  21, 133, 255),
-        "MidnightBlue"          | "midnightblue"              =>  ( 25,  25, 112, 255),
-        "MintCream"             | "mintcream"                 =>  (245, 255, 250, 255),
-        "MistyRose"             | "mistyrose"                 =>  (255, 228, 225, 255),
-        "Moccasin"              | "moccasin"                  =>  (255, 228, 181, 255),
-        "NavajoWhite"           | "navajowhite"               =>  (255, 222, 173, 255),
-        "Navy"                  | "navy"                      =>  (  0,   0, 128, 255),
-        "OldLace"               | "oldlace"                   =>  (253, 245, 230, 255),
-        "Olive"                 | "olive"                     =>  (128, 128,   0, 255),
-        "OliveDrab"             | "olivedrab"                 =>  (107, 142,  35, 255),
-        "Orange"                | "orange"                    =>  (255, 165,   0, 255),
-        "OrangeRed"             | "orangered"                 =>  (255,  69,   0, 255),
-        "Orchid"                | "orchid"                    =>  (218, 112, 214, 255),
-        "PaleGoldenRod"         | "palegoldenrod"            =>  (238, 232, 170, 255),
-        "PaleGreen"             | "palegreen"                 =>  (152, 251, 152, 255),
-        "PaleTurquoise"         | "paleturquoise"             =>  (175, 238, 238, 255),
-        "PaleVioletRed"         | "palevioletred"            =>  (219, 112, 147, 255),
-        "PapayaWhip"            | "papayawhip"                =>  (255, 239, 213, 255),
-        "PeachPuff"             | "peachpuff"                 =>  (255, 218, 185, 255),
-        "Peru"                  | "peru"                      =>  (205, 133,  63, 255),
-        "Pink"                  | "pink"                      =>  (255, 192, 203, 255),
-        "Plum"                  | "plum"                      =>  (221, 160, 221, 255),
-        "PowderBlue"            | "powderblue"                =>  (176, 224, 230, 255),
-        "Purple"                | "purple"                    =>  (128,   0, 128, 255),
-        "RebeccaPurple"         | "rebeccapurple"             =>  (102,  51, 153, 255),
-        "Red"                   | "red"                       =>  (255,   0,   0, 255),
-        "RosyBrown"             | "rosybrown"                 =>  (188, 143, 143, 255),
-        "RoyalBlue"             | "royalblue"                 =>  ( 65, 105, 225, 255),
-        "SaddleBrown"           | "saddlebrown"               =>  (139,  69,  19, 255),
-        "Salmon"                | "salmon"                    =>  (250, 128, 114, 255),
-        "SandyBrown"            | "sandybrown"                =>  (244, 164,  96, 255),
-        "SeaGreen"              | "seagreen"                  =>  ( 46, 139,  87, 255),
-        "SeaShell"              | "seashell"                  =>  (255, 245, 238, 255),
-        "Sienna"                | "sienna"                    =>  (160,  82,  45, 255),
-        "Silver"                | "silver"                    =>  (192, 192, 192, 255),
-        "SkyBlue"               | "skyblue"                   =>  (135, 206, 235, 255),
-        "SlateBlue"             | "slateblue"                 =>  (106,  90, 205, 255),
-        "SlateGray"             | "slategray"                 =>  (112, 128, 144, 255),
-        "SlateGrey"             | "slategrey"                 =>  (112, 128, 144, 255),
-        "Snow"                  | "snow"                      =>  (255, 250, 250, 255),
-        "SpringGreen"           | "springgreen"               =>  (  0, 255, 127, 255),
-        "SteelBlue"             | "steelblue"                 =>  ( 70, 130, 180, 255),
-        "Tan"                   | "tan"                       =>  (210, 180, 140, 255),
-        "Teal"                  | "teal"                      =>  (  0, 128, 128, 255),
-        "Thistle"               | "thistle"                   =>  (216, 191, 216, 255),
-        "Tomato"                | "tomato"                    =>  (255,  99,  71, 255),
-        "Turquoise"             | "turquoise"                 =>  ( 64, 224, 208, 255),
-        "Violet"                | "violet"                    =>  (238, 130, 238, 255),
-        "Wheat"                 | "wheat"                     =>  (245, 222, 179, 255),
-        "White"                 | "white"                     =>  (255, 255, 255, 255),
-        "WhiteSmoke"            | "whitesmoke"                =>  (245, 245, 245, 255),
-        "Yellow"                | "yellow"                    =>  (255, 255,   0, 255),
-        "YellowGreen"           | "yellowgreen"               =>  (154, 205,  50, 255),
-        "Transparent"           | "transparent"               =>  (255, 255, 255,   0),
-        _ => { return Err(CssColorParseError::InvalidColor(input)); }
+        "AliceBlue" | "aliceblue" => (240, 248, 255, 255),
+        "AntiqueWhite" | "antiquewhite" => (250, 235, 215, 255),
+        "Aqua" | "aqua" => (0, 255, 255, 255),
+        "Aquamarine" | "aquamarine" => (127, 255, 212, 255),
+        "Azure" | "azure" => (240, 255, 255, 255),
+        "Beige" | "beige" => (245, 245, 220, 255),
+        "Bisque" | "bisque" => (255, 228, 196, 255),
+        "Black" | "black" => (0, 0, 0, 255),
+        "BlanchedAlmond" | "blanchedalmond" => (255, 235, 205, 255),
+        "Blue" | "blue" => (0, 0, 255, 255),
+        "BlueViolet" | "blueviolet" => (138, 43, 226, 255),
+        "Brown" | "brown" => (165, 42, 42, 255),
+        "BurlyWood" | "burlywood" => (222, 184, 135, 255),
+        "CadetBlue" | "cadetblue" => (95, 158, 160, 255),
+        "Chartreuse" | "chartreuse" => (127, 255, 0, 255),
+        "Chocolate" | "chocolate" => (210, 105, 30, 255),
+        "Coral" | "coral" => (255, 127, 80, 255),
+        "CornflowerBlue" | "cornflowerblue" => (100, 149, 237, 255),
+        "Cornsilk" | "cornsilk" => (255, 248, 220, 255),
+        "Crimson" | "crimson" => (220, 20, 60, 255),
+        "Cyan" | "cyan" => (0, 255, 255, 255),
+        "DarkBlue" | "darkblue" => (0, 0, 139, 255),
+        "DarkCyan" | "darkcyan" => (0, 139, 139, 255),
+        "DarkGoldenRod" | "darkgoldenrod" => (184, 134, 11, 255),
+        "DarkGray" | "darkgray" => (169, 169, 169, 255),
+        "DarkGrey" | "darkgrey" => (169, 169, 169, 255),
+        "DarkGreen" | "darkgreen" => (0, 100, 0, 255),
+        "DarkKhaki" | "darkkhaki" => (189, 183, 107, 255),
+        "DarkMagenta" | "darkmagenta" => (139, 0, 139, 255),
+        "DarkOliveGreen" | "darkolivegreen" => (85, 107, 47, 255),
+        "DarkOrange" | "darkorange" => (255, 140, 0, 255),
+        "DarkOrchid" | "darkorchid" => (153, 50, 204, 255),
+        "DarkRed" | "darkred" => (139, 0, 0, 255),
+        "DarkSalmon" | "darksalmon" => (233, 150, 122, 255),
+        "DarkSeaGreen" | "darkseagreen" => (143, 188, 143, 255),
+        "DarkSlateBlue" | "darkslateblue" => (72, 61, 139, 255),
+        "DarkSlateGray" | "darkslategray" => (47, 79, 79, 255),
+        "DarkSlateGrey" | "darkslategrey" => (47, 79, 79, 255),
+        "DarkTurquoise" | "darkturquoise" => (0, 206, 209, 255),
+        "DarkViolet" | "darkviolet" => (148, 0, 211, 255),
+        "DeepPink" | "deeppink" => (255, 20, 147, 255),
+        "DeepSkyBlue" | "deepskyblue" => (0, 191, 255, 255),
+        "DimGray" | "dimgray" => (105, 105, 105, 255),
+        "DimGrey" | "dimgrey" => (105, 105, 105, 255),
+        "DodgerBlue" | "dodgerblue" => (30, 144, 255, 255),
+        "FireBrick" | "firebrick" => (178, 34, 34, 255),
+        "FloralWhite" | "floralwhite" => (255, 250, 240, 255),
+        "ForestGreen" | "forestgreen" => (34, 139, 34, 255),
+        "Fuchsia" | "fuchsia" => (255, 0, 255, 255),
+        "Gainsboro" | "gainsboro" => (220, 220, 220, 255),
+        "GhostWhite" | "ghostwhite" => (248, 248, 255, 255),
+        "Gold" | "gold" => (255, 215, 0, 255),
+        "GoldenRod" | "goldenrod" => (218, 165, 32, 255),
+        "Gray" | "gray" => (128, 128, 128, 255),
+        "Grey" | "grey" => (128, 128, 128, 255),
+        "Green" | "green" => (0, 128, 0, 255),
+        "GreenYellow" | "greenyellow" => (173, 255, 47, 255),
+        "HoneyDew" | "honeydew" => (240, 255, 240, 255),
+        "HotPink" | "hotpink" => (255, 105, 180, 255),
+        "IndianRed" | "indianred" => (205, 92, 92, 255),
+        "Indigo" | "indigo" => (75, 0, 130, 255),
+        "Ivory" | "ivory" => (255, 255, 240, 255),
+        "Khaki" | "khaki" => (240, 230, 140, 255),
+        "Lavender" | "lavender" => (230, 230, 250, 255),
+        "LavenderBlush" | "lavenderblush" => (255, 240, 245, 255),
+        "LawnGreen" | "lawngreen" => (124, 252, 0, 255),
+        "LemonChiffon" | "lemonchiffon" => (255, 250, 205, 255),
+        "LightBlue" | "lightblue" => (173, 216, 230, 255),
+        "LightCoral" | "lightcoral" => (240, 128, 128, 255),
+        "LightCyan" | "lightcyan" => (224, 255, 255, 255),
+        "LightGoldenRodYellow" | "lightgoldenrodyellow" => (250, 250, 210, 255),
+        "LightGray" | "lightgray" => (211, 211, 211, 255),
+        "LightGrey" | "lightgrey" => (144, 238, 144, 255),
+        "LightGreen" | "lightgreen" => (211, 211, 211, 255),
+        "LightPink" | "lightpink" => (255, 182, 193, 255),
+        "LightSalmon" | "lightsalmon" => (255, 160, 122, 255),
+        "LightSeaGreen" | "lightseagreen" => (32, 178, 170, 255),
+        "LightSkyBlue" | "lightskyblue" => (135, 206, 250, 255),
+        "LightSlateGray" | "lightslategray" => (119, 136, 153, 255),
+        "LightSlateGrey" | "lightslategrey" => (119, 136, 153, 255),
+        "LightSteelBlue" | "lightsteelblue" => (176, 196, 222, 255),
+        "LightYellow" | "lightyellow" => (255, 255, 224, 255),
+        "Lime" | "lime" => (0, 255, 0, 255),
+        "LimeGreen" | "limegreen" => (50, 205, 50, 255),
+        "Linen" | "linen" => (250, 240, 230, 255),
+        "Magenta" | "magenta" => (255, 0, 255, 255),
+        "Maroon" | "maroon" => (128, 0, 0, 255),
+        "MediumAquaMarine" | "mediumaquamarine" => (102, 205, 170, 255),
+        "MediumBlue" | "mediumblue" => (0, 0, 205, 255),
+        "MediumOrchid" | "mediumorchid" => (186, 85, 211, 255),
+        "MediumPurple" | "mediumpurple" => (147, 112, 219, 255),
+        "MediumSeaGreen" | "mediumseagreen" => (60, 179, 113, 255),
+        "MediumSlateBlue" | "mediumslateblue" => (123, 104, 238, 255),
+        "MediumSpringGreen" | "mediumspringgreen" => (0, 250, 154, 255),
+        "MediumTurquoise" | "mediumturquoise" => (72, 209, 204, 255),
+        "MediumVioletRed" | "mediumvioletred" => (199, 21, 133, 255),
+        "MidnightBlue" | "midnightblue" => (25, 25, 112, 255),
+        "MintCream" | "mintcream" => (245, 255, 250, 255),
+        "MistyRose" | "mistyrose" => (255, 228, 225, 255),
+        "Moccasin" | "moccasin" => (255, 228, 181, 255),
+        "NavajoWhite" | "navajowhite" => (255, 222, 173, 255),
+        "Navy" | "navy" => (0, 0, 128, 255),
+        "OldLace" | "oldlace" => (253, 245, 230, 255),
+        "Olive" | "olive" => (128, 128, 0, 255),
+        "OliveDrab" | "olivedrab" => (107, 142, 35, 255),
+        "Orange" | "orange" => (255, 165, 0, 255),
+        "OrangeRed" | "orangered" => (255, 69, 0, 255),
+        "Orchid" | "orchid" => (218, 112, 214, 255),
+        "PaleGoldenRod" | "palegoldenrod" => (238, 232, 170, 255),
+        "PaleGreen" | "palegreen" => (152, 251, 152, 255),
+        "PaleTurquoise" | "paleturquoise" => (175, 238, 238, 255),
+        "PaleVioletRed" | "palevioletred" => (219, 112, 147, 255),
+        "PapayaWhip" | "papayawhip" => (255, 239, 213, 255),
+        "PeachPuff" | "peachpuff" => (255, 218, 185, 255),
+        "Peru" | "peru" => (205, 133, 63, 255),
+        "Pink" | "pink" => (255, 192, 203, 255),
+        "Plum" | "plum" => (221, 160, 221, 255),
+        "PowderBlue" | "powderblue" => (176, 224, 230, 255),
+        "Purple" | "purple" => (128, 0, 128, 255),
+        "RebeccaPurple" | "rebeccapurple" => (102, 51, 153, 255),
+        "Red" | "red" => (255, 0, 0, 255),
+        "RosyBrown" | "rosybrown" => (188, 143, 143, 255),
+        "RoyalBlue" | "royalblue" => (65, 105, 225, 255),
+        "SaddleBrown" | "saddlebrown" => (139, 69, 19, 255),
+        "Salmon" | "salmon" => (250, 128, 114, 255),
+        "SandyBrown" | "sandybrown" => (244, 164, 96, 255),
+        "SeaGreen" | "seagreen" => (46, 139, 87, 255),
+        "SeaShell" | "seashell" => (255, 245, 238, 255),
+        "Sienna" | "sienna" => (160, 82, 45, 255),
+        "Silver" | "silver" => (192, 192, 192, 255),
+        "SkyBlue" | "skyblue" => (135, 206, 235, 255),
+        "SlateBlue" | "slateblue" => (106, 90, 205, 255),
+        "SlateGray" | "slategray" => (112, 128, 144, 255),
+        "SlateGrey" | "slategrey" => (112, 128, 144, 255),
+        "Snow" | "snow" => (255, 250, 250, 255),
+        "SpringGreen" | "springgreen" => (0, 255, 127, 255),
+        "SteelBlue" | "steelblue" => (70, 130, 180, 255),
+        "Tan" | "tan" => (210, 180, 140, 255),
+        "Teal" | "teal" => (0, 128, 128, 255),
+        "Thistle" | "thistle" => (216, 191, 216, 255),
+        "Tomato" | "tomato" => (255, 99, 71, 255),
+        "Turquoise" | "turquoise" => (64, 224, 208, 255),
+        "Violet" | "violet" => (238, 130, 238, 255),
+        "Wheat" | "wheat" => (245, 222, 179, 255),
+        "White" | "white" => (255, 255, 255, 255),
+        "WhiteSmoke" | "whitesmoke" => (245, 245, 245, 255),
+        "Yellow" | "yellow" => (255, 255, 0, 255),
+        "YellowGreen" | "yellowgreen" => (154, 205, 50, 255),
+        "Transparent" | "transparent" => (255, 255, 255, 0),
+        _ => {
+            return Err(CssColorParseError::InvalidColor(input));
+        }
     };
     Ok(ColorU { r, g, b, a })
 }
 
 /// Parse a color of the form `rgb([0-255], [0-255], [0-255])`, or `rgba([0-255], [0-255], [0-255],
 /// [0.0-1.0])` without the leading `rgb[a](` or trailing `)`. Alpha defaults to 255.
-pub fn parse_color_rgb<'a>(input: &'a str, parse_alpha: bool)
--> Result<ColorU, CssColorParseError<'a>>
-{
+pub fn parse_color_rgb<'a>(
+    input: &'a str,
+    parse_alpha: bool,
+) -> Result<ColorU, CssColorParseError<'a>> {
     let mut components = input.split(',').map(|c| c.trim());
     let rgb_color = parse_color_rgb_components(&mut components)?;
     let a = if parse_alpha {
@@ -1202,14 +1492,17 @@ pub fn parse_color_rgb<'a>(input: &'a str, parse_alpha: bool)
 }
 
 /// Parse the color components passed as arguments to an rgb(...) CSS color.
-pub fn parse_color_rgb_components<'a>(components: &mut dyn Iterator<Item = &'a str>)
--> Result<ColorU, CssColorParseError<'a>>
-{
+pub fn parse_color_rgb_components<'a>(
+    components: &mut dyn Iterator<Item = &'a str>,
+) -> Result<ColorU, CssColorParseError<'a>> {
     #[inline]
-    fn component_from_str<'a>(components: &mut dyn Iterator<Item = &'a str>, which: CssColorComponent)
-    -> Result<u8, CssColorParseError<'a>>
-    {
-        let c = components.next().ok_or(CssColorParseError::MissingColorComponent(which))?;
+    fn component_from_str<'a>(
+        components: &mut dyn Iterator<Item = &'a str>,
+        which: CssColorComponent,
+    ) -> Result<u8, CssColorParseError<'a>> {
+        let c = components
+            .next()
+            .ok_or(CssColorParseError::MissingColorComponent(which))?;
         if c.is_empty() {
             return Err(CssColorParseError::MissingColorComponent(which));
         }
@@ -1221,14 +1514,15 @@ pub fn parse_color_rgb_components<'a>(components: &mut dyn Iterator<Item = &'a s
         r: component_from_str(components, CssColorComponent::Red)?,
         g: component_from_str(components, CssColorComponent::Green)?,
         b: component_from_str(components, CssColorComponent::Blue)?,
-        a: 255
+        a: 255,
     })
 }
 
 /// Parse a color of the form 'hsl([0.0-360.0]deg, [0-100]%, [0-100]%)', or 'hsla([0.0-360.0]deg, [0-100]%, [0-100]%, [0.0-1.0])' without the leading 'hsl[a](' or trailing ')'. Alpha defaults to 255.
-pub fn parse_color_hsl<'a>(input: &'a str, parse_alpha: bool)
--> Result<ColorU, CssColorParseError<'a>>
-{
+pub fn parse_color_hsl<'a>(
+    input: &'a str,
+    parse_alpha: bool,
+) -> Result<ColorU, CssColorParseError<'a>> {
     let mut components = input.split(',').map(|c| c.trim());
     let rgb_color = parse_color_hsl_components(&mut components)?;
     let a = if parse_alpha {
@@ -1243,14 +1537,17 @@ pub fn parse_color_hsl<'a>(input: &'a str, parse_alpha: bool)
 }
 
 /// Parse the color components passed as arguments to an hsl(...) CSS color.
-pub fn parse_color_hsl_components<'a>(components: &mut dyn Iterator<Item = &'a str>)
--> Result<ColorU, CssColorParseError<'a>>
-{
+pub fn parse_color_hsl_components<'a>(
+    components: &mut dyn Iterator<Item = &'a str>,
+) -> Result<ColorU, CssColorParseError<'a>> {
     #[inline]
-    fn angle_from_str<'a>(components: &mut dyn Iterator<Item = &'a str>, which: CssColorComponent)
-    -> Result<f32, CssColorParseError<'a>>
-    {
-        let c = components.next().ok_or(CssColorParseError::MissingColorComponent(which))?;
+    fn angle_from_str<'a>(
+        components: &mut dyn Iterator<Item = &'a str>,
+        which: CssColorComponent,
+    ) -> Result<f32, CssColorParseError<'a>> {
+        let c = components
+            .next()
+            .ok_or(CssColorParseError::MissingColorComponent(which))?;
         if c.is_empty() {
             return Err(CssColorParseError::MissingColorComponent(which));
         }
@@ -1262,15 +1559,19 @@ pub fn parse_color_hsl_components<'a>(components: &mut dyn Iterator<Item = &'a s
     }
 
     #[inline]
-    fn percent_from_str<'a>(components: &mut dyn Iterator<Item = &'a str>, which: CssColorComponent)
-    -> Result<f32, CssColorParseError<'a>>
-    {
-        let c = components.next().ok_or(CssColorParseError::MissingColorComponent(which))?;
+    fn percent_from_str<'a>(
+        components: &mut dyn Iterator<Item = &'a str>,
+        which: CssColorComponent,
+    ) -> Result<f32, CssColorParseError<'a>> {
+        let c = components
+            .next()
+            .ok_or(CssColorParseError::MissingColorComponent(which))?;
         if c.is_empty() {
             return Err(CssColorParseError::MissingColorComponent(which));
         }
 
-        let parsed_percent = parse_percentage(c).map_err(|e| CssColorParseError::InvalidPercentage(e))?;
+        let parsed_percent =
+            parse_percentage(c).map_err(|e| CssColorParseError::InvalidPercentage(e))?;
 
         Ok(parsed_percent.get())
     }
@@ -1313,10 +1614,18 @@ pub fn parse_color_hsl_components<'a>(components: &mut dyn Iterator<Item = &'a s
     Ok(ColorU { r, g, b, a: 255 })
 }
 
-fn parse_alpha_component<'a>(components: &mut dyn Iterator<Item=&'a str>) -> Result<u8, CssColorParseError<'a>> {
-    let a = components.next().ok_or(CssColorParseError::MissingColorComponent(CssColorComponent::Alpha))?;
+fn parse_alpha_component<'a>(
+    components: &mut dyn Iterator<Item = &'a str>,
+) -> Result<u8, CssColorParseError<'a>> {
+    let a = components
+        .next()
+        .ok_or(CssColorParseError::MissingColorComponent(
+            CssColorComponent::Alpha,
+        ))?;
     if a.is_empty() {
-        return Err(CssColorParseError::MissingColorComponent(CssColorComponent::Alpha));
+        return Err(CssColorParseError::MissingColorComponent(
+            CssColorComponent::Alpha,
+        ));
     }
     let a = a.parse::<f32>()?;
     if a < 0.0 || a > 1.0 {
@@ -1326,20 +1635,17 @@ fn parse_alpha_component<'a>(components: &mut dyn Iterator<Item=&'a str>) -> Res
     Ok(a)
 }
 
-
 /// Parse a background color, WITHOUT THE HASH
 ///
 /// "00FFFF" -> ColorF { r: 0, g: 255, b: 255})
-pub fn parse_color_no_hash<'a>(input: &'a str)
--> Result<ColorU, CssColorParseError<'a>>
-{
+pub fn parse_color_no_hash<'a>(input: &'a str) -> Result<ColorU, CssColorParseError<'a>> {
     #[inline]
     fn from_hex<'a>(c: u8) -> Result<u8, CssColorParseError<'a>> {
         match c {
-            b'0' ..= b'9' => Ok(c - b'0'),
-            b'a' ..= b'f' => Ok(c - b'a' + 10),
-            b'A' ..= b'F' => Ok(c - b'A' + 10),
-            _ => Err(CssColorParseError::InvalidColorComponent(c))
+            b'0'..=b'9' => Ok(c - b'0'),
+            b'a'..=b'f' => Ok(c - b'a' + 10),
+            b'A'..=b'F' => Ok(c - b'A' + 10),
+            _ => Err(CssColorParseError::InvalidColorComponent(c)),
         }
     }
 
@@ -1355,13 +1661,8 @@ pub fn parse_color_no_hash<'a>(input: &'a str)
             let g = from_hex(g)? * 16 + from_hex(g)?;
             let b = from_hex(b)? * 16 + from_hex(b)?;
 
-            Ok(ColorU {
-                r: r,
-                g: g,
-                b: b,
-                a: 255,
-            })
-        },
+            Ok(ColorU { r, g, b, a: 255 })
+        }
         4 => {
             let mut input_iter = input.chars();
 
@@ -1375,32 +1676,29 @@ pub fn parse_color_no_hash<'a>(input: &'a str)
             let b = from_hex(b)? * 16 + from_hex(b)?;
             let a = from_hex(a)? * 16 + from_hex(a)?;
 
-            Ok(ColorU {
-                r: r,
-                g: g,
-                b: b,
-                a: a,
-            })
-        },
+            Ok(ColorU { r, g, b, a })
+        }
         6 => {
-            let input = u32::from_str_radix(input, 16).map_err(|e| CssColorParseError::IntValueParseErr(e))?;
+            let input = u32::from_str_radix(input, 16)
+                .map_err(|e| CssColorParseError::IntValueParseErr(e))?;
             Ok(ColorU {
                 r: ((input >> 16) & 255) as u8,
                 g: ((input >> 8) & 255) as u8,
                 b: (input & 255) as u8,
                 a: 255,
             })
-        },
+        }
         8 => {
-            let input = u32::from_str_radix(input, 16).map_err(|e| CssColorParseError::IntValueParseErr(e))?;
+            let input = u32::from_str_radix(input, 16)
+                .map_err(|e| CssColorParseError::IntValueParseErr(e))?;
             Ok(ColorU {
                 r: ((input >> 24) & 255) as u8,
                 g: ((input >> 16) & 255) as u8,
                 b: ((input >> 8) & 255) as u8,
                 a: (input & 255) as u8,
             })
-        },
-        _ => { Err(CssColorParseError::InvalidColor(input)) }
+        }
+        _ => Err(CssColorParseError::InvalidColor(input)),
     }
 }
 
@@ -1411,13 +1709,16 @@ pub enum LayoutPaddingParseError<'a> {
     TooFewValues,
 }
 
-impl_display!{ LayoutPaddingParseError<'a>, {
+impl_display! { LayoutPaddingParseError<'a>, {
     CssPixelValueParseError(e) => format!("Could not parse pixel value: {}", e),
     TooManyValues => format!("Too many values - padding property has a maximum of 4 values."),
     TooFewValues => format!("Too few values - padding property has a minimum of 1 value."),
 }}
 
-impl_from!(CssPixelValueParseError<'a>, LayoutPaddingParseError::CssPixelValueParseError);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    LayoutPaddingParseError::CssPixelValueParseError
+);
 
 /// Represents a parsed `padding` attribute
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1431,37 +1732,45 @@ pub struct LayoutPadding {
 /// Parse a padding value such as
 ///
 /// "10px 10px"
-pub fn parse_layout_padding<'a>(input: &'a str)
--> Result<LayoutPadding, LayoutPaddingParseError>
-{
+pub fn parse_layout_padding<'a>(input: &'a str) -> Result<LayoutPadding, LayoutPaddingParseError> {
     let mut input_iter = input.split_whitespace();
-    let first = parse_pixel_value_with_auto(input_iter.next().ok_or(LayoutPaddingParseError::TooFewValues)?)?;
+    let first = parse_pixel_value_with_auto(
+        input_iter
+            .next()
+            .ok_or(LayoutPaddingParseError::TooFewValues)?,
+    )?;
     let second = parse_pixel_value_with_auto(match input_iter.next() {
         Some(s) => s,
-        None => return Ok(LayoutPadding {
-            top: first,
-            bottom: first,
-            left: first,
-            right: first,
-        }),
+        None => {
+            return Ok(LayoutPadding {
+                top: first,
+                bottom: first,
+                left: first,
+                right: first,
+            })
+        }
     })?;
     let third = parse_pixel_value_with_auto(match input_iter.next() {
         Some(s) => s,
-        None => return Ok(LayoutPadding {
-            top: first,
-            bottom: first,
-            left: second,
-            right: second,
-        }),
+        None => {
+            return Ok(LayoutPadding {
+                top: first,
+                bottom: first,
+                left: second,
+                right: second,
+            })
+        }
     })?;
     let fourth = parse_pixel_value_with_auto(match input_iter.next() {
         Some(s) => s,
-        None => return Ok(LayoutPadding {
-            top: first,
-            left: second,
-            right: second,
-            bottom: third,
-        }),
+        None => {
+            return Ok(LayoutPadding {
+                top: first,
+                left: second,
+                right: second,
+                bottom: third,
+            })
+        }
     })?;
 
     if input_iter.next().is_some() {
@@ -1483,13 +1792,16 @@ pub enum LayoutMarginParseError<'a> {
     TooFewValues,
 }
 
-impl_display!{ LayoutMarginParseError<'a>, {
+impl_display! { LayoutMarginParseError<'a>, {
     CssPixelValueParseError(e) => format!("Could not parse pixel value: {}", e),
     TooManyValues => format!("Too many values - margin property has a maximum of 4 values."),
     TooFewValues => format!("Too few values - margin property has a minimum of 1 value."),
 }}
 
-impl_from!(CssPixelValueParseError<'a>, LayoutMarginParseError::CssPixelValueParseError);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    LayoutMarginParseError::CssPixelValueParseError
+);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PixelValueWithAuto {
@@ -1501,7 +1813,9 @@ pub enum PixelValueWithAuto {
 }
 
 /// Parses a pixel value, but also tries values like "auto", "initial", "inherit" and "none"
-pub fn parse_pixel_value_with_auto<'a>(input: &'a str) -> Result<PixelValueWithAuto, CssPixelValueParseError<'a>> {
+pub fn parse_pixel_value_with_auto<'a>(
+    input: &'a str,
+) -> Result<PixelValueWithAuto, CssPixelValueParseError<'a>> {
     let input = input.trim();
     match input {
         "none" => Ok(PixelValueWithAuto::None),
@@ -1521,25 +1835,26 @@ pub struct LayoutMargin {
     pub right: PixelValueWithAuto,
 }
 
-pub fn parse_layout_margin<'a>(input: &'a str)
--> Result<LayoutMargin, LayoutMarginParseError>
-{
+pub fn parse_layout_margin<'a>(input: &'a str) -> Result<LayoutMargin, LayoutMarginParseError> {
     match parse_layout_padding(input) {
-        Ok(padding) => {
-            Ok(LayoutMargin {
-                top: padding.top,
-                left: padding.left,
-                right: padding.right,
-                bottom: padding.bottom,
-            })
-        },
+        Ok(padding) => Ok(LayoutMargin {
+            top: padding.top,
+            left: padding.left,
+            right: padding.right,
+            bottom: padding.bottom,
+        }),
         Err(LayoutPaddingParseError::CssPixelValueParseError(e)) => Err(e.into()),
         Err(LayoutPaddingParseError::TooManyValues) => Err(LayoutMarginParseError::TooManyValues),
         Err(LayoutPaddingParseError::TooFewValues) => Err(LayoutMarginParseError::TooFewValues),
     }
 }
 
-const DEFAULT_BORDER_COLOR: ColorU = ColorU { r: 0, g: 0, b: 0, a: 255 };
+const DEFAULT_BORDER_COLOR: ColorU = ColorU {
+    r: 0,
+    g: 0,
+    b: 0,
+    a: 255,
+};
 // Default border thickness on the web seems to be 3px
 const DEFAULT_BORDER_THICKNESS: PixelValue = PixelValue::const_px(3);
 
@@ -1571,9 +1886,7 @@ fn take_until_next_whitespace(iter: &mut CharIndices) -> Option<usize> {
 /// Parse a CSS border such as
 ///
 /// "5px solid red"
-pub fn parse_style_border<'a>(input: &'a str)
--> Result<StyleBorderSide, CssBorderParseError<'a>>
-{
+pub fn parse_style_border<'a>(input: &'a str) -> Result<StyleBorderSide, CssBorderParseError<'a>> {
     use self::CssBorderParseError::*;
 
     let input = input.trim();
@@ -1581,7 +1894,8 @@ pub fn parse_style_border<'a>(input: &'a str)
     // The first argument can either be a style or a pixel value
 
     let mut char_iter = input.char_indices();
-    let first_arg_end = take_until_next_whitespace(&mut char_iter).ok_or(MissingThickness(input))?;
+    let first_arg_end =
+        take_until_next_whitespace(&mut char_iter).ok_or(MissingThickness(input))?;
     let first_arg_str = &input[0..first_arg_end];
 
     advance_until_next_char(&mut char_iter);
@@ -1592,18 +1906,20 @@ pub fn parse_style_border<'a>(input: &'a str)
     match second_argument_end {
         None => {
             // First argument is the one and only argument, therefore has to be a style such as "double"
-            border_style = parse_style_border_style(first_arg_str).map_err(|e| InvalidBorderStyle(e))?;
+            border_style =
+                parse_style_border_style(first_arg_str).map_err(|e| InvalidBorderStyle(e))?;
             return Ok(StyleBorderSide {
                 border_style,
                 border_width: DEFAULT_BORDER_THICKNESS,
                 border_color: DEFAULT_BORDER_COLOR,
             });
-        },
+        }
         Some(end) => {
             // First argument is a pixel value, second argument is the border style
             border_width = parse_pixel_value(first_arg_str).map_err(|e| ThicknessParseError(e))?;
             let border_style_str = &input[first_arg_end..end];
-            border_style = parse_style_border_style(border_style_str).map_err(|e| InvalidBorderStyle(e))?;
+            border_style =
+                parse_style_border_style(border_style_str).map_err(|e| InvalidBorderStyle(e))?;
             border_width_str_end = end;
         }
     }
@@ -1621,20 +1937,33 @@ pub fn parse_style_border<'a>(input: &'a str)
 }
 
 /// Parses a CSS box-shadow, such as "5px 10px inset"
-pub fn parse_style_box_shadow<'a>(input: &'a str)
--> Result<StyleBoxShadow, CssShadowParseError<'a>>
-{
+pub fn parse_style_box_shadow<'a>(
+    input: &'a str,
+) -> Result<StyleBoxShadow, CssShadowParseError<'a>> {
     let mut input_iter = input.split_whitespace();
     let count = input_iter.clone().count();
 
     let mut box_shadow = StyleBoxShadow {
         offset: [
-            PixelValueNoPercent { inner: PixelValue::const_px(0) },
-            PixelValueNoPercent { inner: PixelValue::const_px(0) }
+            PixelValueNoPercent {
+                inner: PixelValue::const_px(0),
+            },
+            PixelValueNoPercent {
+                inner: PixelValue::const_px(0),
+            },
         ],
-        color: ColorU { r: 0, g: 0, b: 0, a: 255 },
-        blur_radius: PixelValueNoPercent { inner: PixelValue::const_px(0) },
-        spread_radius: PixelValueNoPercent { inner: PixelValue::const_px(0) },
+        color: ColorU {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 255,
+        },
+        blur_radius: PixelValueNoPercent {
+            inner: PixelValue::const_px(0),
+        },
+        spread_radius: PixelValueNoPercent {
+            inner: PixelValue::const_px(0),
+        },
         clip_mode: BoxShadowClipMode::Outset,
     };
 
@@ -1657,7 +1986,7 @@ pub fn parse_style_box_shadow<'a>(input: &'a str)
             let v_offset = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
             box_shadow.offset[0] = h_offset;
             box_shadow.offset[1] = v_offset;
-        },
+        }
         3 => {
             // box-shadow: 5px 10px inset; (h_offset, v_offset, inset)
             let h_offset = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
@@ -1670,7 +1999,7 @@ pub fn parse_style_box_shadow<'a>(input: &'a str)
                 let color = parse_css_color(input_iter.next().unwrap())?;
                 box_shadow.color = color;
             }
-        },
+        }
         4 => {
             let h_offset = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
             let v_offset = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
@@ -1684,7 +2013,7 @@ pub fn parse_style_box_shadow<'a>(input: &'a str)
 
             let color = parse_css_color(input_iter.next().unwrap())?;
             box_shadow.color = color;
-        },
+        }
         5 => {
             // box-shadow: 5px 10px 5px 10px #888888; (h_offset, v_offset, blur, spread, color)
             // box-shadow: 5px 10px 5px #888888 inset; (h_offset, v_offset, blur, color, inset)
@@ -1703,7 +2032,7 @@ pub fn parse_style_box_shadow<'a>(input: &'a str)
 
             let color = parse_css_color(input_iter.next().unwrap())?;
             box_shadow.color = color;
-        },
+        }
         6 => {
             // box-shadow: 5px 10px 5px 10px #888888 inset; (h_offset, v_offset, blur, spread, color, inset)
             let h_offset = parse_pixel_value_no_percent(input_iter.next().unwrap())?;
@@ -1744,7 +2073,7 @@ pub enum CssBackgroundParseError<'a> {
 }
 
 impl_debug_as_display!(CssBackgroundParseError<'a>);
-impl_display!{ CssBackgroundParseError<'a>, {
+impl_display! { CssBackgroundParseError<'a>, {
     Error(e) => e,
     InvalidBackground(val) => format!("Invalid background value: \"{}\"", val),
     UnclosedGradient(val) => format!("Unclosed gradient: \"{}\"", val),
@@ -1758,13 +2087,34 @@ impl_display!{ CssBackgroundParseError<'a>, {
     ColorParseError(e) => format!("Failed to parse color value: {}", e),
 }}
 
-impl_from!(ParenthesisParseError<'a>, CssBackgroundParseError::InvalidBackground);
-impl_from!(CssDirectionParseError<'a>, CssBackgroundParseError::DirectionParseError);
-impl_from!(CssGradientStopParseError<'a>, CssBackgroundParseError::GradientParseError);
-impl_from!(CssShapeParseError<'a>, CssBackgroundParseError::ShapeParseError);
-impl_from!(CssImageParseError<'a>, CssBackgroundParseError::ImageParseError);
-impl_from!(CssColorParseError<'a>, CssBackgroundParseError::ColorParseError);
-impl_from!(CssConicGradientParseError<'a>, CssBackgroundParseError::ConicGradient);
+impl_from!(
+    ParenthesisParseError<'a>,
+    CssBackgroundParseError::InvalidBackground
+);
+impl_from!(
+    CssDirectionParseError<'a>,
+    CssBackgroundParseError::DirectionParseError
+);
+impl_from!(
+    CssGradientStopParseError<'a>,
+    CssBackgroundParseError::GradientParseError
+);
+impl_from!(
+    CssShapeParseError<'a>,
+    CssBackgroundParseError::ShapeParseError
+);
+impl_from!(
+    CssImageParseError<'a>,
+    CssBackgroundParseError::ImageParseError
+);
+impl_from!(
+    CssColorParseError<'a>,
+    CssBackgroundParseError::ColorParseError
+);
+impl_from!(
+    CssConicGradientParseError<'a>,
+    CssBackgroundParseError::ConicGradient
+);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum GradientType {
@@ -1790,34 +2140,65 @@ impl GradientType {
 }
 
 // parses multiple backgrounds, such as "linear-gradient(red, green), radial-gradient(blue, yellow)"
-pub fn parse_style_background_content_multiple<'a>(input: &'a str) -> Result<StyleBackgroundContentVec, CssBackgroundParseError<'a>> {
-     Ok(split_string_respect_comma(input).iter().map(|i| parse_style_background_content(i)).collect::<Result<Vec<_>, _>>()?.into())
+pub fn parse_style_background_content_multiple<'a>(
+    input: &'a str,
+) -> Result<StyleBackgroundContentVec, CssBackgroundParseError<'a>> {
+    Ok(split_string_respect_comma(input)
+        .iter()
+        .map(|i| parse_style_background_content(i))
+        .collect::<Result<Vec<_>, _>>()?
+        .into())
 }
 
 // parses multiple background-positions
-pub fn parse_style_background_position_multiple<'a>(input: &'a str) -> Result<StyleBackgroundPositionVec, CssBackgroundPositionParseError<'a>> {
-     Ok(split_string_respect_comma(input).iter().map(|i| parse_style_background_position(i)).collect::<Result<Vec<_>, _>>()?.into())
+pub fn parse_style_background_position_multiple<'a>(
+    input: &'a str,
+) -> Result<StyleBackgroundPositionVec, CssBackgroundPositionParseError<'a>> {
+    Ok(split_string_respect_comma(input)
+        .iter()
+        .map(|i| parse_style_background_position(i))
+        .collect::<Result<Vec<_>, _>>()?
+        .into())
 }
 
 // parses multiple background-size
-pub fn parse_style_background_size_multiple<'a>(input: &'a str) -> Result<StyleBackgroundSizeVec, InvalidValueErr<'a>> {
-     Ok(split_string_respect_comma(input).iter().map(|i| parse_style_background_size(i)).collect::<Result<Vec<_>, _>>()?.into())
+pub fn parse_style_background_size_multiple<'a>(
+    input: &'a str,
+) -> Result<StyleBackgroundSizeVec, InvalidValueErr<'a>> {
+    Ok(split_string_respect_comma(input)
+        .iter()
+        .map(|i| parse_style_background_size(i))
+        .collect::<Result<Vec<_>, _>>()?
+        .into())
 }
 
 // parses multiple background-repeat
-pub fn parse_style_background_repeat_multiple<'a>(input: &'a str) -> Result<StyleBackgroundRepeatVec, InvalidValueErr<'a>> {
-     Ok(split_string_respect_comma(input).iter().map(|i| parse_style_background_repeat(i)).collect::<Result<Vec<_>, _>>()?.into())
+pub fn parse_style_background_repeat_multiple<'a>(
+    input: &'a str,
+) -> Result<StyleBackgroundRepeatVec, InvalidValueErr<'a>> {
+    Ok(split_string_respect_comma(input)
+        .iter()
+        .map(|i| parse_style_background_repeat(i))
+        .collect::<Result<Vec<_>, _>>()?
+        .into())
 }
 
 // parses a background, such as "linear-gradient(red, green)"
-pub fn parse_style_background_content<'a>(input: &'a str) -> Result<StyleBackgroundContent, CssBackgroundParseError<'a>> {
-
-    match parse_parentheses(input, &[
-        "linear-gradient", "repeating-linear-gradient",
-        "radial-gradient", "repeating-radial-gradient",
-        "conic-gradient", "repeating-conic-gradient",
-        "image",
-    ]) {
+pub fn parse_style_background_content<'a>(
+    input: &'a str,
+) -> Result<StyleBackgroundContent, CssBackgroundParseError<'a>> {
+    match parse_parentheses(
+        input,
+        &[
+            "linear-gradient",
+            "repeating-linear-gradient",
+            "radial-gradient",
+            "repeating-radial-gradient",
+            "conic-gradient",
+            "repeating-conic-gradient",
+            "image",
+        ],
+    ) {
         Ok((background_type, brace_contents)) => {
             let gradient_type = match background_type {
                 "linear-gradient" => GradientType::LinearGradient,
@@ -1826,15 +2207,17 @@ pub fn parse_style_background_content<'a>(input: &'a str) -> Result<StyleBackgro
                 "repeating-radial-gradient" => GradientType::RepeatingRadialGradient,
                 "conic-gradient" => GradientType::ConicGradient,
                 "repeating-conic-gradient" => GradientType::RepeatingConicGradient,
-                "image" => { return Ok(StyleBackgroundContent::Image(parse_image(brace_contents)?)); },
-                other => { return Err(CssBackgroundParseError::Error(other)); /* unreachable */ },
+                "image" => {
+                    return Ok(StyleBackgroundContent::Image(parse_image(brace_contents)?));
+                }
+                other => {
+                    return Err(CssBackgroundParseError::Error(other)); /* unreachable */
+                }
             };
 
             parse_gradient(brace_contents, gradient_type)
-        },
-        Err(_) => {
-            Ok(StyleBackgroundContent::Color(parse_css_color(input)?))
         }
+        Err(_) => Ok(StyleBackgroundContent::Color(parse_css_color(input)?)),
     }
 }
 
@@ -1845,27 +2228,37 @@ pub enum CssConicGradientParseError<'a> {
     NoAngle(&'a str),
 }
 
-
 impl_debug_as_display!(CssConicGradientParseError<'a>);
-impl_display!{ CssConicGradientParseError<'a>, {
+impl_display! { CssConicGradientParseError<'a>, {
     Position(val) => format!("Invalid position attribute: \"{}\"", val),
     Angle(val) => format!("Invalid angle value: \"{}\"", val),
     NoAngle(val) => format!("Expected angle: \"{}\"", val),
 }}
 
-impl_from!(CssAngleValueParseError<'a>, CssConicGradientParseError::Angle);
-impl_from!(CssBackgroundPositionParseError<'a>, CssConicGradientParseError::Position);
+impl_from!(
+    CssAngleValueParseError<'a>,
+    CssConicGradientParseError::Angle
+);
+impl_from!(
+    CssBackgroundPositionParseError<'a>,
+    CssConicGradientParseError::Position
+);
 
 // parse a conic gradient first item such as "from 0.25turn at 50% 30%"
-pub fn parse_conic_first_item<'a>(input: &'a str)
--> Result<Option<(AngleValue, StyleBackgroundPosition)>, CssConicGradientParseError<'a>>
-{
+pub fn parse_conic_first_item<'a>(
+    input: &'a str,
+) -> Result<Option<(AngleValue, StyleBackgroundPosition)>, CssConicGradientParseError<'a>> {
     let input = input.trim();
-    if !input.starts_with("from") { return Ok(None); }
+    if !input.starts_with("from") {
+        return Ok(None);
+    }
     let input = &input["from".len()..];
     let mut iter = input.split_whitespace();
 
-    let angle = parse_angle_value(iter.next().ok_or(CssConicGradientParseError::NoAngle(input))?)?;
+    let angle = parse_angle_value(
+        iter.next()
+            .ok_or(CssConicGradientParseError::NoAngle(input))?,
+    )?;
 
     if !(iter.next() == Some("at")) {
         return Ok(Some((angle, StyleBackgroundPosition::default())));
@@ -1883,11 +2276,13 @@ pub enum CssScrollbarStyleParseError<'a> {
 }
 
 impl_debug_as_display!(CssScrollbarStyleParseError<'a>);
-impl_display!{ CssScrollbarStyleParseError<'a>, {
+impl_display! { CssScrollbarStyleParseError<'a>, {
     Invalid(e) => format!("Invalid scrollbar style: \"{}\"", e),
 }}
 
-pub fn parse_scrollbar_style<'a>(input: &'a str) -> Result<ScrollbarStyle, CssScrollbarStyleParseError<'a>> {
+pub fn parse_scrollbar_style<'a>(
+    input: &'a str,
+) -> Result<ScrollbarStyle, CssScrollbarStyleParseError<'a>> {
     Ok(ScrollbarStyle::default()) // TODO!
 }
 
@@ -1906,7 +2301,7 @@ pub enum CssStyleFilterParseError<'a> {
 }
 
 impl_debug_as_display!(CssStyleFilterParseError<'a>);
-impl_display!{ CssStyleFilterParseError<'a>, {
+impl_display! { CssStyleFilterParseError<'a>, {
     InvalidFilter(e) => format!("Invalid filter property: \"{}\"", e),
     InvalidParenthesis(e) => format!("Invalid filter property - parenthesis error: {}", e),
     Shadow(e) => format!("Error parsing drop-shadow() contents: {}", e),
@@ -1919,13 +2314,28 @@ impl_display!{ CssStyleFilterParseError<'a>, {
     CompositeFilterError(e) => format!("Error parsing composite() contents: {}", e),
 }}
 
-impl_from!(ParenthesisParseError<'a>, CssStyleFilterParseError::InvalidParenthesis);
+impl_from!(
+    ParenthesisParseError<'a>,
+    CssStyleFilterParseError::InvalidParenthesis
+);
 impl_from!(InvalidValueErr<'a>, CssStyleFilterParseError::BlendMode);
-impl_from!(CssStyleBlurParseError<'a>, CssStyleFilterParseError::BlurError);
+impl_from!(
+    CssStyleBlurParseError<'a>,
+    CssStyleFilterParseError::BlurError
+);
 impl_from!(CssColorParseError<'a>, CssStyleFilterParseError::Color);
-impl_from!(CssStyleColorMatrixParseError<'a>, CssStyleFilterParseError::ColorMatrixError);
-impl_from!(CssStyleFilterOffsetParseError<'a>, CssStyleFilterParseError::FilterOffsetError);
-impl_from!(CssStyleCompositeFilterParseError<'a>, CssStyleFilterParseError::CompositeFilterError);
+impl_from!(
+    CssStyleColorMatrixParseError<'a>,
+    CssStyleFilterParseError::ColorMatrixError
+);
+impl_from!(
+    CssStyleFilterOffsetParseError<'a>,
+    CssStyleFilterParseError::FilterOffsetError
+);
+impl_from!(
+    CssStyleCompositeFilterParseError<'a>,
+    CssStyleFilterParseError::CompositeFilterError
+);
 impl_from!(CssShadowParseError<'a>, CssStyleFilterParseError::Shadow);
 
 impl<'a> From<PercentageParseError> for CssStyleFilterParseError<'a> {
@@ -1938,11 +2348,15 @@ impl<'a> From<PercentageParseError> for CssStyleFilterParseError<'a> {
 pub enum CssStyleBlurParseError<'a> {
     Invalid(&'a str),
     Pixel(CssPixelValueParseError<'a>),
-    WrongNumberOfComponents { expected: usize, got: usize, input: &'a str },
+    WrongNumberOfComponents {
+        expected: usize,
+        got: usize,
+        input: &'a str,
+    },
 }
 
 impl_debug_as_display!(CssStyleBlurParseError<'a>);
-impl_display!{ CssStyleBlurParseError<'a>, {
+impl_display! { CssStyleBlurParseError<'a>, {
     Invalid(s) => format!("Invalid: {}", s),
     Pixel(e) => format!("Error parsing pixel value: {}", e),
     WrongNumberOfComponents { expected, got, input } => format!("Expected {} components, got {}: \"{}\"", expected, got, input),
@@ -1953,11 +2367,15 @@ impl_from!(CssPixelValueParseError<'a>, CssStyleBlurParseError::Pixel);
 pub enum CssStyleColorMatrixParseError<'a> {
     Invalid(&'a str),
     Float(ParseFloatError),
-    WrongNumberOfComponents { expected: usize, got: usize, input: &'a str },
+    WrongNumberOfComponents {
+        expected: usize,
+        got: usize,
+        input: &'a str,
+    },
 }
 
 impl_debug_as_display!(CssStyleColorMatrixParseError<'a>);
-impl_display!{ CssStyleColorMatrixParseError<'a>, {
+impl_display! { CssStyleColorMatrixParseError<'a>, {
     Invalid(s) => format!("Invalid: {}", s),
     Float(e) => format!("Error parsing floating-point value: {}", e),
     WrongNumberOfComponents { expected, got, input } => format!("Expected {} components, got {}: \"{}\"", expected, got, input),
@@ -1973,33 +2391,47 @@ impl<'a> From<ParseFloatError> for CssStyleColorMatrixParseError<'a> {
 pub enum CssStyleFilterOffsetParseError<'a> {
     Invalid(&'a str),
     Pixel(CssPixelValueParseError<'a>),
-    WrongNumberOfComponents { expected: usize, got: usize, input: &'a str },
+    WrongNumberOfComponents {
+        expected: usize,
+        got: usize,
+        input: &'a str,
+    },
 }
 
 impl_debug_as_display!(CssStyleFilterOffsetParseError<'a>);
-impl_display!{ CssStyleFilterOffsetParseError<'a>, {
+impl_display! { CssStyleFilterOffsetParseError<'a>, {
     Invalid(s) => format!("Invalid: {}", s),
     Pixel(e) => format!("Error parsing pixel value: {}", e),
     WrongNumberOfComponents { expected, got, input } => format!("Expected {} components, got {}: \"{}\"", expected, got, input),
 }}
-impl_from!(CssPixelValueParseError<'a>, CssStyleFilterOffsetParseError::Pixel);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    CssStyleFilterOffsetParseError::Pixel
+);
 
 #[derive(Clone, PartialEq)]
 pub enum CssStyleCompositeFilterParseError<'a> {
     Invalid(&'a str),
     Float(ParseFloatError),
     InvalidParenthesis(ParenthesisParseError<'a>),
-    WrongNumberOfComponents { expected: usize, got: usize, input: &'a str },
+    WrongNumberOfComponents {
+        expected: usize,
+        got: usize,
+        input: &'a str,
+    },
 }
 
 impl_debug_as_display!(CssStyleCompositeFilterParseError<'a>);
-impl_display!{ CssStyleCompositeFilterParseError<'a>, {
+impl_display! { CssStyleCompositeFilterParseError<'a>, {
     Invalid(s) => format!("Invalid: {}", s),
     Float(e) => format!("Error parsing floating-point value: {}", e),
     InvalidParenthesis(e) => format!("Invalid arithmetic() property - parenthesis error: {}", e),
     WrongNumberOfComponents { expected, got, input } => format!("Expected {} components, got {}: \"{}\"", expected, got, input),
 }}
-impl_from!(ParenthesisParseError<'a>, CssStyleCompositeFilterParseError::InvalidParenthesis);
+impl_from!(
+    ParenthesisParseError<'a>,
+    CssStyleCompositeFilterParseError::InvalidParenthesis
+);
 
 impl<'a> From<ParseFloatError> for CssStyleCompositeFilterParseError<'a> {
     fn from(p: ParseFloatError) -> CssStyleCompositeFilterParseError<'a> {
@@ -2008,89 +2440,128 @@ impl<'a> From<ParseFloatError> for CssStyleCompositeFilterParseError<'a> {
 }
 
 // parses multiple transform values
-pub fn parse_style_filter_vec<'a>(input: &'a str)
--> Result<StyleFilterVec, CssStyleFilterParseError<'a>>
-{
+pub fn parse_style_filter_vec<'a>(
+    input: &'a str,
+) -> Result<StyleFilterVec, CssStyleFilterParseError<'a>> {
     let comma_separated_items = split_string_respect_comma(input);
-    let vec = split_string_respect_comma(input).iter().map(|i| parse_style_filter(i)).collect::<Result<Vec<_>, _>>()?;
+    let vec = split_string_respect_comma(input)
+        .iter()
+        .map(|i| parse_style_filter(i))
+        .collect::<Result<Vec<_>, _>>()?;
     Ok(vec.into())
 }
 
-pub fn parse_style_filter<'a>(input: &'a str)
--> Result<StyleFilter, CssStyleFilterParseError<'a>>
-{
+pub fn parse_style_filter<'a>(input: &'a str) -> Result<StyleFilter, CssStyleFilterParseError<'a>> {
+    use azul_css::{StyleBlur, StyleColorMatrix, StyleCompositeFilter, StyleFilterOffset};
 
-    use azul_css::{StyleBlur, StyleColorMatrix, StyleFilterOffset, StyleCompositeFilter};
-
-    let (filter_type, filter_values) = parse_parentheses(input, &[
-        "blend",
-        "flood",
-        "blur",
-        "opacity",
-        "color-matrix",
-        "drop-shadow",
-        "component-transfer",
-        "offset",
-        "composite",
-    ])?;
+    let (filter_type, filter_values) = parse_parentheses(
+        input,
+        &[
+            "blend",
+            "flood",
+            "blur",
+            "opacity",
+            "color-matrix",
+            "drop-shadow",
+            "component-transfer",
+            "offset",
+            "composite",
+        ],
+    )?;
 
     fn parse_style_blur<'a>(input: &'a str) -> Result<StyleBlur, CssStyleBlurParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let width = parse_pixel_value(iter.next().ok_or(CssStyleBlurParseError::WrongNumberOfComponents { expected: 2, got: 0, input })?)?;
-        let height = parse_pixel_value(iter.next().ok_or(CssStyleBlurParseError::WrongNumberOfComponents { expected: 2, got: 1, input })?)?;
+        let width = parse_pixel_value(iter.next().ok_or(
+            CssStyleBlurParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let height = parse_pixel_value(iter.next().ok_or(
+            CssStyleBlurParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 1,
+                input,
+            },
+        )?)?;
 
         Ok(StyleBlur { width, height })
     }
 
-    fn parse_color_matrix<'a>(input: &'a str) -> Result<StyleColorMatrix, CssStyleColorMatrixParseError<'a>> {
-
+    fn parse_color_matrix<'a>(
+        input: &'a str,
+    ) -> Result<StyleColorMatrix, CssStyleColorMatrixParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
-        let mut array = [FloatValue::const_new(0);20];
+        let mut array = [FloatValue::const_new(0); 20];
 
         for (val_idx, val) in array.iter_mut().enumerate() {
-            *val = parse_float_value(iter.next().ok_or(CssStyleColorMatrixParseError::WrongNumberOfComponents { expected: 20, got: val_idx, input })?)?;
+            *val = parse_float_value(iter.next().ok_or(
+                CssStyleColorMatrixParseError::WrongNumberOfComponents {
+                    expected: 20,
+                    got: val_idx,
+                    input,
+                },
+            )?)?;
         }
 
         Ok(StyleColorMatrix { matrix: array })
-
     }
 
-    fn parse_filter_offset<'a>(input: &'a str) -> Result<StyleFilterOffset, CssStyleFilterOffsetParseError<'a>> {
+    fn parse_filter_offset<'a>(
+        input: &'a str,
+    ) -> Result<StyleFilterOffset, CssStyleFilterOffsetParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let x = parse_pixel_value(iter.next().ok_or(CssStyleFilterOffsetParseError::WrongNumberOfComponents { expected: 2, got: 0, input })?)?;
-        let y = parse_pixel_value(iter.next().ok_or(CssStyleFilterOffsetParseError::WrongNumberOfComponents { expected: 2, got: 1, input })?)?;
+        let x = parse_pixel_value(iter.next().ok_or(
+            CssStyleFilterOffsetParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let y = parse_pixel_value(iter.next().ok_or(
+            CssStyleFilterOffsetParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 1,
+                input,
+            },
+        )?)?;
 
         Ok(StyleFilterOffset { x, y })
     }
 
-    fn parse_filter_composite<'a>(input: &'a str) -> Result<StyleCompositeFilter, CssStyleCompositeFilterParseError<'a>> {
-
-        fn parse_arithmetic_composite_filter<'a>(input: &'a str) -> Result<[FloatValue;4], CssStyleCompositeFilterParseError<'a>> {
+    fn parse_filter_composite<'a>(
+        input: &'a str,
+    ) -> Result<StyleCompositeFilter, CssStyleCompositeFilterParseError<'a>> {
+        fn parse_arithmetic_composite_filter<'a>(
+            input: &'a str,
+        ) -> Result<[FloatValue; 4], CssStyleCompositeFilterParseError<'a>> {
             let input = input.trim();
             let mut iter = input.split(",");
-            let mut array = [FloatValue::const_new(0);4];
+            let mut array = [FloatValue::const_new(0); 4];
 
             for (val_idx, val) in array.iter_mut().enumerate() {
-                *val = parse_float_value(iter.next().ok_or(CssStyleCompositeFilterParseError::WrongNumberOfComponents { expected: 4, got: val_idx, input })?)?;
+                *val = parse_float_value(iter.next().ok_or(
+                    CssStyleCompositeFilterParseError::WrongNumberOfComponents {
+                        expected: 4,
+                        got: val_idx,
+                        input,
+                    },
+                )?)?;
             }
 
             Ok(array)
         }
 
-        let (filter_composite_type, filter_composite_values) = parse_parentheses(input, &[
-            "over",
-            "in",
-            "atop",
-            "out",
-            "xor",
-            "lighter",
-            "arithmetic",
-        ])?;
+        let (filter_composite_type, filter_composite_values) = parse_parentheses(
+            input,
+            &["over", "in", "atop", "out", "xor", "lighter", "arithmetic"],
+        )?;
 
         match filter_composite_type {
             "over" => Ok(StyleCompositeFilter::Over),
@@ -2099,21 +2570,29 @@ pub fn parse_style_filter<'a>(input: &'a str)
             "out" => Ok(StyleCompositeFilter::Out),
             "xor" => Ok(StyleCompositeFilter::Xor),
             "lighter" => Ok(StyleCompositeFilter::Lighter),
-            "arithmetic" => Ok(StyleCompositeFilter::Arithmetic(parse_arithmetic_composite_filter(filter_composite_values)?)),
+            "arithmetic" => Ok(StyleCompositeFilter::Arithmetic(
+                parse_arithmetic_composite_filter(filter_composite_values)?,
+            )),
             _ => unreachable!(),
         }
     }
 
     match filter_type {
-        "blend" => Ok(StyleFilter::Blend(parse_style_mix_blend_mode(filter_values)?)),
+        "blend" => Ok(StyleFilter::Blend(parse_style_mix_blend_mode(
+            filter_values,
+        )?)),
         "flood" => Ok(StyleFilter::Flood(parse_css_color(filter_values)?)),
         "blur" => Ok(StyleFilter::Blur(parse_style_blur(filter_values)?)),
         "opacity" => Ok(StyleFilter::Opacity(parse_percentage_value(filter_values)?)),
         "color-matrix" => Ok(StyleFilter::ColorMatrix(parse_color_matrix(filter_values)?)),
-        "drop-shadow" => Ok(StyleFilter::DropShadow(parse_style_box_shadow(filter_values)?)),
+        "drop-shadow" => Ok(StyleFilter::DropShadow(parse_style_box_shadow(
+            filter_values,
+        )?)),
         "component-transfer" => Ok(StyleFilter::ComponentTransfer),
         "offset" => Ok(StyleFilter::Offset(parse_filter_offset(filter_values)?)),
-        "composite" => Ok(StyleFilter::Composite(parse_filter_composite(filter_values)?)),
+        "composite" => Ok(StyleFilter::Composite(parse_filter_composite(
+            filter_values,
+        )?)),
         _ => unreachable!(),
     }
 }
@@ -2122,14 +2601,18 @@ pub fn parse_style_filter<'a>(input: &'a str)
 pub enum CssStyleTransformParseError<'a> {
     InvalidTransform(&'a str),
     InvalidParenthesis(ParenthesisParseError<'a>),
-    WrongNumberOfComponents { expected: usize, got: usize, input: &'a str },
+    WrongNumberOfComponents {
+        expected: usize,
+        got: usize,
+        input: &'a str,
+    },
     PixelValueParseError(CssPixelValueParseError<'a>),
     AngleValueParseError(CssAngleValueParseError<'a>),
     PercentageValueParseError(PercentageParseError),
 }
 
 impl_debug_as_display!(CssStyleTransformParseError<'a>);
-impl_display!{ CssStyleTransformParseError<'a>, {
+impl_display! { CssStyleTransformParseError<'a>, {
     InvalidTransform(e) => format!("Invalid transform property: \"{}\"", e),
     InvalidParenthesis(e) => format!("Invalid transform property - parenthesis error: {}", e),
     WrongNumberOfComponents { expected, got, input } => format!("Invalid number of components on transform property: expected {} components, got {}: \"{}\"", expected, got, input),
@@ -2138,9 +2621,18 @@ impl_display!{ CssStyleTransformParseError<'a>, {
     PercentageValueParseError(e) => format!("Invalid transform property - error parsing percentage: {}", e),
 }}
 
-impl_from!(ParenthesisParseError<'a>, CssStyleTransformParseError::InvalidParenthesis);
-impl_from!(CssPixelValueParseError<'a>, CssStyleTransformParseError::PixelValueParseError);
-impl_from!(CssAngleValueParseError<'a>, CssStyleTransformParseError::AngleValueParseError);
+impl_from!(
+    ParenthesisParseError<'a>,
+    CssStyleTransformParseError::InvalidParenthesis
+);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    CssStyleTransformParseError::PixelValueParseError
+);
+impl_from!(
+    CssAngleValueParseError<'a>,
+    CssStyleTransformParseError::AngleValueParseError
+);
 
 impl<'a> From<PercentageParseError> for CssStyleTransformParseError<'a> {
     fn from(p: PercentageParseError) -> CssStyleTransformParseError<'a> {
@@ -2149,147 +2641,413 @@ impl<'a> From<PercentageParseError> for CssStyleTransformParseError<'a> {
 }
 
 // parses multiple transform values
-pub fn parse_style_transform_vec<'a>(input: &'a str)
--> Result<StyleTransformVec, CssStyleTransformParseError<'a>>
-{
+pub fn parse_style_transform_vec<'a>(
+    input: &'a str,
+) -> Result<StyleTransformVec, CssStyleTransformParseError<'a>> {
     let comma_separated_items = split_string_respect_comma(input);
-    let vec = split_string_respect_comma(input).iter().map(|i| parse_style_transform(i)).collect::<Result<Vec<_>, _>>()?;
+    let vec = split_string_respect_comma(input)
+        .iter()
+        .map(|i| parse_style_transform(i))
+        .collect::<Result<Vec<_>, _>>()?;
     Ok(vec.into())
 }
 
-pub fn parse_style_transform<'a>(input: &'a str)
--> Result<StyleTransform, CssStyleTransformParseError<'a>>
-{
+pub fn parse_style_transform<'a>(
+    input: &'a str,
+) -> Result<StyleTransform, CssStyleTransformParseError<'a>> {
     use azul_css::{
-        StyleTransformMatrix2D, StyleTransformMatrix3D,
-        StyleTransformTranslate2D, StyleTransformTranslate3D, StyleTransformRotate3D,
-        StyleTransformScale2D, StyleTransformScale3D, StyleTransformSkew2D
+        StyleTransformMatrix2D, StyleTransformMatrix3D, StyleTransformRotate3D,
+        StyleTransformScale2D, StyleTransformScale3D, StyleTransformSkew2D,
+        StyleTransformTranslate2D, StyleTransformTranslate3D,
     };
 
-    let (transform_type, transform_values) = parse_parentheses(input, &[
-        "matrix",
-        "matrix3d",
-        "translate",
-        "translate3d",
-        "translateX",
-        "translateY",
-        "translateZ",
-        "rotate",
-        "rotate3d",
-        "rotateX",
-        "rotateY",
-        "rotateZ",
-        "scale",
-        "scale3d",
-        "scaleX",
-        "scaleY",
-        "scaleZ",
-        "skew",
-        "skewX",
-        "skewY",
-        "perspective",
-    ])?;
+    let (transform_type, transform_values) = parse_parentheses(
+        input,
+        &[
+            "matrix",
+            "matrix3d",
+            "translate",
+            "translate3d",
+            "translateX",
+            "translateY",
+            "translateZ",
+            "rotate",
+            "rotate3d",
+            "rotateX",
+            "rotateY",
+            "rotateZ",
+            "scale",
+            "scale3d",
+            "scaleX",
+            "scaleY",
+            "scaleZ",
+            "skew",
+            "skewX",
+            "skewY",
+            "perspective",
+        ],
+    )?;
 
-    fn parse_matrix<'a>(input: &'a str) -> Result<StyleTransformMatrix2D, CssStyleTransformParseError<'a>> {
-
+    fn parse_matrix<'a>(
+        input: &'a str,
+    ) -> Result<StyleTransformMatrix2D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let a =  parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 6, got: 0, input })?)?;
-        let b =  parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 6, got: 1, input })?)?;
-        let c =  parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 6, got: 2, input })?)?;
-        let d =  parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 6, got: 3, input })?)?;
-        let tx = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 6, got: 4, input })?)?;
-        let ty = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 6, got: 5, input })?)?;
+        let a = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 6,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let b = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 6,
+                got: 1,
+                input,
+            },
+        )?)?;
+        let c = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 6,
+                got: 2,
+                input,
+            },
+        )?)?;
+        let d = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 6,
+                got: 3,
+                input,
+            },
+        )?)?;
+        let tx = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 6,
+                got: 4,
+                input,
+            },
+        )?)?;
+        let ty = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 6,
+                got: 5,
+                input,
+            },
+        )?)?;
 
         Ok(StyleTransformMatrix2D { a, b, c, d, tx, ty })
     }
 
-    fn parse_matrix_3d<'a>(input: &'a str) -> Result<StyleTransformMatrix3D, CssStyleTransformParseError<'a>> {
+    fn parse_matrix_3d<'a>(
+        input: &'a str,
+    ) -> Result<StyleTransformMatrix3D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
         // I realize I could use a loop here, but that makes passing the variables to the StyleTransformMatrix3D simpler
-        let m11 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 0, input })?)?;
-        let m12 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 1, input })?)?;
-        let m13 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 2, input })?)?;
-        let m14 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 3, input })?)?;
-        let m21 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 4, input })?)?;
-        let m22 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 5, input })?)?;
-        let m23 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 6, input })?)?;
-        let m24 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 7, input })?)?;
-        let m31 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 8, input })?)?;
-        let m32 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 9, input })?)?;
-        let m33 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 10, input })?)?;
-        let m34 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 11, input })?)?;
-        let m41 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 12, input })?)?;
-        let m42 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 13, input })?)?;
-        let m43 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 14, input })?)?;
-        let m44 = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 16, got: 15, input })?)?;
+        let m11 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let m12 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 1,
+                input,
+            },
+        )?)?;
+        let m13 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 2,
+                input,
+            },
+        )?)?;
+        let m14 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 3,
+                input,
+            },
+        )?)?;
+        let m21 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 4,
+                input,
+            },
+        )?)?;
+        let m22 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 5,
+                input,
+            },
+        )?)?;
+        let m23 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 6,
+                input,
+            },
+        )?)?;
+        let m24 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 7,
+                input,
+            },
+        )?)?;
+        let m31 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 8,
+                input,
+            },
+        )?)?;
+        let m32 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 9,
+                input,
+            },
+        )?)?;
+        let m33 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 10,
+                input,
+            },
+        )?)?;
+        let m34 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 11,
+                input,
+            },
+        )?)?;
+        let m41 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 12,
+                input,
+            },
+        )?)?;
+        let m42 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 13,
+                input,
+            },
+        )?)?;
+        let m43 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 14,
+                input,
+            },
+        )?)?;
+        let m44 = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 16,
+                got: 15,
+                input,
+            },
+        )?)?;
 
-        Ok(StyleTransformMatrix3D { m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44 })
+        Ok(StyleTransformMatrix3D {
+            m11,
+            m12,
+            m13,
+            m14,
+            m21,
+            m22,
+            m23,
+            m24,
+            m31,
+            m32,
+            m33,
+            m34,
+            m41,
+            m42,
+            m43,
+            m44,
+        })
     }
 
-    fn parse_translate<'a>(input: &'a str) -> Result<StyleTransformTranslate2D, CssStyleTransformParseError<'a>> {
+    fn parse_translate<'a>(
+        input: &'a str,
+    ) -> Result<StyleTransformTranslate2D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let x = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 0, input })?)?;
-        let y = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 1, input })?)?;
+        let x = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let y = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 1,
+                input,
+            },
+        )?)?;
 
         Ok(StyleTransformTranslate2D { x, y })
     }
 
-    fn parse_translate_3d<'a>(input: &'a str) -> Result<StyleTransformTranslate3D, CssStyleTransformParseError<'a>> {
+    fn parse_translate_3d<'a>(
+        input: &'a str,
+    ) -> Result<StyleTransformTranslate3D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let x = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 3, got: 0, input })?)?;
-        let y = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 3, got: 1, input })?)?;
-        let z = parse_pixel_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 3, got: 2, input })?)?;
+        let x = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 3,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let y = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 3,
+                got: 1,
+                input,
+            },
+        )?)?;
+        let z = parse_pixel_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 3,
+                got: 2,
+                input,
+            },
+        )?)?;
 
         Ok(StyleTransformTranslate3D { x, y, z })
     }
 
-    fn parse_rotate_3d<'a>(input: &'a str) -> Result<StyleTransformRotate3D, CssStyleTransformParseError<'a>> {
+    fn parse_rotate_3d<'a>(
+        input: &'a str,
+    ) -> Result<StyleTransformRotate3D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let x     = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 4, got: 0, input })?)?;
-        let y     = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 4, got: 1, input })?)?;
-        let z     = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 4, got: 2, input })?)?;
-        let angle = parse_angle_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 4, got: 3, input })?)?;
+        let x = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 4,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let y = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 4,
+                got: 1,
+                input,
+            },
+        )?)?;
+        let z = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 4,
+                got: 2,
+                input,
+            },
+        )?)?;
+        let angle = parse_angle_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 4,
+                got: 3,
+                input,
+            },
+        )?)?;
 
         Ok(StyleTransformRotate3D { x, y, z, angle })
     }
 
-    fn parse_scale<'a>(input: &'a str) -> Result<StyleTransformScale2D, CssStyleTransformParseError<'a>> {
+    fn parse_scale<'a>(
+        input: &'a str,
+    ) -> Result<StyleTransformScale2D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let x = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 0, input })?)?;
-        let y = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 1, input })?)?;
+        let x = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let y = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 1,
+                input,
+            },
+        )?)?;
 
         Ok(StyleTransformScale2D { x, y })
     }
 
-    fn parse_scale_3d<'a>(input: &'a str) -> Result<StyleTransformScale3D, CssStyleTransformParseError<'a>> {
+    fn parse_scale_3d<'a>(
+        input: &'a str,
+    ) -> Result<StyleTransformScale3D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let x = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 0, input })?)?;
-        let y = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 1, input })?)?;
-        let z = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 1, input })?)?;
+        let x = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let y = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 1,
+                input,
+            },
+        )?)?;
+        let z = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 1,
+                input,
+            },
+        )?)?;
 
         Ok(StyleTransformScale3D { x, y, z })
     }
 
-    fn parse_skew<'a>(input: &'a str) -> Result<StyleTransformSkew2D, CssStyleTransformParseError<'a>> {
+    fn parse_skew<'a>(
+        input: &'a str,
+    ) -> Result<StyleTransformSkew2D, CssStyleTransformParseError<'a>> {
         let input = input.trim();
         let mut iter = input.split(",");
 
-        let x = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 0, input })?)?;
-        let y = parse_percentage_value(iter.next().ok_or(CssStyleTransformParseError::WrongNumberOfComponents { expected: 2, got: 1, input })?)?;
+        let x = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 0,
+                input,
+            },
+        )?)?;
+        let y = parse_percentage_value(iter.next().ok_or(
+            CssStyleTransformParseError::WrongNumberOfComponents {
+                expected: 2,
+                got: 1,
+                input,
+            },
+        )?)?;
 
         Ok(StyleTransformSkew2D { x, y })
     }
@@ -2297,75 +3055,141 @@ pub fn parse_style_transform<'a>(input: &'a str)
     match transform_type {
         "matrix" => Ok(StyleTransform::Matrix(parse_matrix(transform_values)?)),
         "matrix3d" => Ok(StyleTransform::Matrix3D(parse_matrix_3d(transform_values)?)),
-        "translate" => Ok(StyleTransform::Translate(parse_translate(transform_values)?)),
-        "translate3d" => Ok(StyleTransform::Translate3D(parse_translate_3d(transform_values)?)),
-        "translateX" => Ok(StyleTransform::TranslateX(parse_pixel_value(transform_values)?)),
-        "translateY" => Ok(StyleTransform::TranslateY(parse_pixel_value(transform_values)?)),
-        "translateZ" => Ok(StyleTransform::TranslateZ(parse_pixel_value(transform_values)?)),
+        "translate" => Ok(StyleTransform::Translate(parse_translate(
+            transform_values,
+        )?)),
+        "translate3d" => Ok(StyleTransform::Translate3D(parse_translate_3d(
+            transform_values,
+        )?)),
+        "translateX" => Ok(StyleTransform::TranslateX(parse_pixel_value(
+            transform_values,
+        )?)),
+        "translateY" => Ok(StyleTransform::TranslateY(parse_pixel_value(
+            transform_values,
+        )?)),
+        "translateZ" => Ok(StyleTransform::TranslateZ(parse_pixel_value(
+            transform_values,
+        )?)),
         "rotate" => Ok(StyleTransform::Rotate(parse_angle_value(transform_values)?)),
         "rotate3d" => Ok(StyleTransform::Rotate3D(parse_rotate_3d(transform_values)?)),
-        "rotateX" => Ok(StyleTransform::RotateX(parse_angle_value(transform_values)?)),
-        "rotateY" => Ok(StyleTransform::RotateY(parse_angle_value(transform_values)?)),
-        "rotateZ" => Ok(StyleTransform::RotateZ(parse_angle_value(transform_values)?)),
+        "rotateX" => Ok(StyleTransform::RotateX(parse_angle_value(
+            transform_values,
+        )?)),
+        "rotateY" => Ok(StyleTransform::RotateY(parse_angle_value(
+            transform_values,
+        )?)),
+        "rotateZ" => Ok(StyleTransform::RotateZ(parse_angle_value(
+            transform_values,
+        )?)),
         "scale" => Ok(StyleTransform::Scale(parse_scale(transform_values)?)),
         "scale3d" => Ok(StyleTransform::Scale3D(parse_scale_3d(transform_values)?)),
-        "scaleX" => Ok(StyleTransform::ScaleX(parse_percentage_value(transform_values)?)),
-        "scaleY" => Ok(StyleTransform::ScaleY(parse_percentage_value(transform_values)?)),
-        "scaleZ" => Ok(StyleTransform::ScaleZ(parse_percentage_value(transform_values)?)),
+        "scaleX" => Ok(StyleTransform::ScaleX(parse_percentage_value(
+            transform_values,
+        )?)),
+        "scaleY" => Ok(StyleTransform::ScaleY(parse_percentage_value(
+            transform_values,
+        )?)),
+        "scaleZ" => Ok(StyleTransform::ScaleZ(parse_percentage_value(
+            transform_values,
+        )?)),
         "skew" => Ok(StyleTransform::Skew(parse_skew(transform_values)?)),
-        "skewX" => Ok(StyleTransform::SkewX(parse_percentage_value(transform_values)?)),
-        "skewY" => Ok(StyleTransform::SkewY(parse_percentage_value(transform_values)?)),
-        "perspective" => Ok(StyleTransform::Perspective(parse_pixel_value(transform_values)?)),
+        "skewX" => Ok(StyleTransform::SkewX(parse_percentage_value(
+            transform_values,
+        )?)),
+        "skewY" => Ok(StyleTransform::SkewY(parse_percentage_value(
+            transform_values,
+        )?)),
+        "perspective" => Ok(StyleTransform::Perspective(parse_pixel_value(
+            transform_values,
+        )?)),
         _ => unreachable!(),
     }
 }
 
 #[derive(Clone, PartialEq)]
 pub enum CssStyleTransformOriginParseError<'a> {
-    WrongNumberOfComponents { expected: usize, got: usize, input: &'a str },
+    WrongNumberOfComponents {
+        expected: usize,
+        got: usize,
+        input: &'a str,
+    },
     PixelValueParseError(CssPixelValueParseError<'a>),
 }
 
 impl_debug_as_display!(CssStyleTransformOriginParseError<'a>);
-impl_display!{ CssStyleTransformOriginParseError<'a>, {
+impl_display! { CssStyleTransformOriginParseError<'a>, {
     WrongNumberOfComponents { expected, got, input } => format!("Invalid number of components on transform property: expected {} components, got {}: \"{}\"", expected, got, input),
     PixelValueParseError(e) => format!("Invalid transform property: {}", e),
 }}
-impl_from!(CssPixelValueParseError<'a>, CssStyleTransformOriginParseError::PixelValueParseError);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    CssStyleTransformOriginParseError::PixelValueParseError
+);
 
-pub fn parse_style_transform_origin<'a>(input: &'a str)
--> Result<StyleTransformOrigin, CssStyleTransformOriginParseError<'a>>
-{
+pub fn parse_style_transform_origin<'a>(
+    input: &'a str,
+) -> Result<StyleTransformOrigin, CssStyleTransformOriginParseError<'a>> {
     let input = input.trim();
     let mut iter = input.split(",");
 
-    let x =  parse_pixel_value(iter.next().ok_or(CssStyleTransformOriginParseError::WrongNumberOfComponents { expected: 6, got: 0, input })?)?;
-    let y =  parse_pixel_value(iter.next().ok_or(CssStyleTransformOriginParseError::WrongNumberOfComponents { expected: 6, got: 1, input })?)?;
+    let x = parse_pixel_value(iter.next().ok_or(
+        CssStyleTransformOriginParseError::WrongNumberOfComponents {
+            expected: 6,
+            got: 0,
+            input,
+        },
+    )?)?;
+    let y = parse_pixel_value(iter.next().ok_or(
+        CssStyleTransformOriginParseError::WrongNumberOfComponents {
+            expected: 6,
+            got: 1,
+            input,
+        },
+    )?)?;
 
     Ok(StyleTransformOrigin { x, y })
 }
 
 #[derive(Clone, PartialEq)]
 pub enum CssStylePerspectiveOriginParseError<'a> {
-    WrongNumberOfComponents { expected: usize, got: usize, input: &'a str },
+    WrongNumberOfComponents {
+        expected: usize,
+        got: usize,
+        input: &'a str,
+    },
     PixelValueParseError(CssPixelValueParseError<'a>),
 }
 
 impl_debug_as_display!(CssStylePerspectiveOriginParseError<'a>);
-impl_display!{ CssStylePerspectiveOriginParseError<'a>, {
+impl_display! { CssStylePerspectiveOriginParseError<'a>, {
     WrongNumberOfComponents { expected, got, input } => format!("Invalid number of components on transform property: expected {} components, got {}: \"{}\"", expected, got, input),
     PixelValueParseError(e) => format!("Invalid transform property: {}", e),
 }}
-impl_from!(CssPixelValueParseError<'a>, CssStylePerspectiveOriginParseError::PixelValueParseError);
+impl_from!(
+    CssPixelValueParseError<'a>,
+    CssStylePerspectiveOriginParseError::PixelValueParseError
+);
 
-pub fn parse_style_perspective_origin<'a>(input: &'a str)
--> Result<StylePerspectiveOrigin, CssStylePerspectiveOriginParseError<'a>>
-{
+pub fn parse_style_perspective_origin<'a>(
+    input: &'a str,
+) -> Result<StylePerspectiveOrigin, CssStylePerspectiveOriginParseError<'a>> {
     let input = input.trim();
     let mut iter = input.split(",");
 
-    let x =  parse_pixel_value(iter.next().ok_or(CssStylePerspectiveOriginParseError::WrongNumberOfComponents { expected: 6, got: 0, input })?)?;
-    let y =  parse_pixel_value(iter.next().ok_or(CssStylePerspectiveOriginParseError::WrongNumberOfComponents { expected: 6, got: 1, input })?)?;
+    let x = parse_pixel_value(iter.next().ok_or(
+        CssStylePerspectiveOriginParseError::WrongNumberOfComponents {
+            expected: 6,
+            got: 0,
+            input,
+        },
+    )?)?;
+    let y = parse_pixel_value(iter.next().ok_or(
+        CssStylePerspectiveOriginParseError::WrongNumberOfComponents {
+            expected: 6,
+            got: 1,
+            input,
+        },
+    )?)?;
 
     Ok(StylePerspectiveOrigin { x, y })
 }
@@ -2378,14 +3202,16 @@ pub enum CssBackgroundPositionParseError<'a> {
     SecondComponentWrong(CssPixelValueParseError<'a>),
 }
 
-impl_display!{CssBackgroundPositionParseError<'a>, {
+impl_display! {CssBackgroundPositionParseError<'a>, {
     NoPosition(e) => format!("First background position missing: \"{}\"", e),
     TooManyComponents(e) => format!("background-position can only have one or two components, not more: \"{}\"", e),
     FirstComponentWrong(e) => format!("Failed to parse first component: \"{}\"", e),
     SecondComponentWrong(e) => format!("Failed to parse second component: \"{}\"", e),
 }}
 
-pub fn parse_background_position_horizontal<'a>(input: &'a str) -> Result<BackgroundPositionHorizontal, CssPixelValueParseError<'a>> {
+pub fn parse_background_position_horizontal<'a>(
+    input: &'a str,
+) -> Result<BackgroundPositionHorizontal, CssPixelValueParseError<'a>> {
     Ok(match input {
         "left" => BackgroundPositionHorizontal::Left,
         "center" => BackgroundPositionHorizontal::Center,
@@ -2394,7 +3220,9 @@ pub fn parse_background_position_horizontal<'a>(input: &'a str) -> Result<Backgr
     })
 }
 
-pub fn parse_background_position_vertical<'a>(input: &'a str) -> Result<BackgroundPositionVertical, CssPixelValueParseError<'a>> {
+pub fn parse_background_position_vertical<'a>(
+    input: &'a str,
+) -> Result<BackgroundPositionVertical, CssPixelValueParseError<'a>> {
     Ok(match input {
         "top" => BackgroundPositionVertical::Top,
         "center" => BackgroundPositionVertical::Center,
@@ -2403,9 +3231,9 @@ pub fn parse_background_position_vertical<'a>(input: &'a str) -> Result<Backgrou
     })
 }
 
-pub fn parse_style_background_position<'a>(input: &'a str)
--> Result<StyleBackgroundPosition, CssBackgroundPositionParseError<'a>>
-{
+pub fn parse_style_background_position<'a>(
+    input: &'a str,
+) -> Result<StyleBackgroundPosition, CssBackgroundPositionParseError<'a>> {
     use self::CssBackgroundPositionParseError::*;
 
     let input = input.trim();
@@ -2418,22 +3246,25 @@ pub fn parse_style_background_position<'a>(input: &'a str)
         return Err(TooManyComponents(input));
     }
 
-    let horizontal = parse_background_position_horizontal(first).map_err(|e| FirstComponentWrong(e))?;
+    let horizontal =
+        parse_background_position_horizontal(first).map_err(|e| FirstComponentWrong(e))?;
 
     let vertical = match second {
-        Some(second) => parse_background_position_vertical(second).map_err(|e| SecondComponentWrong(e))?,
+        Some(second) => {
+            parse_background_position_vertical(second).map_err(|e| SecondComponentWrong(e))?
+        }
         None => BackgroundPositionVertical::Center,
     };
 
-    Ok(StyleBackgroundPosition { horizontal, vertical })
+    Ok(StyleBackgroundPosition {
+        horizontal,
+        vertical,
+    })
 }
 
 fn split_string_respect_comma<'a>(input: &'a str) -> Vec<&'a str> {
-
-
     /// Given a string, returns how many characters need to be skipped
     fn skip_next_braces(input: &str, target_char: char) -> Option<(usize, bool)> {
-
         let mut depth = 0;
         let mut last_character = 0;
         let mut character_was_found = false;
@@ -2445,14 +3276,18 @@ fn split_string_respect_comma<'a>(input: &'a str) -> Vec<&'a str> {
         for (idx, ch) in input.char_indices() {
             last_character = idx;
             match ch {
-                '(' => { depth += 1; },
-                ')' => { depth -= 1; },
+                '(' => {
+                    depth += 1;
+                }
+                ')' => {
+                    depth -= 1;
+                }
                 c => {
                     if c == target_char && depth == 0 {
                         character_was_found = true;
                         break;
                     }
-                },
+                }
             }
         }
 
@@ -2469,10 +3304,10 @@ fn split_string_respect_comma<'a>(input: &'a str) -> Vec<&'a str> {
 
     'outer: loop {
         let (skip_next_braces_result, character_was_found) =
-        match skip_next_braces(&current_input, ',') {
-            Some(s) => s,
-            None => break 'outer,
-        };
+            match skip_next_braces(&current_input, ',') {
+                Some(s) => s,
+                None => break 'outer,
+            };
         let new_push_item = if character_was_found {
             &current_input[..skip_next_braces_result]
         } else {
@@ -2490,9 +3325,10 @@ fn split_string_respect_comma<'a>(input: &'a str) -> Vec<&'a str> {
 }
 
 // parses a single gradient such as "to right, 50px"
-pub fn parse_gradient<'a>(input: &'a str, background_type: GradientType)
--> Result<StyleBackgroundContent, CssBackgroundParseError<'a>>
-{
+pub fn parse_gradient<'a>(
+    input: &'a str,
+    background_type: GradientType,
+) -> Result<StyleBackgroundContent, CssBackgroundParseError<'a>> {
     let input = input.trim();
 
     // Splitting the input by "," doesn't work since rgba() might contain commas
@@ -2506,14 +3342,14 @@ pub fn parse_gradient<'a>(input: &'a str, background_type: GradientType)
         None => return Err(CssBackgroundParseError::NoDirection(input)),
     };
 
-    let is_linear_gradient = background_type == GradientType::LinearGradient ||
-                             background_type == GradientType::RepeatingLinearGradient;
+    let is_linear_gradient = background_type == GradientType::LinearGradient
+        || background_type == GradientType::RepeatingLinearGradient;
 
-    let is_radial_gradient = background_type == GradientType::RadialGradient ||
-                             background_type == GradientType::RepeatingRadialGradient;
+    let is_radial_gradient = background_type == GradientType::RadialGradient
+        || background_type == GradientType::RepeatingRadialGradient;
 
-    let is_conic_gradient = background_type == GradientType::ConicGradient ||
-                            background_type == GradientType::RepeatingConicGradient;
+    let is_conic_gradient = background_type == GradientType::ConicGradient
+        || background_type == GradientType::RepeatingConicGradient;
 
     if is_linear_gradient {
         let mut linear_gradient = LinearGradient::default();
@@ -2527,7 +3363,8 @@ pub fn parse_gradient<'a>(input: &'a str, background_type: GradientType)
         while let Some(next_brace_item) = brace_iterator.next() {
             linear_gradient_stops.push(parse_linear_color_stop(next_brace_item)?);
         }
-        linear_gradient.stops = LinearColorStop::get_normalized_linear_stops(&linear_gradient_stops).into();
+        linear_gradient.stops =
+            LinearColorStop::get_normalized_linear_stops(&linear_gradient_stops).into();
         Ok(StyleBackgroundContent::LinearGradient(linear_gradient))
     } else if is_radial_gradient {
         let mut radial_gradient = RadialGradient::default();
@@ -2541,9 +3378,10 @@ pub fn parse_gradient<'a>(input: &'a str, background_type: GradientType)
         while let Some(next_brace_item) = brace_iterator.next() {
             radial_gradient_stops.push(parse_linear_color_stop(next_brace_item)?);
         }
-        radial_gradient.stops = LinearColorStop::get_normalized_linear_stops(&radial_gradient_stops).into();
+        radial_gradient.stops =
+            LinearColorStop::get_normalized_linear_stops(&radial_gradient_stops).into();
         Ok(StyleBackgroundContent::RadialGradient(radial_gradient))
-    } else /* if is_conic_gradient */ {
+    } else {
         let mut conic_gradient = ConicGradient::default();
         let mut conic_gradient_stops = Vec::new();
         if let Some((angle, center)) = parse_conic_first_item(first_brace_item)? {
@@ -2556,14 +3394,14 @@ pub fn parse_gradient<'a>(input: &'a str, background_type: GradientType)
         while let Some(next_brace_item) = brace_iterator.next() {
             conic_gradient_stops.push(parse_radial_color_stop(next_brace_item)?);
         }
-        conic_gradient.stops = RadialColorStop::get_normalized_radial_stops(&conic_gradient_stops).into();
+        conic_gradient.stops =
+            RadialColorStop::get_normalized_radial_stops(&conic_gradient_stops).into();
         Ok(StyleBackgroundContent::ConicGradient(conic_gradient))
     }
 }
 
 impl<'a> From<QuoteStripped<'a>> for AzString {
     fn from(input: QuoteStripped<'a>) -> Self {
-        use alloc::string::ToString;
         input.0.to_string().into()
     }
 }
@@ -2606,7 +3444,7 @@ pub fn strip_quotes<'a>(input: &'a str) -> Result<QuoteStripped<'a>, UnclosedQuo
         Ok(QuoteStripped(quote_contents.trim_end_matches("\"")))
     } else if first_single_quote.is_some() {
         let quote_contents = first_single_quote.unwrap();
-        if!quote_contents.ends_with('\'') {
+        if !quote_contents.ends_with('\'') {
             return Err(UnclosedQuotesError(input));
         }
         Ok(QuoteStripped(quote_contents.trim_end_matches("'")))
@@ -2624,20 +3462,22 @@ pub enum CssGradientStopParseError<'a> {
 }
 
 impl_debug_as_display!(CssGradientStopParseError<'a>);
-impl_display!{ CssGradientStopParseError<'a>, {
+impl_display! { CssGradientStopParseError<'a>, {
     Error(e) => e,
     Percentage(e) => format!("Failed to parse offset percentage: {}", e),
     Angle(e) => format!("Failed to parse angle: {}", e),
     ColorParseError(e) => format!("{}", e),
 }}
 
-impl_from!(CssColorParseError<'a>, CssGradientStopParseError::ColorParseError);
-
+impl_from!(
+    CssColorParseError<'a>,
+    CssGradientStopParseError::ColorParseError
+);
 
 // parses "red" , "red 5%"
-pub fn parse_linear_color_stop<'a>(input: &'a str)
--> Result<LinearColorStop, CssGradientStopParseError<'a>>
-{
+pub fn parse_linear_color_stop<'a>(
+    input: &'a str,
+) -> Result<LinearColorStop, CssGradientStopParseError<'a>> {
     use self::CssGradientStopParseError::*;
 
     let input = input.trim();
@@ -2646,8 +3486,11 @@ pub fn parse_linear_color_stop<'a>(input: &'a str)
     let (color_str, percentage_str) = match (input.rfind(')'), input.rfind(char::is_whitespace)) {
         (Some(closing_brace), None) if closing_brace < input.len() - 1 => {
             // percentage after closing brace, eg. "rgb(...)50%"
-            (&input[..=closing_brace], Some(&input[(closing_brace + 1)..]))
-        },
+            (
+                &input[..=closing_brace],
+                Some(&input[(closing_brace + 1)..]),
+            )
+        }
         (None, Some(last_ws)) => {
             // percentage after last whitespace, eg. "... 50%"
             (&input[..=last_ws], Some(&input[(last_ws + 1)..]))
@@ -2655,26 +3498,28 @@ pub fn parse_linear_color_stop<'a>(input: &'a str)
         (Some(closing_brace), Some(last_ws)) if closing_brace < last_ws => {
             // percentage after last whitespace, eg. "... 50%"
             (&input[..=last_ws], Some(&input[(last_ws + 1)..]))
-        },
+        }
         _ => {
             // no percentage
             (input, None)
-        },
+        }
     };
 
     let color = parse_css_color(color_str)?;
     let offset = match percentage_str {
         None => OptionPercentageValue::None,
-        Some(s) => OptionPercentageValue::Some(parse_percentage_value(s).map_err(|e| Percentage(e))?)
+        Some(s) => {
+            OptionPercentageValue::Some(parse_percentage_value(s).map_err(|e| Percentage(e))?)
+        }
     };
 
-    Ok(LinearColorStop { offset, color: color })
+    Ok(LinearColorStop { offset, color })
 }
 
 // parses "red" , "red 5%"
-pub fn parse_radial_color_stop<'a>(input: &'a str)
--> Result<RadialColorStop, CssGradientStopParseError<'a>>
-{
+pub fn parse_radial_color_stop<'a>(
+    input: &'a str,
+) -> Result<RadialColorStop, CssGradientStopParseError<'a>> {
     use self::CssGradientStopParseError::*;
     use azul_css::OptionAngleValue;
 
@@ -2684,8 +3529,11 @@ pub fn parse_radial_color_stop<'a>(input: &'a str)
     let (color_str, percentage_str) = match (input.rfind(')'), input.rfind(char::is_whitespace)) {
         (Some(closing_brace), None) if closing_brace < input.len() - 1 => {
             // percentage after closing brace, eg. "rgb(...)50%"
-            (&input[..=closing_brace], Some(&input[(closing_brace + 1)..]))
-        },
+            (
+                &input[..=closing_brace],
+                Some(&input[(closing_brace + 1)..]),
+            )
+        }
         (None, Some(last_ws)) => {
             // percentage after last whitespace, eg. "... 50%"
             (&input[..=last_ws], Some(&input[(last_ws + 1)..]))
@@ -2693,27 +3541,27 @@ pub fn parse_radial_color_stop<'a>(input: &'a str)
         (Some(closing_brace), Some(last_ws)) if closing_brace < last_ws => {
             // percentage after last whitespace, eg. "... 50%"
             (&input[..=last_ws], Some(&input[(last_ws + 1)..]))
-        },
+        }
         _ => {
             // no percentage
             (input, None)
-        },
+        }
     };
 
     let color = parse_css_color(color_str)?;
     let offset = match percentage_str {
         None => OptionAngleValue::None,
-        Some(s) => OptionAngleValue::Some(parse_angle_value(s).map_err(|e| Angle(e))?)
+        Some(s) => OptionAngleValue::Some(parse_angle_value(s).map_err(|e| Angle(e))?),
     };
 
-    Ok(RadialColorStop { offset, color: color })
+    Ok(RadialColorStop { offset, color })
 }
 
 // parses "5%" -> 5
-pub fn parse_percentage(input: &str)
--> Result<PercentageValue, PercentageParseError>
-{
-    let percent_location = input.rfind('%').ok_or(PercentageParseError::NoPercentSign)?;
+pub fn parse_percentage(input: &str) -> Result<PercentageValue, PercentageParseError> {
+    let percent_location = input
+        .rfind('%')
+        .ok_or(PercentageParseError::NoPercentSign)?;
     let input = &input[..percent_location];
     Ok(PercentageValue::new(input.parse::<f32>()?))
 }
@@ -2726,7 +3574,7 @@ pub enum CssDirectionParseError<'a> {
     CornerError(CssDirectionCornerParseError<'a>),
 }
 
-impl_display!{CssDirectionParseError<'a>, {
+impl_display! {CssDirectionParseError<'a>, {
     Error(e) => e,
     InvalidArguments(val) => format!("Invalid arguments: \"{}\"", val),
     ParseFloat(e) => format!("Invalid value: {}", e),
@@ -2760,15 +3608,15 @@ impl<'a> From<CssDirectionCornerParseError<'a>> for CssDirectionParseError<'a> {
 /// assert_eq!(parse_direction("to right"), Ok(Direction::FromTo(DirectionCorners { from: Left, to: Right })));
 /// assert_eq!(parse_direction("50deg"), Ok(Direction::Angle(AngleValue::deg(50.0))));
 /// ```
-pub fn parse_direction<'a>(input: &'a str)
--> Result<Direction, CssDirectionParseError<'a>>
-{
+pub fn parse_direction<'a>(input: &'a str) -> Result<Direction, CssDirectionParseError<'a>> {
     let input_iter = input.split_whitespace();
     let count = input_iter.clone().count();
     let mut first_input_iter = input_iter.clone();
 
     // "50deg" | "to" | "right"
-    let first_input = first_input_iter.next().ok_or(CssDirectionParseError::Error(input))?;
+    let first_input = first_input_iter
+        .next()
+        .ok_or(CssDirectionParseError::Error(input))?;
 
     if let Some(angle) = parse_angle_value(first_input).ok() {
         Ok(Direction::Angle(angle))
@@ -2779,30 +3627,41 @@ pub fn parse_direction<'a>(input: &'a str)
             return Err(CssDirectionParseError::InvalidArguments(input));
         }
 
-        let second_input = first_input_iter.next().ok_or(CssDirectionParseError::Error(input))?;
+        let second_input = first_input_iter
+            .next()
+            .ok_or(CssDirectionParseError::Error(input))?;
         let end = parse_direction_corner(second_input)?;
 
         return match count {
             2 => {
                 // "to right"
                 let start = end.opposite();
-                Ok(Direction::FromTo(DirectionCorners { from: start, to: end }))
-            },
+                Ok(Direction::FromTo(DirectionCorners {
+                    from: start,
+                    to: end,
+                }))
+            }
             3 => {
                 // "to bottom right"
                 let beginning = end;
-                let third_input = first_input_iter.next().ok_or(CssDirectionParseError::Error(input))?;
+                let third_input = first_input_iter
+                    .next()
+                    .ok_or(CssDirectionParseError::Error(input))?;
                 let new_end = parse_direction_corner(third_input)?;
                 // "Bottom, Right" -> "BottomRight"
-                let new_end = beginning.combine(&new_end).ok_or(CssDirectionParseError::Error(input))?;
+                let new_end = beginning
+                    .combine(&new_end)
+                    .ok_or(CssDirectionParseError::Error(input))?;
                 let start = new_end.opposite();
-                Ok(Direction::FromTo(DirectionCorners { from: start, to: new_end }))
-            },
-            _ => { Err(CssDirectionParseError::InvalidArguments(input)) }
+                Ok(Direction::FromTo(DirectionCorners {
+                    from: start,
+                    to: new_end,
+                }))
+            }
+            _ => Err(CssDirectionParseError::InvalidArguments(input)),
         };
     }
 }
-
 
 #[derive(Clone, PartialEq)]
 pub enum CssAngleValueParseError<'a> {
@@ -2814,7 +3673,7 @@ pub enum CssAngleValueParseError<'a> {
 
 impl_debug_as_display!(CssAngleValueParseError<'a>);
 
-impl_display!{ CssAngleValueParseError<'a>, {
+impl_display! { CssAngleValueParseError<'a>, {
     EmptyString => format!("Missing [rad / deg / turn / %] value"),
     NoValueGiven(input, metric) => format!("Expected floating-point angle value, got: \"{}{}\"", input, metric),
     ValueParseErr(err, number_str) => format!("Could not parse \"{}\" as floating-point value: \"{}\"", number_str, err),
@@ -2822,9 +3681,7 @@ impl_display!{ CssAngleValueParseError<'a>, {
 }}
 
 /// parses an angle value like `30deg`, `1.64rad`, `100%`, etc.
-pub fn parse_angle_value<'a>(input: &'a str)
--> Result<AngleValue, CssAngleValueParseError<'a>>
-{
+pub fn parse_angle_value<'a>(input: &'a str) -> Result<AngleValue, CssAngleValueParseError<'a>> {
     let input = input.trim();
 
     if input.is_empty() {
@@ -2843,10 +3700,16 @@ pub fn parse_angle_value<'a>(input: &'a str)
         if input.ends_with(match_val) {
             let value = &input[..input.len() - match_val.len()];
             let value = value.trim();
-            if value.is_empty() { return Err(CssAngleValueParseError::NoValueGiven(input, *metric)); }
+            if value.is_empty() {
+                return Err(CssAngleValueParseError::NoValueGiven(input, *metric));
+            }
             match value.parse::<f32>() {
-                Ok(o) => { return Ok(AngleValue::from_metric(*metric, o)); },
-                Err(e) => { return Err(CssAngleValueParseError::ValueParseErr(e, value)); },
+                Ok(o) => {
+                    return Ok(AngleValue::from_metric(*metric, o));
+                }
+                Err(e) => {
+                    return Err(CssAngleValueParseError::ValueParseErr(e, value));
+                }
             }
         }
     }
@@ -2862,19 +3725,19 @@ pub enum CssDirectionCornerParseError<'a> {
     InvalidDirection(&'a str),
 }
 
-impl_display!{ CssDirectionCornerParseError<'a>, {
+impl_display! { CssDirectionCornerParseError<'a>, {
     InvalidDirection(val) => format!("Invalid direction: \"{}\"", val),
 }}
 
-pub fn parse_direction_corner<'a>(input: &'a str)
--> Result<DirectionCorner, CssDirectionCornerParseError<'a>>
-{
+pub fn parse_direction_corner<'a>(
+    input: &'a str,
+) -> Result<DirectionCorner, CssDirectionCornerParseError<'a>> {
     match input {
         "right" => Ok(DirectionCorner::Right),
         "left" => Ok(DirectionCorner::Left),
         "top" => Ok(DirectionCorner::Top),
         "bottom" => Ok(DirectionCorner::Bottom),
-        _ => { Err(CssDirectionCornerParseError::InvalidDirection(input))}
+        _ => Err(CssDirectionCornerParseError::InvalidDirection(input)),
     }
 }
 
@@ -2883,7 +3746,7 @@ pub enum CssShapeParseError<'a> {
     ShapeErr(InvalidValueErr<'a>),
 }
 
-impl_display!{CssShapeParseError<'a>, {
+impl_display! {CssShapeParseError<'a>, {
     ShapeErr(e) => format!("\"{}\"", e.0),
 }}
 
@@ -2914,9 +3777,18 @@ typed_pixel_value_parser!(parse_layout_padding_right, LayoutPaddingRight);
 typed_pixel_value_parser!(parse_layout_padding_left, LayoutPaddingLeft);
 
 typed_pixel_value_parser!(parse_style_border_top_left_radius, StyleBorderTopLeftRadius);
-typed_pixel_value_parser!(parse_style_border_bottom_left_radius, StyleBorderBottomLeftRadius);
-typed_pixel_value_parser!(parse_style_border_top_right_radius, StyleBorderTopRightRadius);
-typed_pixel_value_parser!(parse_style_border_bottom_right_radius, StyleBorderBottomRightRadius);
+typed_pixel_value_parser!(
+    parse_style_border_bottom_left_radius,
+    StyleBorderBottomLeftRadius
+);
+typed_pixel_value_parser!(
+    parse_style_border_top_right_radius,
+    StyleBorderTopRightRadius
+);
+typed_pixel_value_parser!(
+    parse_style_border_bottom_right_radius,
+    StyleBorderBottomRightRadius
+);
 
 typed_pixel_value_parser!(parse_style_border_top_width, LayoutBorderTopWidth);
 typed_pixel_value_parser!(parse_style_border_bottom_width, LayoutBorderBottomWidth);
@@ -2928,11 +3800,13 @@ pub enum FlexGrowParseError<'a> {
     ParseFloat(ParseFloatError, &'a str),
 }
 
-impl_display!{FlexGrowParseError<'a>, {
+impl_display! {FlexGrowParseError<'a>, {
     ParseFloat(e, orig_str) => format!("flex-grow: Could not parse floating-point value: \"{}\" - Error: \"{}\"", orig_str, e),
 }}
 
-pub fn parse_layout_flex_grow<'a>(input: &'a str) -> Result<LayoutFlexGrow, FlexGrowParseError<'a>> {
+pub fn parse_layout_flex_grow<'a>(
+    input: &'a str,
+) -> Result<LayoutFlexGrow, FlexGrowParseError<'a>> {
     match parse_float_value(input) {
         Ok(o) => Ok(LayoutFlexGrow { inner: o }),
         Err(e) => Err(FlexGrowParseError::ParseFloat(e, input)),
@@ -2944,26 +3818,24 @@ pub enum FlexShrinkParseError<'a> {
     ParseFloat(ParseFloatError, &'a str),
 }
 
-impl_display!{FlexShrinkParseError<'a>, {
+impl_display! {FlexShrinkParseError<'a>, {
     ParseFloat(e, orig_str) => format!("flex-shrink: Could not parse floating-point value: \"{}\" - Error: \"{}\"", orig_str, e),
 }}
 
-pub fn parse_layout_flex_shrink<'a>(input: &'a str) -> Result<LayoutFlexShrink, FlexShrinkParseError<'a>> {
+pub fn parse_layout_flex_shrink<'a>(
+    input: &'a str,
+) -> Result<LayoutFlexShrink, FlexShrinkParseError<'a>> {
     match parse_float_value(input) {
         Ok(o) => Ok(LayoutFlexShrink { inner: o }),
         Err(e) => Err(FlexShrinkParseError::ParseFloat(e, input)),
     }
 }
 
-pub fn parse_style_tab_width(input: &str)
--> Result<StyleTabWidth, PercentageParseError>
-{
+pub fn parse_style_tab_width(input: &str) -> Result<StyleTabWidth, PercentageParseError> {
     parse_percentage_value(input).and_then(|e| Ok(StyleTabWidth { inner: e }))
 }
 
-pub fn parse_style_line_height(input: &str)
--> Result<StyleLineHeight, PercentageParseError>
-{
+pub fn parse_style_line_height(input: &str) -> Result<StyleLineHeight, PercentageParseError> {
     parse_percentage_value(input).and_then(|e| Ok(StyleLineHeight { inner: e }))
 }
 
@@ -2974,16 +3846,14 @@ pub enum OpacityParseError<'a> {
     ParsePercentage(PercentageParseError, &'a str),
 }
 
-impl_display!{OpacityParseError<'a>, {
+impl_display! {OpacityParseError<'a>, {
     ParsePercentage(e, orig_str) => format!("opacity: Could not parse percentage value: \"{}\" - Error: \"{}\"", orig_str, e),
 }}
 
-pub fn parse_style_opacity<'a>(input: &'a str)
--> Result<StyleOpacity, OpacityParseError<'a>>
-{
+pub fn parse_style_opacity<'a>(input: &'a str) -> Result<StyleOpacity, OpacityParseError<'a>> {
     parse_percentage_value(input)
-    .map_err(|e| OpacityParseError::ParsePercentage(e, input))
-    .and_then(|e| Ok(StyleOpacity { inner: e }))
+        .map_err(|e| OpacityParseError::ParsePercentage(e, input))
+        .and_then(|e| Ok(StyleOpacity { inner: e }))
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -2992,7 +3862,7 @@ pub enum CssStyleFontFamilyParseError<'a> {
     UnclosedQuotes(&'a str),
 }
 
-impl_display!{CssStyleFontFamilyParseError<'a>, {
+impl_display! {CssStyleFontFamilyParseError<'a>, {
     InvalidStyleFontFamily(val) => format!("Invalid font-family: \"{}\"", val),
     UnclosedQuotes(val) => format!("Unclosed quotes: \"{}\"", val),
 }}
@@ -3021,9 +3891,9 @@ impl<'a> From<UnclosedQuotesError<'a>> for CssStyleFontFamilyParseError<'a> {
 ///
 /// assert_eq!(parse_style_font_family(input), Ok(fonts));
 /// ```
-pub fn parse_style_font_family<'a>(input: &'a str) -> Result<StyleFontFamilyVec, CssStyleFontFamilyParseError<'a>> {
-    use alloc::string::ToString;
-
+pub fn parse_style_font_family<'a>(
+    input: &'a str,
+) -> Result<StyleFontFamilyVec, CssStyleFontFamilyParseError<'a>> {
     let multiple_fonts = input.split(',');
     let mut fonts = Vec::with_capacity(1);
 
@@ -3047,7 +3917,7 @@ pub enum ParenthesisParseError<'a> {
     EmptyInput,
 }
 
-impl_display!{ ParenthesisParseError<'a>, {
+impl_display! { ParenthesisParseError<'a>, {
     UnclosedBraces => format!("Unclosed parenthesis"),
     NoOpeningBraceFound => format!("Expected value in parenthesis (missing \"(\")"),
     NoClosingBraceFound => format!("Missing closing parenthesis (missing \")\")"),
@@ -3072,9 +3942,8 @@ impl_display!{ ParenthesisParseError<'a>, {
 /// ```
 pub fn parse_parentheses<'a>(
     input: &'a str,
-    stopwords: &[&'static str])
--> Result<(&'static str, &'a str), ParenthesisParseError<'a>>
-{
+    stopwords: &[&'static str],
+) -> Result<(&'static str, &'a str), ParenthesisParseError<'a>> {
     use self::ParenthesisParseError::*;
 
     let input = input.trim();
@@ -3097,10 +3966,15 @@ pub fn parse_parentheses<'a>(
     let validated_stopword = validated_stopword.ok_or(StopWordNotFound(found_stopword))?;
     let last_closing_brace = input.rfind(')').ok_or(NoClosingBraceFound)?;
 
-    Ok((validated_stopword, &input[(first_open_brace + 1)..last_closing_brace]))
+    Ok((
+        validated_stopword,
+        &input[(first_open_brace + 1)..last_closing_brace],
+    ))
 }
 
-multi_type_parser!(parse_style_mix_blend_mode, StyleMixBlendMode,
+multi_type_parser!(
+    parse_style_mix_blend_mode,
+    StyleMixBlendMode,
     ["normal", Normal],
     ["multiply", Multiply],
     ["screen", Screen],
@@ -3116,9 +3990,12 @@ multi_type_parser!(parse_style_mix_blend_mode, StyleMixBlendMode,
     ["hue", Hue],
     ["saturation", Saturation],
     ["color", Color],
-    ["luminosity", Luminosity]);
+    ["luminosity", Luminosity]
+);
 
-multi_type_parser!(parse_style_border_style, BorderStyle,
+multi_type_parser!(
+    parse_style_border_style,
+    BorderStyle,
     ["none", None],
     ["solid", Solid],
     ["double", Double],
@@ -3128,47 +4005,54 @@ multi_type_parser!(parse_style_border_style, BorderStyle,
     ["groove", Groove],
     ["ridge", Ridge],
     ["inset", Inset],
-    ["outset", Outset]);
+    ["outset", Outset]
+);
 
-multi_type_parser!(parse_style_cursor, StyleCursor,
-                    ["alias", Alias],
-                    ["all-scroll", AllScroll],
-                    ["cell", Cell],
-                    ["col-resize", ColResize],
-                    ["context-menu", ContextMenu],
-                    ["copy", Copy],
-                    ["crosshair", Crosshair],
-                    ["default", Default],
-                    ["e-resize", EResize],
-                    ["ew-resize", EwResize],
-                    ["grab", Grab],
-                    ["grabbing", Grabbing],
-                    ["help", Help],
-                    ["move", Move],
-                    ["n-resize", NResize],
-                    ["ns-resize", NsResize],
-                    ["nesw-resize", NeswResize],
-                    ["nwse-resize", NwseResize],
-                    ["pointer", Pointer],
-                    ["progress", Progress],
-                    ["row-resize", RowResize],
-                    ["s-resize", SResize],
-                    ["se-resize", SeResize],
-                    ["text", Text],
-                    ["unset", Unset],
-                    ["vertical-text", VerticalText],
-                    ["w-resize", WResize],
-                    ["wait", Wait],
-                    ["zoom-in", ZoomIn],
-                    ["zoom-out", ZoomOut]);
+multi_type_parser!(
+    parse_style_cursor,
+    StyleCursor,
+    ["alias", Alias],
+    ["all-scroll", AllScroll],
+    ["cell", Cell],
+    ["col-resize", ColResize],
+    ["context-menu", ContextMenu],
+    ["copy", Copy],
+    ["crosshair", Crosshair],
+    ["default", Default],
+    ["e-resize", EResize],
+    ["ew-resize", EwResize],
+    ["grab", Grab],
+    ["grabbing", Grabbing],
+    ["help", Help],
+    ["move", Move],
+    ["n-resize", NResize],
+    ["ns-resize", NsResize],
+    ["nesw-resize", NeswResize],
+    ["nwse-resize", NwseResize],
+    ["pointer", Pointer],
+    ["progress", Progress],
+    ["row-resize", RowResize],
+    ["s-resize", SResize],
+    ["se-resize", SeResize],
+    ["text", Text],
+    ["unset", Unset],
+    ["vertical-text", VerticalText],
+    ["w-resize", WResize],
+    ["wait", Wait],
+    ["zoom-in", ZoomIn],
+    ["zoom-out", ZoomOut]
+);
 
-multi_type_parser!(parse_style_backface_visibility, StyleBackfaceVisibility,
-                    ["hidden", Hidden],
-                    ["visible", Visible]);
+multi_type_parser!(
+    parse_style_backface_visibility,
+    StyleBackfaceVisibility,
+    ["hidden", Hidden],
+    ["visible", Visible]
+);
 
-pub fn parse_style_background_size<'a>(input: &'a str)
--> Result<StyleBackgroundSize, InvalidValueErr<'a>>
-{
+pub fn parse_style_background_size<'a>(
+    input: &'a str,
+) -> Result<StyleBackgroundSize, InvalidValueErr<'a>> {
     let input = input.trim();
     match input {
         "contain" => Ok(StyleBackgroundSize::Contain),
@@ -3195,83 +4079,118 @@ impl FormatAsCssValue for StyleBackgroundSize {
     }
 }
 
-multi_type_parser!(parse_style_background_repeat, StyleBackgroundRepeat,
-                    ["no-repeat", NoRepeat],
-                    ["repeat", Repeat],
-                    ["repeat-x", RepeatX],
-                    ["repeat-y", RepeatY]);
+multi_type_parser!(
+    parse_style_background_repeat,
+    StyleBackgroundRepeat,
+    ["no-repeat", NoRepeat],
+    ["repeat", Repeat],
+    ["repeat-x", RepeatX],
+    ["repeat-y", RepeatY]
+);
 
-multi_type_parser!(parse_layout_display, LayoutDisplay,
-                    ["none", None],
-                    ["flex", Flex],
-                    ["block", Block],
-                    ["inline-block", InlineBlock]);
+multi_type_parser!(
+    parse_layout_display,
+    LayoutDisplay,
+    ["none", None],
+    ["flex", Flex],
+    ["block", Block],
+    ["inline-block", InlineBlock]
+);
 
-multi_type_parser!(parse_layout_float, LayoutFloat,
-                    ["left", Left],
-                    ["right", Right]);
+multi_type_parser!(
+    parse_layout_float,
+    LayoutFloat,
+    ["left", Left],
+    ["right", Right]
+);
 
-multi_type_parser!(parse_layout_box_sizing, LayoutBoxSizing,
+multi_type_parser!(
+    parse_layout_box_sizing,
+    LayoutBoxSizing,
     ["content-box", ContentBox],
-    ["border-box", BorderBox]);
+    ["border-box", BorderBox]
+);
 
-multi_type_parser!(parse_layout_direction, LayoutFlexDirection,
-                    ["row", Row],
-                    ["row-reverse", RowReverse],
-                    ["column", Column],
-                    ["column-reverse", ColumnReverse]);
+multi_type_parser!(
+    parse_layout_direction,
+    LayoutFlexDirection,
+    ["row", Row],
+    ["row-reverse", RowReverse],
+    ["column", Column],
+    ["column-reverse", ColumnReverse]
+);
 
-multi_type_parser!(parse_layout_wrap, LayoutFlexWrap,
-                    ["wrap", Wrap],
-                    ["nowrap", NoWrap]);
+multi_type_parser!(
+    parse_layout_wrap,
+    LayoutFlexWrap,
+    ["wrap", Wrap],
+    ["nowrap", NoWrap]
+);
 
-multi_type_parser!(parse_layout_justify_content, LayoutJustifyContent,
-                    ["flex-start", Start],
-                    ["flex-end", End],
-                    ["center", Center],
-                    ["space-between", SpaceBetween],
-                    ["space-around", SpaceAround],
-                    ["space-evenly", SpaceEvenly]);
+multi_type_parser!(
+    parse_layout_justify_content,
+    LayoutJustifyContent,
+    ["flex-start", Start],
+    ["flex-end", End],
+    ["center", Center],
+    ["space-between", SpaceBetween],
+    ["space-around", SpaceAround],
+    ["space-evenly", SpaceEvenly]
+);
 
-multi_type_parser!(parse_layout_align_items, LayoutAlignItems,
-                    ["flex-start", FlexStart],
-                    ["flex-end", FlexEnd],
-                    ["stretch", Stretch],
-                    ["center", Center]);
+multi_type_parser!(
+    parse_layout_align_items,
+    LayoutAlignItems,
+    ["flex-start", FlexStart],
+    ["flex-end", FlexEnd],
+    ["stretch", Stretch],
+    ["center", Center]
+);
 
-multi_type_parser!(parse_layout_align_content, LayoutAlignContent,
-                    ["flex-start", Start],
-                    ["flex-end", End],
-                    ["stretch", Stretch],
-                    ["center", Center],
-                    ["space-between", SpaceBetween],
-                    ["space-around", SpaceAround]);
+multi_type_parser!(
+    parse_layout_align_content,
+    LayoutAlignContent,
+    ["flex-start", Start],
+    ["flex-end", End],
+    ["stretch", Stretch],
+    ["center", Center],
+    ["space-between", SpaceBetween],
+    ["space-around", SpaceAround]
+);
 
-multi_type_parser!(parse_shape, Shape,
-                    ["circle", Circle],
-                    ["ellipse", Ellipse]);
+multi_type_parser!(parse_shape, Shape, ["circle", Circle], ["ellipse", Ellipse]);
 
-multi_type_parser!(parse_layout_position, LayoutPosition,
-                    ["static", Static],
-                    ["fixed", Fixed],
-                    ["absolute", Absolute],
-                    ["relative", Relative]);
+multi_type_parser!(
+    parse_layout_position,
+    LayoutPosition,
+    ["static", Static],
+    ["fixed", Fixed],
+    ["absolute", Absolute],
+    ["relative", Relative]
+);
 
-multi_type_parser!(parse_layout_overflow, LayoutOverflow,
-                    ["auto", Auto],
-                    ["scroll", Scroll],
-                    ["visible", Visible],
-                    ["hidden", Hidden]);
+multi_type_parser!(
+    parse_layout_overflow,
+    LayoutOverflow,
+    ["auto", Auto],
+    ["scroll", Scroll],
+    ["visible", Visible],
+    ["hidden", Hidden]
+);
 
-multi_type_parser!(parse_layout_text_align, StyleTextAlign,
-                    ["center", Center],
-                    ["left", Left],
-                    ["right", Right]);
+multi_type_parser!(
+    parse_layout_text_align,
+    StyleTextAlign,
+    ["center", Center],
+    ["left", Left],
+    ["right", Right]
+);
 
 #[cfg(test)]
 mod css_tests {
-    use super::*;
+    use azul_css::{NormalizedLinearColorStop, NormalizedRadialColorStop};
 
+    use super::*;
 
     #[test]
     fn test_parse_box_shadow_1() {
@@ -3287,8 +4206,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 0,
@@ -3296,8 +4219,12 @@ mod css_tests {
                     b: 0,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
                 clip_mode: BoxShadowClipMode::Outset,
             })
         );
@@ -3309,8 +4236,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px #888888"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 136,
@@ -3318,8 +4249,12 @@ mod css_tests {
                     b: 136,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
                 clip_mode: BoxShadowClipMode::Outset,
             })
         );
@@ -3331,8 +4266,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px inset"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 0,
@@ -3340,8 +4279,12 @@ mod css_tests {
                     b: 0,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
                 clip_mode: BoxShadowClipMode::Inset,
             })
         );
@@ -3353,8 +4296,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px outset"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 0,
@@ -3362,8 +4309,12 @@ mod css_tests {
                     b: 0,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
                 clip_mode: BoxShadowClipMode::Outset,
             })
         );
@@ -3375,8 +4326,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px 5px #888888"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 136,
@@ -3384,8 +4339,12 @@ mod css_tests {
                     b: 136,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(5.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
                 clip_mode: BoxShadowClipMode::Outset,
             })
         );
@@ -3397,8 +4356,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px #888888 inset"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 136,
@@ -3406,8 +4369,12 @@ mod css_tests {
                     b: 136,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
                 clip_mode: BoxShadowClipMode::Inset,
             })
         );
@@ -3419,8 +4386,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px 5px #888888 inset"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 136,
@@ -3428,8 +4399,12 @@ mod css_tests {
                     b: 136,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(0.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(5.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(0.0)
+                },
                 clip_mode: BoxShadowClipMode::Inset,
             })
         );
@@ -3441,8 +4416,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px 5px 10px #888888"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 136,
@@ -3450,8 +4429,12 @@ mod css_tests {
                     b: 136,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(5.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(10.0)
+                },
                 clip_mode: BoxShadowClipMode::Outset,
             })
         );
@@ -3463,8 +4446,12 @@ mod css_tests {
             parse_style_box_shadow("5px 10px 5px 10px #888888 inset"),
             Ok(StyleBoxShadow {
                 offset: [
-                    PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                    PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(5.0)
+                    },
+                    PixelValueNoPercent {
+                        inner: PixelValue::px(10.0)
+                    },
                 ],
                 color: ColorU {
                     r: 136,
@@ -3472,13 +4459,16 @@ mod css_tests {
                     b: 136,
                     a: 255
                 },
-                blur_radius: PixelValueNoPercent { inner: PixelValue::px(5.0) },
-                spread_radius: PixelValueNoPercent { inner: PixelValue::px(10.0) },
+                blur_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(5.0)
+                },
+                spread_radius: PixelValueNoPercent {
+                    inner: PixelValue::px(10.0)
+                },
                 clip_mode: BoxShadowClipMode::Inset,
             })
         );
     }
-
 
     #[test]
     fn test_parse_css_border_1() {
@@ -3487,7 +4477,12 @@ mod css_tests {
             Ok(StyleBorderSide {
                 border_width: PixelValue::px(5.0),
                 border_style: BorderStyle::Solid,
-                border_color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                border_color: ColorU {
+                    r: 255,
+                    g: 0,
+                    b: 0,
+                    a: 255
+                },
             })
         );
     }
@@ -3499,7 +4494,12 @@ mod css_tests {
             Ok(StyleBorderSide {
                 border_width: PixelValue::px(3.0),
                 border_style: BorderStyle::Double,
-                border_color: ColorU { r: 0, g: 0, b: 0, a: 255 },
+                border_color: ColorU {
+                    r: 0,
+                    g: 0,
+                    b: 0,
+                    a: 255
+                },
             })
         );
     }
@@ -3511,14 +4511,20 @@ mod css_tests {
             Ok(StyleBorderSide {
                 border_width: PixelValue::px(1.0),
                 border_style: BorderStyle::Solid,
-                border_color: ColorU { r: 51, g: 153, b: 255, a: 255 },
+                border_color: ColorU {
+                    r: 51,
+                    g: 153,
+                    b: 255,
+                    a: 255
+                },
             })
         );
     }
 
     #[test]
     fn test_parse_linear_gradient_1() {
-        assert_eq!(parse_style_background_content("linear-gradient(red, yellow)"),
+        assert_eq!(
+            parse_style_background_content("linear-gradient(red, yellow)"),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::FromTo(DirectionCorners {
                     from: DirectionCorner::Top,
@@ -3528,19 +4534,32 @@ mod css_tests {
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-            })));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_2() {
-        assert_eq!(parse_style_background_content("linear-gradient(red, lime, blue, yellow)"),
+        assert_eq!(
+            parse_style_background_content("linear-gradient(red, lime, blue, yellow)"),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::FromTo(DirectionCorners {
                     from: DirectionCorner::Top,
@@ -3550,50 +4569,93 @@ mod css_tests {
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(33.333332),
-                        color: ColorU { r: 0, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(66.666664),
-                        color: ColorU { r: 0, g: 0, b: 255, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 0,
+                            b: 255,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-        })));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_3() {
-        assert_eq!(parse_style_background_content("repeating-linear-gradient(50deg, blue, yellow, #00FF00)"),
+        assert_eq!(
+            parse_style_background_content(
+                "repeating-linear-gradient(50deg, blue, yellow, #00FF00)"
+            ),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::Angle(AngleValue::deg(50.0)),
                 extend_mode: ExtendMode::Repeat,
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 0, g: 0, b: 255, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 0,
+                            b: 255,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(50.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 0, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-        })));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_4() {
-        assert_eq!(parse_style_background_content("linear-gradient(to bottom right, red, yellow)"),
+        assert_eq!(
+            parse_style_background_content("linear-gradient(to bottom right, red, yellow)"),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::FromTo(DirectionCorners {
                     from: DirectionCorner::TopLeft,
@@ -3603,58 +4665,98 @@ mod css_tests {
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-            })
-        ));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_5() {
-        assert_eq!(parse_style_background_content("linear-gradient(0.42rad, red, yellow)"),
+        assert_eq!(
+            parse_style_background_content("linear-gradient(0.42rad, red, yellow)"),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::Angle(AngleValue::rad(0.42)),
                 extend_mode: ExtendMode::Clamp,
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-        })));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_6() {
-        assert_eq!(parse_style_background_content("linear-gradient(12.93grad, red, yellow)"),
+        assert_eq!(
+            parse_style_background_content("linear-gradient(12.93grad, red, yellow)"),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::Angle(AngleValue::grad(12.93)),
                 extend_mode: ExtendMode::Clamp,
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-        })));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_7() {
-        assert_eq!(parse_style_background_content("linear-gradient(to right, rgba(255,0, 0,1) 0%,rgba(0,0,0, 0) 100%)"),
+        assert_eq!(
+            parse_style_background_content(
+                "linear-gradient(to right, rgba(255,0, 0,1) 0%,rgba(0,0,0, 0) 100%)"
+            ),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::FromTo(DirectionCorners {
                     from: DirectionCorner::Left,
@@ -3664,20 +4766,32 @@ mod css_tests {
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 0, g: 0, b: 0, a: 0 },
+                        color: ColorU {
+                            r: 0,
+                            g: 0,
+                            b: 0,
+                            a: 0
+                        },
                     }
-                ].into(),
-            })
-        ));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_8() {
-        assert_eq!(parse_style_background_content("linear-gradient(to bottom, rgb(255,0, 0),rgb(0,0,0))"),
+        assert_eq!(
+            parse_style_background_content("linear-gradient(to bottom, rgb(255,0, 0),rgb(0,0,0))"),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::FromTo(DirectionCorners {
                     from: DirectionCorner::Top,
@@ -3687,59 +4801,101 @@ mod css_tests {
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 0, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-            })
-        ));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_9() {
-        assert_eq!(parse_style_background_content("linear-gradient(10deg, rgb(10, 30, 20), yellow)"),
+        assert_eq!(
+            parse_style_background_content("linear-gradient(10deg, rgb(10, 30, 20), yellow)"),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::Angle(AngleValue::deg(10.0)),
                 extend_mode: ExtendMode::Clamp,
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 10, g: 30, b: 20, a: 255 },
+                        color: ColorU {
+                            r: 10,
+                            g: 30,
+                            b: 20,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-        })));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_10() {
-        assert_eq!(parse_style_background_content("linear-gradient(50deg, rgba(10, 30, 20, 0.93), hsla(40deg, 80%, 30%, 0.1))"),
+        assert_eq!(
+            parse_style_background_content(
+                "linear-gradient(50deg, rgba(10, 30, 20, 0.93), hsla(40deg, 80%, 30%, 0.1))"
+            ),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::Angle(AngleValue::deg(50.0)),
                 extend_mode: ExtendMode::Clamp,
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 10, g: 30, b: 20, a: 238 },
+                        color: ColorU {
+                            r: 10,
+                            g: 30,
+                            b: 20,
+                            a: 238
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 138, g: 97, b: 15, a: 25 },
+                        color: ColorU {
+                            r: 138,
+                            g: 97,
+                            b: 15,
+                            a: 25
+                        },
                     }
-                ].into(),
-        })));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_linear_gradient_11() {
         // wacky whitespace on purpose
-        assert_eq!(parse_style_background_content("linear-gradient(to bottom,rgb(255,0, 0)0%, rgb( 0 , 255 , 0 ) 10% ,blue   100%  )"),
+        assert_eq!(
+            parse_style_background_content(
+                "linear-gradient(to bottom,rgb(255,0, 0)0%, rgb( 0 , 255 , 0 ) 10% ,blue   100%  )"
+            ),
             Ok(StyleBackgroundContent::LinearGradient(LinearGradient {
                 direction: Direction::FromTo(DirectionCorners {
                     from: DirectionCorner::Top,
@@ -3749,24 +4905,41 @@ mod css_tests {
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 255, g: 0, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 0,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(10.0),
-                        color: ColorU { r: 0, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 0, g: 0, b: 255, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 0,
+                            b: 255,
+                            a: 255
+                        },
                     }
-                ].into(),
-            })
-        ));
+                ]
+                .into(),
+            }))
+        );
     }
 
     #[test]
     fn test_parse_radial_gradient_1() {
-        assert_eq!(parse_style_background_content("radial-gradient(circle, lime, blue, yellow)"),
+        assert_eq!(
+            parse_style_background_content("radial-gradient(circle, lime, blue, yellow)"),
             Ok(StyleBackgroundContent::RadialGradient(RadialGradient {
                 shape: Shape::Circle,
                 extend_mode: ExtendMode::Clamp,
@@ -3778,24 +4951,41 @@ mod css_tests {
                 stops: vec![
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(0.0),
-                        color: ColorU { r: 0, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(50.0),
-                        color: ColorU { r: 0, g: 0, b: 255, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 0,
+                            b: 255,
+                            a: 255
+                        },
                     },
                     NormalizedLinearColorStop {
                         offset: PercentageValue::new(100.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-        })));
+                ]
+                .into(),
+            }))
+        );
     }
-
 
     #[test]
     fn test_parse_conic_gradient_1() {
-        assert_eq!(parse_style_background_content("conic-gradient(lime, blue, yellow)"),
+        assert_eq!(
+            parse_style_background_content("conic-gradient(lime, blue, yellow)"),
             Ok(StyleBackgroundContent::ConicGradient(ConicGradient {
                 extend_mode: ExtendMode::Clamp,
                 center: StyleBackgroundPosition {
@@ -3806,18 +4996,35 @@ mod css_tests {
                 stops: vec![
                     NormalizedRadialColorStop {
                         angle: AngleValue::deg(0.0),
-                        color: ColorU { r: 0, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     },
                     NormalizedRadialColorStop {
                         angle: AngleValue::deg(180.0),
-                        color: ColorU { r: 0, g: 0, b: 255, a: 255 },
+                        color: ColorU {
+                            r: 0,
+                            g: 0,
+                            b: 255,
+                            a: 255
+                        },
                     },
                     NormalizedRadialColorStop {
                         angle: AngleValue::deg(360.0),
-                        color: ColorU { r: 255, g: 255, b: 0, a: 255 },
+                        color: ColorU {
+                            r: 255,
+                            g: 255,
+                            b: 0,
+                            a: 255
+                        },
                     }
-                ].into(),
-        })));
+                ]
+                .into(),
+            }))
+        );
     }
 
     /*
@@ -3857,142 +5064,315 @@ mod css_tests {
 
     #[test]
     fn test_parse_css_color_1() {
-        assert_eq!(parse_css_color("#F0F8FF"), Ok(ColorU { r: 240, g: 248, b: 255, a: 255 }));
+        assert_eq!(
+            parse_css_color("#F0F8FF"),
+            Ok(ColorU {
+                r: 240,
+                g: 248,
+                b: 255,
+                a: 255
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_2() {
-        assert_eq!(parse_css_color("#F0F8FF00"), Ok(ColorU { r: 240, g: 248, b: 255, a: 0 }));
+        assert_eq!(
+            parse_css_color("#F0F8FF00"),
+            Ok(ColorU {
+                r: 240,
+                g: 248,
+                b: 255,
+                a: 0
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_3() {
-        assert_eq!(parse_css_color("#EEE"), Ok(ColorU { r: 238, g: 238, b: 238, a: 255 }));
+        assert_eq!(
+            parse_css_color("#EEE"),
+            Ok(ColorU {
+                r: 238,
+                g: 238,
+                b: 238,
+                a: 255
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_4() {
-        assert_eq!(parse_css_color("rgb(192, 14, 12)"), Ok(ColorU { r: 192, g: 14, b: 12, a: 255 }));
+        assert_eq!(
+            parse_css_color("rgb(192, 14, 12)"),
+            Ok(ColorU {
+                r: 192,
+                g: 14,
+                b: 12,
+                a: 255
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_5() {
-        assert_eq!(parse_css_color("rgb(283, 8, 105)"), Err(CssColorParseError::IntValueParseErr("283".parse::<u8>().err().unwrap())));
+        assert_eq!(
+            parse_css_color("rgb(283, 8, 105)"),
+            Err(CssColorParseError::IntValueParseErr(
+                "283".parse::<u8>().err().unwrap()
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_6() {
-        assert_eq!(parse_css_color("rgba(192, 14, 12, 80)"), Err(CssColorParseError::FloatValueOutOfRange(80.0)));
+        assert_eq!(
+            parse_css_color("rgba(192, 14, 12, 80)"),
+            Err(CssColorParseError::FloatValueOutOfRange(80.0))
+        );
     }
 
     #[test]
     fn test_parse_css_color_7() {
-        assert_eq!(parse_css_color("rgba( 0,127,     255   , 0.25  )"), Ok(ColorU { r: 0, g: 127, b: 255, a: 64 }));
+        assert_eq!(
+            parse_css_color("rgba( 0,127,     255   , 0.25  )"),
+            Ok(ColorU {
+                r: 0,
+                g: 127,
+                b: 255,
+                a: 64
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_8() {
-        assert_eq!(parse_css_color("rgba( 1 ,2,3, 1.0)"), Ok(ColorU { r: 1, g: 2, b: 3, a: 255 }));
+        assert_eq!(
+            parse_css_color("rgba( 1 ,2,3, 1.0)"),
+            Ok(ColorU {
+                r: 1,
+                g: 2,
+                b: 3,
+                a: 255
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_9() {
-        assert_eq!(parse_css_color("rgb("), Err(CssColorParseError::UnclosedColor("rgb(")));
+        assert_eq!(
+            parse_css_color("rgb("),
+            Err(CssColorParseError::UnclosedColor("rgb("))
+        );
     }
 
     #[test]
     fn test_parse_css_color_10() {
-        assert_eq!(parse_css_color("rgba("), Err(CssColorParseError::UnclosedColor("rgba(")));
+        assert_eq!(
+            parse_css_color("rgba("),
+            Err(CssColorParseError::UnclosedColor("rgba("))
+        );
     }
 
     #[test]
     fn test_parse_css_color_11() {
-        assert_eq!(parse_css_color("rgba(123, 36, 92, 0.375"), Err(CssColorParseError::UnclosedColor("rgba(123, 36, 92, 0.375")));
+        assert_eq!(
+            parse_css_color("rgba(123, 36, 92, 0.375"),
+            Err(CssColorParseError::UnclosedColor("rgba(123, 36, 92, 0.375"))
+        );
     }
 
     #[test]
     fn test_parse_css_color_12() {
-        assert_eq!(parse_css_color("rgb()"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Red)));
+        assert_eq!(
+            parse_css_color("rgb()"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Red
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_13() {
-        assert_eq!(parse_css_color("rgb(10)"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Green)));
+        assert_eq!(
+            parse_css_color("rgb(10)"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Green
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_14() {
-        assert_eq!(parse_css_color("rgb(20, 30)"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Blue)));
+        assert_eq!(
+            parse_css_color("rgb(20, 30)"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Blue
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_15() {
-        assert_eq!(parse_css_color("rgb(30, 40,)"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Blue)));
+        assert_eq!(
+            parse_css_color("rgb(30, 40,)"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Blue
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_16() {
-        assert_eq!(parse_css_color("rgba(40, 50, 60)"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Alpha)));
+        assert_eq!(
+            parse_css_color("rgba(40, 50, 60)"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Alpha
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_17() {
-        assert_eq!(parse_css_color("rgba(50, 60, 70, )"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Alpha)));
+        assert_eq!(
+            parse_css_color("rgba(50, 60, 70, )"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Alpha
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_18() {
-        assert_eq!(parse_css_color("hsl(0deg, 100%, 100%)"), Ok(ColorU { r: 255, g: 255, b: 255, a: 255 }));
+        assert_eq!(
+            parse_css_color("hsl(0deg, 100%, 100%)"),
+            Ok(ColorU {
+                r: 255,
+                g: 255,
+                b: 255,
+                a: 255
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_19() {
-        assert_eq!(parse_css_color("hsl(0deg, 100%, 50%)"), Ok(ColorU { r: 255, g: 0, b: 0, a: 255 }));
+        assert_eq!(
+            parse_css_color("hsl(0deg, 100%, 50%)"),
+            Ok(ColorU {
+                r: 255,
+                g: 0,
+                b: 0,
+                a: 255
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_20() {
-        assert_eq!(parse_css_color("hsl(170deg, 50%, 75%)"), Ok(ColorU { r: 160, g: 224, b: 213, a: 255 }));
+        assert_eq!(
+            parse_css_color("hsl(170deg, 50%, 75%)"),
+            Ok(ColorU {
+                r: 160,
+                g: 224,
+                b: 213,
+                a: 255
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_21() {
-        assert_eq!(parse_css_color("hsla(190deg, 50%, 75%, 1.0)"), Ok(ColorU { r: 160, g: 213, b: 224, a: 255 }));
+        assert_eq!(
+            parse_css_color("hsla(190deg, 50%, 75%, 1.0)"),
+            Ok(ColorU {
+                r: 160,
+                g: 213,
+                b: 224,
+                a: 255
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_22() {
-        assert_eq!(parse_css_color("hsla(120deg, 0%, 25%, 0.25)"), Ok(ColorU { r: 64, g: 64, b: 64, a: 64 }));
+        assert_eq!(
+            parse_css_color("hsla(120deg, 0%, 25%, 0.25)"),
+            Ok(ColorU {
+                r: 64,
+                g: 64,
+                b: 64,
+                a: 64
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_23() {
-        assert_eq!(parse_css_color("hsla(120deg, 0%, 0%, 0.5)"), Ok(ColorU { r: 0, g: 0, b: 0, a: 128 }));
+        assert_eq!(
+            parse_css_color("hsla(120deg, 0%, 0%, 0.5)"),
+            Ok(ColorU {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 128
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_24() {
-        assert_eq!(parse_css_color("hsla(60.9deg, 80.3%, 40%, 0.5)"), Ok(ColorU { r: 182, g: 184, b: 20, a: 128 }));
+        assert_eq!(
+            parse_css_color("hsla(60.9deg, 80.3%, 40%, 0.5)"),
+            Ok(ColorU {
+                r: 182,
+                g: 184,
+                b: 20,
+                a: 128
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_25() {
-        assert_eq!(parse_css_color("hsla(60.9rad, 80.3%, 40%, 0.5)"), Ok(ColorU { r: 184, g: 170, b: 20, a: 128 }));
+        assert_eq!(
+            parse_css_color("hsla(60.9rad, 80.3%, 40%, 0.5)"),
+            Ok(ColorU {
+                r: 184,
+                g: 170,
+                b: 20,
+                a: 128
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_26() {
-        assert_eq!(parse_css_color("hsla(60.9grad, 80.3%, 40%, 0.5)"), Ok(ColorU { r: 45, g: 20, b: 184, a: 128 }));
+        assert_eq!(
+            parse_css_color("hsla(60.9grad, 80.3%, 40%, 0.5)"),
+            Ok(ColorU {
+                r: 45,
+                g: 20,
+                b: 184,
+                a: 128
+            })
+        );
     }
 
     #[test]
     fn test_parse_transform() {
-        assert_eq!(parse_style_transform("rotate(25deg)"), Ok(StyleTransform::Rotate(AngleValue::deg(25.0))));
+        assert_eq!(
+            parse_style_transform("rotate(25deg)"),
+            Ok(StyleTransform::Rotate(AngleValue::deg(25.0)))
+        );
     }
 
     #[test]
     fn test_parse_direction() {
-        assert_eq!(parse_direction("60.9grad"), Ok(Direction::Angle(AngleValue::grad(60.9))));
+        assert_eq!(
+            parse_direction("60.9grad"),
+            Ok(Direction::Angle(AngleValue::grad(60.9)))
+        );
     }
 
     #[test]
@@ -4002,52 +5382,106 @@ mod css_tests {
 
     #[test]
     fn test_parse_css_color_27() {
-        assert_eq!(parse_css_color("hsla(240, 0%, 0%, 0.5)"), Ok(ColorU { r: 0, g: 0, b: 0, a: 128 }));
+        assert_eq!(
+            parse_css_color("hsla(240, 0%, 0%, 0.5)"),
+            Ok(ColorU {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 128
+            })
+        );
     }
 
     #[test]
     fn test_parse_css_color_28() {
-        assert_eq!(parse_css_color("hsla(240deg, 0, 0%, 0.5)"), Err(CssColorParseError::InvalidPercentage(PercentageParseError::NoPercentSign)));
+        assert_eq!(
+            parse_css_color("hsla(240deg, 0, 0%, 0.5)"),
+            Err(CssColorParseError::InvalidPercentage(
+                PercentageParseError::NoPercentSign
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_29() {
-        assert_eq!(parse_css_color("hsla(240deg, 0%, 0, 0.5)"), Err(CssColorParseError::InvalidPercentage(PercentageParseError::NoPercentSign)));
+        assert_eq!(
+            parse_css_color("hsla(240deg, 0%, 0, 0.5)"),
+            Err(CssColorParseError::InvalidPercentage(
+                PercentageParseError::NoPercentSign
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_30() {
-        assert_eq!(parse_css_color("hsla(240deg, 0%, 0%, )"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Alpha)));
+        assert_eq!(
+            parse_css_color("hsla(240deg, 0%, 0%, )"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Alpha
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_31() {
-        assert_eq!(parse_css_color("hsl(, 0%, 0%, )"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Hue)));
+        assert_eq!(
+            parse_css_color("hsl(, 0%, 0%, )"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Hue
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_32() {
-        assert_eq!(parse_css_color("hsl(240deg ,  )"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Saturation)));
+        assert_eq!(
+            parse_css_color("hsl(240deg ,  )"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Saturation
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_33() {
-        assert_eq!(parse_css_color("hsl(240deg, 0%,  )"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Lightness)));
+        assert_eq!(
+            parse_css_color("hsl(240deg, 0%,  )"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Lightness
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_34() {
-        assert_eq!(parse_css_color("hsl(240deg, 0%, 0%,  )"), Err(CssColorParseError::ExtraArguments("")));
+        assert_eq!(
+            parse_css_color("hsl(240deg, 0%, 0%,  )"),
+            Err(CssColorParseError::ExtraArguments(""))
+        );
     }
 
     #[test]
     fn test_parse_css_color_35() {
-        assert_eq!(parse_css_color("hsla(240deg, 0%, 0%  )"), Err(CssColorParseError::MissingColorComponent(CssColorComponent::Alpha)));
+        assert_eq!(
+            parse_css_color("hsla(240deg, 0%, 0%  )"),
+            Err(CssColorParseError::MissingColorComponent(
+                CssColorComponent::Alpha
+            ))
+        );
     }
 
     #[test]
     fn test_parse_css_color_36() {
-        assert_eq!(parse_css_color("rgb(255,0, 0)"), Ok(ColorU { r: 255, g: 0, b: 0, a: 255 }));
+        assert_eq!(
+            parse_css_color("rgb(255,0, 0)"),
+            Ok(ColorU {
+                r: 255,
+                g: 0,
+                b: 0,
+                a: 255
+            })
+        );
     }
 
     #[test]
@@ -4067,7 +5501,10 @@ mod css_tests {
 
     #[test]
     fn test_parse_pixel_value_4() {
-        assert_eq!(parse_pixel_value("aslkfdjasdflk"), Err(CssPixelValueParseError::InvalidPixelValue("aslkfdjasdflk")));
+        assert_eq!(
+            parse_pixel_value("aslkfdjasdflk"),
+            Err(CssPixelValueParseError::InvalidPixelValue("aslkfdjasdflk"))
+        );
     }
 
     #[test]
@@ -4124,30 +5561,28 @@ mod css_tests {
 
     #[test]
     fn test_parse_style_font_family_1() {
-        use azul_css::{AzString, StringVec};
-        use crate::alloc::string::ToString;
         let fonts0: Vec<StyleFontFamily> = vec![
-            StyleFontFamily::Native("Webly Sleeky UI".to_string().into()),
-            StyleFontFamily::Native("monospace".to_string().into()),
+            StyleFontFamily::System("Webly Sleeky UI".to_string().into()),
+            StyleFontFamily::System("monospace".to_string().into()),
         ];
         let fonts0: StyleFontFamilyVec = fonts0.into();
-        assert_eq!(parse_style_font_family("\"Webly Sleeky UI\", monospace"), Ok(fonts0));
+        assert_eq!(
+            parse_style_font_family("\"Webly Sleeky UI\", monospace"),
+            Ok(fonts0)
+        );
     }
 
     #[test]
     fn test_parse_style_font_family_2() {
-        use azul_css::{AzString, StringVec};
-        use crate::alloc::string::ToString;
-        let fonts0: Vec<StyleFontFamily> = vec![
-            StyleFontFamily::Native("Webly Sleeky UI".to_string().into()),
-        ];
+        let fonts0: Vec<StyleFontFamily> = vec![StyleFontFamily::System(
+            "Webly Sleeky UI".to_string().into(),
+        )];
         let fonts0: StyleFontFamilyVec = fonts0.into();
         assert_eq!(parse_style_font_family("'Webly Sleeky UI'"), Ok(fonts0));
     }
 
     #[test]
     fn test_parse_background_image() {
-        use crate::alloc::string::ToString;
         assert_eq!(
             parse_style_background_content("image(\"Cat 01\")"),
             Ok(StyleBackgroundContent::Image("Cat 01".to_string().into()))
@@ -4208,10 +5643,7 @@ mod css_tests {
 
     #[test]
     fn test_parse_percentage_value_1() {
-        assert_eq!(
-            parse_percentage_value("5%"),
-            Ok(PercentageValue::new(5.0))
-        );
+        assert_eq!(parse_percentage_value("5%"), Ok(PercentageValue::new(5.0)));
     }
 
     #[test]
@@ -4224,25 +5656,16 @@ mod css_tests {
 
     #[test]
     fn test_parse_angle_value_1() {
-        assert_eq!(
-            parse_angle_value("20deg"),
-            Ok(AngleValue::deg(20.0))
-        );
+        assert_eq!(parse_angle_value("20deg"), Ok(AngleValue::deg(20.0)));
     }
 
     #[test]
     fn test_parse_angle_value_2() {
-        assert_eq!(
-            parse_angle_value("20.4rad"),
-            Ok(AngleValue::rad(20.4))
-        );
+        assert_eq!(parse_angle_value("20.4rad"), Ok(AngleValue::rad(20.4)));
     }
 
     #[test]
     fn test_parse_angle_value_3() {
-        assert_eq!(
-            parse_angle_value("20.4grad"),
-            Ok(AngleValue::grad(20.4))
-        );
+        assert_eq!(parse_angle_value("20.4grad"), Ok(AngleValue::grad(20.4)));
     }
 }

@@ -70,21 +70,11 @@
 )]
 #![allow(warnings)]
 
-// #![no_std] // doable once allsorts PR is merged
-
-extern crate core;
-#[macro_use]
-extern crate alloc;
-
-#[macro_use]
+// #[macro_use]
 extern crate azul_css;
-extern crate azul_core;
-extern crate unicode_normalization;
-extern crate allsorts;
 #[macro_use]
 extern crate tinyvec;
 
-use alloc::boxed::Box;
 use core::ffi::c_void;
 use crate::text_shaping::ParsedFont;
 use azul_css::{FontData, FontRef};

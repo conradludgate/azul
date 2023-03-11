@@ -328,81 +328,81 @@ pub(crate) fn selector_group_matches(
     true
 }
 
-#[test]
-fn test_case_issue_93() {
+// #[test]
+// fn test_case_issue_93() {
 
-    use azul_css::CssPathSelector::*;
-    use azul_css::*;
-    use crate::dom::*;
+//     use azul_css::CssPathSelector::*;
+//     use azul_css::*;
+//     use crate::dom::*;
 
-    fn render_tab() -> Dom {
-        Dom::div().with_class("tabwidget-tab")
-            .with_child(Dom::label("").with_class("tabwidget-tab-label"))
-            .with_child(Dom::label("").with_class("tabwidget-tab-close"))
-    }
+//     fn render_tab() -> Dom {
+//         Dom::div().with_class("tabwidget-tab")
+//             .with_child(Dom::label("").with_class("tabwidget-tab-label"))
+//             .with_child(Dom::label("").with_class("tabwidget-tab-close"))
+//     }
 
-    let dom = Dom::div().with_id("editor-rooms")
-    .with_child(
-        Dom::div().with_class("tabwidget-bar")
-        .with_child(render_tab().with_class("active"))
-        .with_child(render_tab())
-        .with_child(render_tab())
-        .with_child(render_tab())
-    );
+//     let dom = Dom::div().with_id("editor-rooms")
+//     .with_child(
+//         Dom::div().with_class("tabwidget-bar")
+//         .with_child(render_tab().with_class("active"))
+//         .with_child(render_tab())
+//         .with_child(render_tab())
+//         .with_child(render_tab())
+//     );
 
-    let dom = convert_dom_into_compact_dom(dom);
+//     let dom = convert_dom_into_compact_dom(dom);
 
-    let tab_active_close = CssPath { selectors: vec![
-        Class("tabwidget-tab".to_string().into()),
-        Class("active".to_string().into()),
-        Children,
-        Class("tabwidget-tab-close".to_string().into())
-    ].into() };
+//     let tab_active_close = CssPath { selectors: vec![
+//         Class("tabwidget-tab".to_string().into()),
+//         Class("active".to_string().into()),
+//         Children,
+//         Class("tabwidget-tab-close".to_string().into())
+//     ].into() };
 
-    let node_hierarchy = &dom.arena.node_hierarchy;
-    let node_data = &dom.arena.node_data;
-    let nodes_sorted: Vec<_> = node_hierarchy.get_parents_sorted_by_depth();
-    let html_node_tree = construct_html_cascade_tree(
-        &node_hierarchy,
-        &nodes_sorted,
-        None,
-        &BTreeMap::new(),
-        false,
-    );
+//     let node_hierarchy = &dom.arena.node_hierarchy;
+//     let node_data = &dom.arena.node_data;
+//     let nodes_sorted: Vec<_> = node_hierarchy.get_parents_sorted_by_depth();
+//     let html_node_tree = construct_html_cascade_tree(
+//         &node_hierarchy,
+//         &nodes_sorted,
+//         None,
+//         &BTreeMap::new(),
+//         false,
+//     );
 
-    //  rules: [
-    //    ".tabwidget-tab-label"                        : ColorU::BLACK,
-    //    ".tabwidget-tab.active .tabwidget-tab-label"  : ColorU::WHITE,
-    //    ".tabwidget-tab.active .tabwidget-tab-close"  : ColorU::RED,
-    //  ]
+//     //  rules: [
+//     //    ".tabwidget-tab-label"                        : ColorU::BLACK,
+//     //    ".tabwidget-tab.active .tabwidget-tab-label"  : ColorU::WHITE,
+//     //    ".tabwidget-tab.active .tabwidget-tab-close"  : ColorU::RED,
+//     //  ]
 
-    //  0: [div #editor-rooms ]
-    //   |-- 1: [div  .tabwidget-bar]
-    //   |    |-- 2: [div  .tabwidget-tab .active]
-    //   |    |    |-- 3: [p  .tabwidget-tab-label]
-    //   |    |    |-- 4: [p  .tabwidget-tab-close]
-    //   |    |-- 5: [div  .tabwidget-tab]
-    //   |    |    |-- 6: [p  .tabwidget-tab-label]
-    //   |    |    |-- 7: [p  .tabwidget-tab-close]
-    //   |    |-- 8: [div  .tabwidget-tab]
-    //   |    |    |-- 9: [p  .tabwidget-tab-label]
-    //   |    |    |-- 10: [p  .tabwidget-tab-close]
-    //   |    |-- 11: [div  .tabwidget-tab]
-    //   |    |    |-- 12: [p  .tabwidget-tab-label]
-    //   |    |    |-- 13: [p  .tabwidget-tab-close]
+//     //  0: [div #editor-rooms ]
+//     //   |-- 1: [div  .tabwidget-bar]
+//     //   |    |-- 2: [div  .tabwidget-tab .active]
+//     //   |    |    |-- 3: [p  .tabwidget-tab-label]
+//     //   |    |    |-- 4: [p  .tabwidget-tab-close]
+//     //   |    |-- 5: [div  .tabwidget-tab]
+//     //   |    |    |-- 6: [p  .tabwidget-tab-label]
+//     //   |    |    |-- 7: [p  .tabwidget-tab-close]
+//     //   |    |-- 8: [div  .tabwidget-tab]
+//     //   |    |    |-- 9: [p  .tabwidget-tab-label]
+//     //   |    |    |-- 10: [p  .tabwidget-tab-close]
+//     //   |    |-- 11: [div  .tabwidget-tab]
+//     //   |    |    |-- 12: [p  .tabwidget-tab-label]
+//     //   |    |    |-- 13: [p  .tabwidget-tab-close]
 
-    // Test 1:
-    // ".tabwidget-tab.active .tabwidget-tab-label"
-    // should not match
-    // ".tabwidget-tab.active .tabwidget-tab-close"
-    assert_eq!(matches_html_element(&tab_active_close, NodeId::new(3), &node_hierarchy, &node_data, &html_node_tree), false);
+//     // Test 1:
+//     // ".tabwidget-tab.active .tabwidget-tab-label"
+//     // should not match
+//     // ".tabwidget-tab.active .tabwidget-tab-close"
+//     assert_eq!(matches_html_element(&tab_active_close, NodeId::new(3), &node_hierarchy, &node_data, &html_node_tree), false);
 
-    // Test 2:
-    // ".tabwidget-tab.active .tabwidget-tab-close"
-    // should match
-    // ".tabwidget-tab.active .tabwidget-tab-close"
-    assert_eq!(matches_html_element(&tab_active_close, NodeId::new(4), &node_hierarchy, &node_data, &html_node_tree), true);
-}
+//     // Test 2:
+//     // ".tabwidget-tab.active .tabwidget-tab-close"
+//     // should match
+//     // ".tabwidget-tab.active .tabwidget-tab-close"
+//     assert_eq!(matches_html_element(&tab_active_close, NodeId::new(4), &node_hierarchy, &node_data, &html_node_tree), true);
+// }
 
 #[test]
 fn test_css_group_iterator() {

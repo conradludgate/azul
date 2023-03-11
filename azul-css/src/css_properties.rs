@@ -4922,9 +4922,9 @@ impl Drop for FontData {
 #[repr(C, u8)]
 pub enum StyleFontFamily {
     /// Native font, such as "Webly Sleeky UI", "monospace", etc.
-    System(AzString),
+    System(String),
     /// Font loaded from a file
-    File(AzString),
+    File(String),
     /// Reference-counted, already-decoded font,
     /// so that specific DOM nodes are required to use this font
     Ref(FontRef),
@@ -4933,8 +4933,8 @@ pub enum StyleFontFamily {
 impl StyleFontFamily {
     pub(crate) fn as_string(&self) -> String {
         match &self {
-            StyleFontFamily::System(s) => s.clone().into_library_owned_string(),
-            StyleFontFamily::File(s) => s.clone().into_library_owned_string(),
+            StyleFontFamily::System(s) => s.clone(),
+            StyleFontFamily::File(s) => s.clone(),
             StyleFontFamily::Ref(s) => format!("{:0x}", s.data as usize),
         }
     }

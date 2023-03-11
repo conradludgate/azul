@@ -1779,26 +1779,26 @@ impl_option!(RawImage, OptionRawImage, copy = false, [Debug, Clone, PartialEq, P
 #[repr(C)]
 pub struct Words {
     /// Words (and spaces), broken up into semantic items
-    pub items: WordVec,
+    pub items: Vec<Word>,
     /// String that makes up this paragraph of words
-    pub internal_str: AzString,
-    /// `internal_chars` is used in order to enable copy-paste (since taking a sub-string isn't possible using UTF-8)
-    pub internal_chars: U32Vec,
+    pub internal_str: String,
+    // /// `internal_chars` is used in order to enable copy-paste (since taking a sub-string isn't possible using UTF-8)
+    // pub internal_chars: Vec<char>U32Vec,
 }
 
 impl Words {
 
-    pub fn get_substr(&self, word: &Word) -> String {
-        self.internal_chars.as_ref()[word.start..word.end].iter().filter_map(|c| core::char::from_u32(*c)).collect()
+    pub fn get_substr(&self, word: &Word) -> &str {
+        &self.internal_str.as_str()[word.start..word.end]
     }
 
     pub fn get_str(&self) -> &str {
         &self.internal_str.as_str()
     }
 
-    pub fn get_char(&self, idx: usize) -> Option<char> {
-        self.internal_chars.as_ref().get(idx).and_then(|c| core::char::from_u32(*c))
-    }
+    // pub fn get_char(&self, idx: usize) -> Option<char> {
+    //     self.internal_str.as_ref().get(idx).and_then(|c| core::char::from_u32(*c))
+    // }
 }
 
 /// Section of a certain type
@@ -1809,15 +1809,6 @@ pub struct Word {
     pub end: usize,
     pub word_type: WordType,
 }
-
-impl_vec!(Word, WordVec, WordVecDestructor);
-impl_vec_clone!(Word, WordVec, WordVecDestructor);
-impl_vec_debug!(Word, WordVec);
-impl_vec_partialeq!(Word, WordVec);
-impl_vec_eq!(Word, WordVec);
-impl_vec_ord!(Word, WordVec);
-impl_vec_partialord!(Word, WordVec);
-impl_vec_hash!(Word, WordVec);
 
 /// Either a white-space delimited word, tab or return character
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1839,7 +1830,7 @@ pub enum WordType {
 #[repr(C)]
 pub struct ShapedWords {
     /// Words scaled to their appropriate font size, but not yet positioned on the screen
-    pub items: ShapedWordVec,
+    pub items: Vec<ShapedWord>,
     /// Longest word in the `self.scaled_words`, necessary for
     /// calculating overflow rectangles.
     pub longest_word_width: usize,
@@ -2004,14 +1995,12 @@ pub struct GlyphInfo {
     pub placement: Placement,
 }
 
-#[cfg(feature = "multithreading")]
 pub fn get_inline_text(words: &Words, shaped_words: &ShapedWords, word_positions: &WordPositions, inline_text_layout: &InlineTextLayout) -> InlineText {
 
     use crate::callbacks::{
         InlineWord, InlineLine,
         InlineTextContents, InlineGlyph
     };
-    use rayon::prelude::*;
 
     // check the range so that in the worst case there isn't a random crash here
     fn get_range_checked_inclusive_end(input: &[Word], word_start: usize, word_end: usize) -> Option<&[Word]> {
@@ -2031,7 +2020,7 @@ pub fn get_inline_text(words: &Words, shaped_words: &ShapedWords, word_positions
 
     let inline_lines = inline_text_layout.lines
     .as_ref()
-    .par_iter()
+    .iter()
     .filter_map(|line| {
 
         let word_items = words.items.as_ref();
@@ -2039,7 +2028,7 @@ pub fn get_inline_text(words: &Words, shaped_words: &ShapedWords, word_positions
         let word_end = line.word_end.max(line.word_start);
 
         let words = get_range_checked_inclusive_end(word_items, word_start, word_end)?
-        .par_iter()
+        .iter()
         .enumerate()
         .filter_map(|(word_idx, word)| {
             let word_idx = word_start + word_idx;
