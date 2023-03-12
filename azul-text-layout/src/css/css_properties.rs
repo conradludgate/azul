@@ -25,7 +25,6 @@ const COMBINED_CSS_PROPERTIES_KEY_MAP: [(CombinedCssPropertyType, &'static str);
     (CombinedCssPropertyType::BackgroundImage, "background-image"),
 ];
 
-
 // The following types are present in webrender, however, azul-css should not
 // depend on webrender, just to have the same types, azul-css should be a standalone crate.
 
@@ -49,7 +48,6 @@ impl fmt::Display for LayoutRect {
     }
 }
 
-
 /// Only used for calculations: Size (width, height) in layout space.
 #[derive(Copy, Default, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
 #[repr(C)]
@@ -69,7 +67,6 @@ impl fmt::Display for LayoutSize {
         write!(f, "{}x{}", self.width, self.height)
     }
 }
-
 
 /// Only used for calculations: Point coordinate (x, y) in layout space.
 #[derive(Copy, Default, Clone, PartialEq, PartialOrd, Ord, Eq, Hash)]
@@ -91,32 +88,11 @@ impl fmt::Display for LayoutPoint {
     }
 }
 
-impl LayoutPoint {
-    #[inline(always)]
-    pub const fn new(x: isize, y: isize) -> Self {
-        Self { x, y }
-    }
-    #[inline(always)]
-    pub const fn zero() -> Self {
-        Self::new(0, 0)
-    }
-}
-
 /// Represents a parsed pair of `5px, 10px` values - useful for border radius calculation
 #[derive(Default, Debug, Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct PixelSize {
     pub width: PixelValue,
     pub height: PixelValue,
-}
-
-impl PixelSize {
-    pub const fn new(width: PixelValue, height: PixelValue) -> Self {
-        Self { width, height }
-    }
-
-    pub const fn zero() -> Self {
-        Self::new(PixelValue::const_px(0), PixelValue::const_px(0))
-    }
 }
 
 /// Offsets of the border-width calculations
@@ -162,30 +138,6 @@ impl ColorU {
     pub const ALPHA_TRANSPARENT: u8 = 0;
     pub const ALPHA_OPAQUE: u8 = 255;
 
-    pub const RED: ColorU = ColorU {
-        r: 255,
-        g: 0,
-        b: 0,
-        a: Self::ALPHA_OPAQUE,
-    };
-    pub const GREEN: ColorU = ColorU {
-        r: 0,
-        g: 255,
-        b: 0,
-        a: Self::ALPHA_OPAQUE,
-    };
-    pub const BLUE: ColorU = ColorU {
-        r: 0,
-        g: 0,
-        b: 255,
-        a: Self::ALPHA_OPAQUE,
-    };
-    pub const WHITE: ColorU = ColorU {
-        r: 255,
-        g: 255,
-        b: 255,
-        a: Self::ALPHA_OPAQUE,
-    };
     pub const BLACK: ColorU = ColorU {
         r: 0,
         g: 0,
@@ -198,35 +150,6 @@ impl ColorU {
         b: 0,
         a: Self::ALPHA_TRANSPARENT,
     };
-
-    pub const fn new_rgb(r: u8, g: u8, b: u8) -> Self {
-        Self { r, g, b, a: 255 }
-    }
-
-    pub fn interpolate(&self, other: &Self, t: f32) -> Self {
-        Self {
-            r: libm::roundf(self.r as f32 + (other.r as f32 - self.r as f32) * t) as u8,
-            g: libm::roundf(self.g as f32 + (other.g as f32 - self.g as f32) * t) as u8,
-            b: libm::roundf(self.b as f32 + (other.b as f32 - self.b as f32) * t) as u8,
-            a: libm::roundf(self.a as f32 + (other.a as f32 - self.a as f32) * t) as u8,
-        }
-    }
-
-    pub const fn has_alpha(&self) -> bool {
-        self.a != Self::ALPHA_OPAQUE
-    }
-
-    pub fn to_hash(&self) -> String {
-        format!("#{:02x}{:02x}{:02x}{:02x}", self.r, self.g, self.b, self.a)
-    }
-
-    pub fn write_hash(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "#{:02x}{:02x}{:02x}{:02x}",
-            self.r, self.g, self.b, self.a
-        )
-    }
 }
 
 /// f32-based color, range 0.0 to 1.0 (similar to webrenders ColorF)
@@ -258,26 +181,13 @@ impl fmt::Display for ColorF {
 }
 
 impl ColorF {
-    pub const ALPHA_TRANSPARENT: f32 = 0.0;
     pub const ALPHA_OPAQUE: f32 = 1.0;
 
-    pub const WHITE: ColorF = ColorF {
-        r: 1.0,
-        g: 1.0,
-        b: 1.0,
-        a: Self::ALPHA_OPAQUE,
-    };
     pub const BLACK: ColorF = ColorF {
         r: 0.0,
         g: 0.0,
         b: 0.0,
         a: Self::ALPHA_OPAQUE,
-    };
-    pub const TRANSPARENT: ColorF = ColorF {
-        r: 0.0,
-        g: 0.0,
-        b: 0.0,
-        a: Self::ALPHA_TRANSPARENT,
     };
 }
 
@@ -303,30 +213,11 @@ impl From<ColorF> for ColorU {
     }
 }
 
-/// What direction should a `box-shadow` be clipped in (inset or outset)
-#[derive(Debug, Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
-#[repr(C)]
-pub enum BoxShadowClipMode {
-    Outset,
-    Inset,
-}
-
-impl fmt::Display for BoxShadowClipMode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::BoxShadowClipMode::*;
-        match self {
-            Outset => write!(f, "outset"),
-            Inset => write!(f, "inset"),
-        }
-    }
-}
-
 /// Whether a `gradient` should be repeated or clamped to the edges.
 #[derive(Debug, Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
 #[repr(C)]
 pub enum ExtendMode {
     Clamp,
-    Repeat,
 }
 
 impl Default for ExtendMode {
@@ -334,7 +225,6 @@ impl Default for ExtendMode {
         ExtendMode::Clamp
     }
 }
-
 
 #[derive(Debug, Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct NinePatchBorder {
@@ -413,312 +303,10 @@ impl fmt::Display for CombinedCssPropertyType {
     }
 }
 
-impl CombinedCssPropertyType {
-    /// Parses a CSS key, such as `width` from a string:
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use azul_css::{CombinedCssPropertyType, get_css_key_map};
-    /// let map = get_css_key_map();
-    /// assert_eq!(Some(CombinedCssPropertyType::Border), CombinedCssPropertyType::from_str("border", &map));
-    /// ```
-    pub fn from_str(input: &str, map: &CssKeyMap) -> Option<Self> {
-        let input = input.trim();
-        map.shorthands.get(input).map(|x| *x)
-    }
-
-    /// Returns the original string that was used to construct this `CssPropertyType`.
-    pub fn to_str(&self, map: &CssKeyMap) -> &'static str {
-        map.shorthands
-            .iter()
-            .find(|(_, v)| *v == self)
-            .map(|(k, _)| k)
-            .unwrap()
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CssKeyMap {
     // Contains all keys that act as a shorthand for other types
     pub shorthands: BTreeMap<&'static str, CombinedCssPropertyType>,
-}
-
-impl CssKeyMap {
-    pub fn get() -> Self {
-        get_css_key_map()
-    }
-}
-
-/// Returns a map useful for parsing the keys of CSS stylesheets
-pub fn get_css_key_map() -> CssKeyMap {
-    CssKeyMap {
-        shorthands: COMBINED_CSS_PROPERTIES_KEY_MAP
-            .iter()
-            .map(|(v, k)| (*k, *v))
-            .collect(),
-    }
-}
-
-
-
-/// Represents one parsed CSS key-value pair, such as `"width: 20px"` => `CssProperty::Width(LayoutWidth::px(20.0))`
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[repr(C, u8)]
-pub enum CssProperty {
-    TextColor(StyleTextColorValue),
-    FontSize(StyleFontSizeValue),
-    TextAlign(StyleTextAlignValue),
-    LetterSpacing(StyleLetterSpacingValue),
-    LineHeight(StyleLineHeightValue),
-    WordSpacing(StyleWordSpacingValue),
-    TabWidth(StyleTabWidthValue),
-    Cursor(StyleCursorValue),
-    Display(LayoutDisplayValue),
-    Float(LayoutFloatValue),
-    BoxSizing(LayoutBoxSizingValue),
-    Width(LayoutWidthValue),
-    Height(LayoutHeightValue),
-    MinWidth(LayoutMinWidthValue),
-    MinHeight(LayoutMinHeightValue),
-    MaxWidth(LayoutMaxWidthValue),
-    MaxHeight(LayoutMaxHeightValue),
-    Position(LayoutPositionValue),
-    Top(LayoutTopValue),
-    Right(LayoutRightValue),
-    Left(LayoutLeftValue),
-    Bottom(LayoutBottomValue),
-    FlexWrap(LayoutFlexWrapValue),
-    FlexDirection(LayoutFlexDirectionValue),
-    JustifyContent(LayoutJustifyContentValue),
-    AlignItems(LayoutAlignItemsValue),
-    AlignContent(LayoutAlignContentValue),
-    BackgroundContent(StyleBackgroundContentVecValue),
-    BackgroundPosition(StyleBackgroundPositionVecValue),
-    BackgroundSize(StyleBackgroundSizeVecValue),
-    BackgroundRepeat(StyleBackgroundRepeatVecValue),
-    OverflowX(LayoutOverflowValue),
-    OverflowY(LayoutOverflowValue),
-    PaddingTop(LayoutPaddingTopValue),
-    PaddingLeft(LayoutPaddingLeftValue),
-    PaddingRight(LayoutPaddingRightValue),
-    PaddingBottom(LayoutPaddingBottomValue),
-    MarginTop(LayoutMarginTopValue),
-    MarginLeft(LayoutMarginLeftValue),
-    MarginRight(LayoutMarginRightValue),
-    MarginBottom(LayoutMarginBottomValue),
-    BorderTopLeftRadius(StyleBorderTopLeftRadiusValue),
-    BorderTopRightRadius(StyleBorderTopRightRadiusValue),
-    BorderBottomLeftRadius(StyleBorderBottomLeftRadiusValue),
-    BorderBottomRightRadius(StyleBorderBottomRightRadiusValue),
-    BorderTopWidth(LayoutBorderTopWidthValue),
-    BorderRightWidth(LayoutBorderRightWidthValue),
-    BorderLeftWidth(LayoutBorderLeftWidthValue),
-    BorderBottomWidth(LayoutBorderBottomWidthValue),
-    BoxShadowLeft(StyleBoxShadowValue),
-    BoxShadowRight(StyleBoxShadowValue),
-    BoxShadowTop(StyleBoxShadowValue),
-    BoxShadowBottom(StyleBoxShadowValue),
-    ScrollbarStyle(ScrollbarStyleValue),
-    Opacity(StyleOpacityValue),
-    TransformOrigin(StyleTransformOriginValue),
-    PerspectiveOrigin(StylePerspectiveOriginValue),
-    BackfaceVisibility(StyleBackfaceVisibilityValue),
-    MixBlendMode(StyleMixBlendModeValue),
-    TextShadow(StyleBoxShadowValue),
-}
-
-macro_rules! css_property_from_type {
-    ($prop_type:expr, $content_type:ident) => {{
-        match $prop_type {
-            CssPropertyType::TextColor => {
-                CssProperty::TextColor(StyleTextColorValue::$content_type)
-            }
-            CssPropertyType::FontSize => CssProperty::FontSize(StyleFontSizeValue::$content_type),
-            CssPropertyType::FontFamily => {
-                CssProperty::FontFamily(StyleFontFamilyVecValue::$content_type)
-            }
-            CssPropertyType::TextAlign => {
-                CssProperty::TextAlign(StyleTextAlignValue::$content_type)
-            }
-            CssPropertyType::LetterSpacing => {
-                CssProperty::LetterSpacing(StyleLetterSpacingValue::$content_type)
-            }
-            CssPropertyType::LineHeight => {
-                CssProperty::LineHeight(StyleLineHeightValue::$content_type)
-            }
-            CssPropertyType::WordSpacing => {
-                CssProperty::WordSpacing(StyleWordSpacingValue::$content_type)
-            }
-            CssPropertyType::TabWidth => CssProperty::TabWidth(StyleTabWidthValue::$content_type),
-            CssPropertyType::Cursor => CssProperty::Cursor(StyleCursorValue::$content_type),
-            CssPropertyType::Display => CssProperty::Display(LayoutDisplayValue::$content_type),
-            CssPropertyType::Float => CssProperty::Float(LayoutFloatValue::$content_type),
-            CssPropertyType::BoxSizing => {
-                CssProperty::BoxSizing(LayoutBoxSizingValue::$content_type)
-            }
-            CssPropertyType::Width => CssProperty::Width(LayoutWidthValue::$content_type),
-            CssPropertyType::Height => CssProperty::Height(LayoutHeightValue::$content_type),
-            CssPropertyType::MinWidth => CssProperty::MinWidth(LayoutMinWidthValue::$content_type),
-            CssPropertyType::MinHeight => {
-                CssProperty::MinHeight(LayoutMinHeightValue::$content_type)
-            }
-            CssPropertyType::MaxWidth => CssProperty::MaxWidth(LayoutMaxWidthValue::$content_type),
-            CssPropertyType::MaxHeight => {
-                CssProperty::MaxHeight(LayoutMaxHeightValue::$content_type)
-            }
-            CssPropertyType::Position => CssProperty::Position(LayoutPositionValue::$content_type),
-            CssPropertyType::Top => CssProperty::Top(LayoutTopValue::$content_type),
-            CssPropertyType::Right => CssProperty::Right(LayoutRightValue::$content_type),
-            CssPropertyType::Left => CssProperty::Left(LayoutLeftValue::$content_type),
-            CssPropertyType::Bottom => CssProperty::Bottom(LayoutBottomValue::$content_type),
-            CssPropertyType::FlexWrap => CssProperty::FlexWrap(LayoutFlexWrapValue::$content_type),
-            CssPropertyType::FlexDirection => {
-                CssProperty::FlexDirection(LayoutFlexDirectionValue::$content_type)
-            }
-            CssPropertyType::FlexGrow => CssProperty::FlexGrow(LayoutFlexGrowValue::$content_type),
-            CssPropertyType::FlexShrink => {
-                CssProperty::FlexShrink(LayoutFlexShrinkValue::$content_type)
-            }
-            CssPropertyType::JustifyContent => {
-                CssProperty::JustifyContent(LayoutJustifyContentValue::$content_type)
-            }
-            CssPropertyType::AlignItems => {
-                CssProperty::AlignItems(LayoutAlignItemsValue::$content_type)
-            }
-            CssPropertyType::AlignContent => {
-                CssProperty::AlignContent(LayoutAlignContentValue::$content_type)
-            }
-            CssPropertyType::BackgroundContent => {
-                CssProperty::BackgroundContent(StyleBackgroundContentVecValue::$content_type)
-            }
-            CssPropertyType::BackgroundPosition => {
-                CssProperty::BackgroundPosition(StyleBackgroundPositionVecValue::$content_type)
-            }
-            CssPropertyType::BackgroundSize => {
-                CssProperty::BackgroundSize(StyleBackgroundSizeVecValue::$content_type)
-            }
-            CssPropertyType::BackgroundRepeat => {
-                CssProperty::BackgroundRepeat(StyleBackgroundRepeatVecValue::$content_type)
-            }
-            CssPropertyType::OverflowX => {
-                CssProperty::OverflowX(LayoutOverflowValue::$content_type)
-            }
-            CssPropertyType::OverflowY => {
-                CssProperty::OverflowY(LayoutOverflowValue::$content_type)
-            }
-            CssPropertyType::PaddingTop => {
-                CssProperty::PaddingTop(LayoutPaddingTopValue::$content_type)
-            }
-            CssPropertyType::PaddingLeft => {
-                CssProperty::PaddingLeft(LayoutPaddingLeftValue::$content_type)
-            }
-            CssPropertyType::PaddingRight => {
-                CssProperty::PaddingRight(LayoutPaddingRightValue::$content_type)
-            }
-            CssPropertyType::PaddingBottom => {
-                CssProperty::PaddingBottom(LayoutPaddingBottomValue::$content_type)
-            }
-            CssPropertyType::MarginTop => {
-                CssProperty::MarginTop(LayoutMarginTopValue::$content_type)
-            }
-            CssPropertyType::MarginLeft => {
-                CssProperty::MarginLeft(LayoutMarginLeftValue::$content_type)
-            }
-            CssPropertyType::MarginRight => {
-                CssProperty::MarginRight(LayoutMarginRightValue::$content_type)
-            }
-            CssPropertyType::MarginBottom => {
-                CssProperty::MarginBottom(LayoutMarginBottomValue::$content_type)
-            }
-            CssPropertyType::BorderTopLeftRadius => {
-                CssProperty::BorderTopLeftRadius(StyleBorderTopLeftRadiusValue::$content_type)
-            }
-            CssPropertyType::BorderTopRightRadius => {
-                CssProperty::BorderTopRightRadius(StyleBorderTopRightRadiusValue::$content_type)
-            }
-            CssPropertyType::BorderBottomLeftRadius => {
-                CssProperty::BorderBottomLeftRadius(StyleBorderBottomLeftRadiusValue::$content_type)
-            }
-            CssPropertyType::BorderBottomRightRadius => CssProperty::BorderBottomRightRadius(
-                StyleBorderBottomRightRadiusValue::$content_type,
-            ),
-            CssPropertyType::BorderTopColor => {
-                CssProperty::BorderTopColor(StyleBorderTopColorValue::$content_type)
-            }
-            CssPropertyType::BorderRightColor => {
-                CssProperty::BorderRightColor(StyleBorderRightColorValue::$content_type)
-            }
-            CssPropertyType::BorderLeftColor => {
-                CssProperty::BorderLeftColor(StyleBorderLeftColorValue::$content_type)
-            }
-            CssPropertyType::BorderBottomColor => {
-                CssProperty::BorderBottomColor(StyleBorderBottomColorValue::$content_type)
-            }
-            CssPropertyType::BorderTopStyle => {
-                CssProperty::BorderTopStyle(StyleBorderTopStyleValue::$content_type)
-            }
-            CssPropertyType::BorderRightStyle => {
-                CssProperty::BorderRightStyle(StyleBorderRightStyleValue::$content_type)
-            }
-            CssPropertyType::BorderLeftStyle => {
-                CssProperty::BorderLeftStyle(StyleBorderLeftStyleValue::$content_type)
-            }
-            CssPropertyType::BorderBottomStyle => {
-                CssProperty::BorderBottomStyle(StyleBorderBottomStyleValue::$content_type)
-            }
-            CssPropertyType::BorderTopWidth => {
-                CssProperty::BorderTopWidth(LayoutBorderTopWidthValue::$content_type)
-            }
-            CssPropertyType::BorderRightWidth => {
-                CssProperty::BorderRightWidth(LayoutBorderRightWidthValue::$content_type)
-            }
-            CssPropertyType::BorderLeftWidth => {
-                CssProperty::BorderLeftWidth(LayoutBorderLeftWidthValue::$content_type)
-            }
-            CssPropertyType::BorderBottomWidth => {
-                CssProperty::BorderBottomWidth(LayoutBorderBottomWidthValue::$content_type)
-            }
-            CssPropertyType::BoxShadowLeft => {
-                CssProperty::BoxShadowLeft(StyleBoxShadowValue::$content_type)
-            }
-            CssPropertyType::BoxShadowRight => {
-                CssProperty::BoxShadowRight(StyleBoxShadowValue::$content_type)
-            }
-            CssPropertyType::BoxShadowTop => {
-                CssProperty::BoxShadowTop(StyleBoxShadowValue::$content_type)
-            }
-            CssPropertyType::BoxShadowBottom => {
-                CssProperty::BoxShadowBottom(StyleBoxShadowValue::$content_type)
-            }
-            CssPropertyType::ScrollbarStyle => {
-                CssProperty::ScrollbarStyle(ScrollbarStyleValue::$content_type)
-            }
-            CssPropertyType::Opacity => CssProperty::Opacity(StyleOpacityValue::$content_type),
-            CssPropertyType::Transform => {
-                CssProperty::Transform(StyleTransformVecValue::$content_type)
-            }
-            CssPropertyType::PerspectiveOrigin => {
-                CssProperty::PerspectiveOrigin(StylePerspectiveOriginValue::$content_type)
-            }
-            CssPropertyType::TransformOrigin => {
-                CssProperty::TransformOrigin(StyleTransformOriginValue::$content_type)
-            }
-            CssPropertyType::BackfaceVisibility => {
-                CssProperty::BackfaceVisibility(StyleBackfaceVisibilityValue::$content_type)
-            }
-            CssPropertyType::MixBlendMode => {
-                CssProperty::MixBlendMode(StyleMixBlendModeValue::$content_type)
-            }
-            CssPropertyType::Filter => CssProperty::Filter(StyleFilterVecValue::$content_type),
-            CssPropertyType::BackdropFilter => {
-                CssProperty::BackdropFilter(StyleFilterVecValue::$content_type)
-            }
-            CssPropertyType::TextShadow => {
-                CssProperty::TextShadow(StyleBoxShadowValue::$content_type)
-            }
-        }
-    }};
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
@@ -764,79 +352,6 @@ pub struct SvgQuadraticCurve {
     pub ctrl: SvgPoint,
     pub end: SvgPoint,
 }
-
-macro_rules! impl_from_css_prop {
-    ($a:ty, $b:ident::$enum_type:ident) => {
-        impl From<$a> for $b {
-            fn from(e: $a) -> Self {
-                $b::$enum_type(CssPropertyValue::from(e))
-            }
-        }
-    };
-}
-
-impl_from_css_prop!(StyleTextColor, CssProperty::TextColor);
-impl_from_css_prop!(StyleFontSize, CssProperty::FontSize);
-impl_from_css_prop!(StyleTextAlign, CssProperty::TextAlign);
-impl_from_css_prop!(StyleLetterSpacing, CssProperty::LetterSpacing);
-impl_from_css_prop!(StyleLineHeight, CssProperty::LineHeight);
-impl_from_css_prop!(StyleWordSpacing, CssProperty::WordSpacing);
-impl_from_css_prop!(StyleTabWidth, CssProperty::TabWidth);
-impl_from_css_prop!(StyleCursor, CssProperty::Cursor);
-impl_from_css_prop!(LayoutDisplay, CssProperty::Display);
-impl_from_css_prop!(LayoutFloat, CssProperty::Float);
-impl_from_css_prop!(LayoutBoxSizing, CssProperty::BoxSizing);
-impl_from_css_prop!(LayoutWidth, CssProperty::Width);
-impl_from_css_prop!(LayoutHeight, CssProperty::Height);
-impl_from_css_prop!(LayoutMinWidth, CssProperty::MinWidth);
-impl_from_css_prop!(LayoutMinHeight, CssProperty::MinHeight);
-impl_from_css_prop!(LayoutMaxWidth, CssProperty::MaxWidth);
-impl_from_css_prop!(LayoutMaxHeight, CssProperty::MaxHeight);
-impl_from_css_prop!(LayoutPosition, CssProperty::Position);
-impl_from_css_prop!(LayoutTop, CssProperty::Top);
-impl_from_css_prop!(LayoutRight, CssProperty::Right);
-impl_from_css_prop!(LayoutLeft, CssProperty::Left);
-impl_from_css_prop!(LayoutBottom, CssProperty::Bottom);
-impl_from_css_prop!(LayoutFlexWrap, CssProperty::FlexWrap);
-impl_from_css_prop!(LayoutFlexDirection, CssProperty::FlexDirection);
-impl_from_css_prop!(LayoutJustifyContent, CssProperty::JustifyContent);
-impl_from_css_prop!(LayoutAlignItems, CssProperty::AlignItems);
-impl_from_css_prop!(LayoutAlignContent, CssProperty::AlignContent);
-impl_from_css_prop!(Vec<StyleBackgroundContent>, CssProperty::BackgroundContent);
-impl_from_css_prop!(
-    Vec<StyleBackgroundPosition>,
-    CssProperty::BackgroundPosition
-);
-impl_from_css_prop!(Vec<StyleBackgroundSize>, CssProperty::BackgroundSize);
-impl_from_css_prop!(Vec<StyleBackgroundRepeat>, CssProperty::BackgroundRepeat);
-impl_from_css_prop!(LayoutPaddingTop, CssProperty::PaddingTop);
-impl_from_css_prop!(LayoutPaddingLeft, CssProperty::PaddingLeft);
-impl_from_css_prop!(LayoutPaddingRight, CssProperty::PaddingRight);
-impl_from_css_prop!(LayoutPaddingBottom, CssProperty::PaddingBottom);
-impl_from_css_prop!(LayoutMarginTop, CssProperty::MarginTop);
-impl_from_css_prop!(LayoutMarginLeft, CssProperty::MarginLeft);
-impl_from_css_prop!(LayoutMarginRight, CssProperty::MarginRight);
-impl_from_css_prop!(LayoutMarginBottom, CssProperty::MarginBottom);
-impl_from_css_prop!(StyleBorderTopLeftRadius, CssProperty::BorderTopLeftRadius);
-impl_from_css_prop!(StyleBorderTopRightRadius, CssProperty::BorderTopRightRadius);
-impl_from_css_prop!(
-    StyleBorderBottomLeftRadius,
-    CssProperty::BorderBottomLeftRadius
-);
-impl_from_css_prop!(
-    StyleBorderBottomRightRadius,
-    CssProperty::BorderBottomRightRadius
-);
-impl_from_css_prop!(LayoutBorderTopWidth, CssProperty::BorderTopWidth);
-impl_from_css_prop!(LayoutBorderRightWidth, CssProperty::BorderRightWidth);
-impl_from_css_prop!(LayoutBorderLeftWidth, CssProperty::BorderLeftWidth);
-impl_from_css_prop!(LayoutBorderBottomWidth, CssProperty::BorderBottomWidth);
-impl_from_css_prop!(ScrollbarStyle, CssProperty::ScrollbarStyle);
-impl_from_css_prop!(StyleOpacity, CssProperty::Opacity);
-impl_from_css_prop!(StyleTransformOrigin, CssProperty::TransformOrigin);
-impl_from_css_prop!(StylePerspectiveOrigin, CssProperty::PerspectiveOrigin);
-impl_from_css_prop!(StyleBackfaceVisibility, CssProperty::BackfaceVisibility);
-impl_from_css_prop!(StyleMixBlendMode, CssProperty::MixBlendMode);
 
 /// Multiplier for floating point accuracy. Elements such as px or %
 /// are only accurate until a certain number of decimal points, therefore
@@ -1210,18 +725,6 @@ impl_pixel_value!(LayoutBorderTopWidth);
 impl_pixel_value!(LayoutBorderLeftWidth);
 impl_pixel_value!(LayoutBorderRightWidth);
 impl_pixel_value!(LayoutBorderBottomWidth);
-
-
-// missing StyleBorderRadius & LayoutRect
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleBoxShadow {
-    pub offset: [PixelValueNoPercent; 2],
-    pub color: ColorU,
-    pub blur_radius: PixelValueNoPercent,
-    pub spread_radius: PixelValueNoPercent,
-    pub clip_mode: BoxShadowClipMode,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C, u8)]
@@ -1967,64 +1470,6 @@ pub struct StyleTransformSkew2D {
     pub x: PercentageValue,
     pub y: PercentageValue,
 }
-
-pub type StyleBackgroundContentVecValue = CssPropertyValue<Vec<StyleBackgroundContent>>;
-pub type StyleBackgroundPositionVecValue = CssPropertyValue<Vec<StyleBackgroundPosition>>;
-pub type StyleBackgroundSizeVecValue = CssPropertyValue<Vec<StyleBackgroundSize>>;
-pub type StyleBackgroundRepeatVecValue = CssPropertyValue<Vec<StyleBackgroundRepeat>>;
-pub type StyleFontSizeValue = CssPropertyValue<StyleFontSize>;
-pub type StyleTextColorValue = CssPropertyValue<StyleTextColor>;
-pub type StyleTextAlignValue = CssPropertyValue<StyleTextAlign>;
-pub type StyleLineHeightValue = CssPropertyValue<StyleLineHeight>;
-pub type StyleLetterSpacingValue = CssPropertyValue<StyleLetterSpacing>;
-pub type StyleWordSpacingValue = CssPropertyValue<StyleWordSpacing>;
-pub type StyleTabWidthValue = CssPropertyValue<StyleTabWidth>;
-pub type StyleCursorValue = CssPropertyValue<StyleCursor>;
-pub type StyleBoxShadowValue = CssPropertyValue<StyleBoxShadow>;
-pub type StyleBorderTopLeftRadiusValue = CssPropertyValue<StyleBorderTopLeftRadius>;
-pub type StyleBorderTopRightRadiusValue = CssPropertyValue<StyleBorderTopRightRadius>;
-pub type StyleBorderBottomLeftRadiusValue = CssPropertyValue<StyleBorderBottomLeftRadius>;
-pub type StyleBorderBottomRightRadiusValue = CssPropertyValue<StyleBorderBottomRightRadius>;
-pub type StyleOpacityValue = CssPropertyValue<StyleOpacity>;
-pub type StyleTransformOriginValue = CssPropertyValue<StyleTransformOrigin>;
-pub type StylePerspectiveOriginValue = CssPropertyValue<StylePerspectiveOrigin>;
-pub type StyleBackfaceVisibilityValue = CssPropertyValue<StyleBackfaceVisibility>;
-pub type StyleMixBlendModeValue = CssPropertyValue<StyleMixBlendMode>;
-pub type ScrollbarStyleValue = CssPropertyValue<ScrollbarStyle>;
-pub type LayoutDisplayValue = CssPropertyValue<LayoutDisplay>;
-pub type LayoutFloatValue = CssPropertyValue<LayoutFloat>;
-pub type LayoutBoxSizingValue = CssPropertyValue<LayoutBoxSizing>;
-pub type LayoutWidthValue = CssPropertyValue<LayoutWidth>;
-pub type LayoutHeightValue = CssPropertyValue<LayoutHeight>;
-pub type LayoutMinWidthValue = CssPropertyValue<LayoutMinWidth>;
-pub type LayoutMinHeightValue = CssPropertyValue<LayoutMinHeight>;
-pub type LayoutMaxWidthValue = CssPropertyValue<LayoutMaxWidth>;
-pub type LayoutMaxHeightValue = CssPropertyValue<LayoutMaxHeight>;
-pub type LayoutPositionValue = CssPropertyValue<LayoutPosition>;
-pub type LayoutTopValue = CssPropertyValue<LayoutTop>;
-pub type LayoutBottomValue = CssPropertyValue<LayoutBottom>;
-pub type LayoutRightValue = CssPropertyValue<LayoutRight>;
-pub type LayoutLeftValue = CssPropertyValue<LayoutLeft>;
-pub type LayoutPaddingTopValue = CssPropertyValue<LayoutPaddingTop>;
-pub type LayoutPaddingBottomValue = CssPropertyValue<LayoutPaddingBottom>;
-pub type LayoutPaddingLeftValue = CssPropertyValue<LayoutPaddingLeft>;
-pub type LayoutPaddingRightValue = CssPropertyValue<LayoutPaddingRight>;
-pub type LayoutMarginTopValue = CssPropertyValue<LayoutMarginTop>;
-pub type LayoutMarginBottomValue = CssPropertyValue<LayoutMarginBottom>;
-pub type LayoutMarginLeftValue = CssPropertyValue<LayoutMarginLeft>;
-pub type LayoutMarginRightValue = CssPropertyValue<LayoutMarginRight>;
-pub type LayoutBorderTopWidthValue = CssPropertyValue<LayoutBorderTopWidth>;
-pub type LayoutBorderLeftWidthValue = CssPropertyValue<LayoutBorderLeftWidth>;
-pub type LayoutBorderRightWidthValue = CssPropertyValue<LayoutBorderRightWidth>;
-pub type LayoutBorderBottomWidthValue = CssPropertyValue<LayoutBorderBottomWidth>;
-pub type LayoutOverflowValue = CssPropertyValue<LayoutOverflow>;
-pub type LayoutFlexDirectionValue = CssPropertyValue<LayoutFlexDirection>;
-pub type LayoutFlexWrapValue = CssPropertyValue<LayoutFlexWrap>;
-pub type LayoutFlexGrowValue = CssPropertyValue<LayoutFlexGrow>;
-pub type LayoutFlexShrinkValue = CssPropertyValue<LayoutFlexShrink>;
-pub type LayoutJustifyContentValue = CssPropertyValue<LayoutJustifyContent>;
-pub type LayoutAlignItemsValue = CssPropertyValue<LayoutAlignItems>;
-pub type LayoutAlignContentValue = CssPropertyValue<LayoutAlignContent>;
 
 /// Holds info necessary for layouting / styling scrollbars (-webkit-scrollbar)
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
