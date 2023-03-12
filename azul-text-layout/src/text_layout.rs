@@ -463,16 +463,16 @@ impl LineCaretIntersection {
     }
 }
 
-pub fn shape_text(font: &FontRef, text: &str, options: &ResolvedTextLayoutOptions) -> InlineText {
-    let font_data = font.get_data();
+// pub fn shape_text(font: &FontRef, text: &str, options: &ResolvedTextLayoutOptions) -> InlineText {
+//     let font_data = font.get_data();
 
-    let words = split_text_into_words(text);
-    let shaped_words = shape_words(&words, &font_data.parsed);
-    let word_positions = position_words(&words, &shaped_words, options);
-    let inline_text_layout = word_positions_to_inline_text_layout(&word_positions);
+//     let words = split_text_into_words(text);
+//     let shaped_words = shape_words(&words, &font_data.parsed);
+//     let word_positions = position_words(&words, &shaped_words, options);
+//     let inline_text_layout = word_positions_to_inline_text_layout(&word_positions);
 
-    crate::words::get_inline_text(&words, &shaped_words, &word_positions, &inline_text_layout)
-}
+//     crate::words::get_inline_text(&words, &shaped_words, &word_positions, &inline_text_layout)
+// }
 
 #[test]
 fn test_split_words() {

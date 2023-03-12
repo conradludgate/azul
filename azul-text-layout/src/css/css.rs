@@ -13,17 +13,7 @@ pub struct Css {
     pub stylesheets: Vec<Stylesheet>,
 }
 
-impl Css {
-    pub fn is_empty(&self) -> bool {
-        self.stylesheets.iter().all(|s| s.rules.is_empty())
-    }
-
-    pub fn new(stylesheets: Vec<Stylesheet>) -> Self {
-        Self {
-            stylesheets: stylesheets.into(),
-        }
-    }
-}
+impl Css {}
 
 #[derive(Debug, Default, PartialEq, PartialOrd, Clone)]
 #[repr(C)]
@@ -32,13 +22,7 @@ pub struct Stylesheet {
     pub rules: Vec<CssRuleBlock>,
 }
 
-impl Stylesheet {
-    pub fn new(rules: Vec<CssRuleBlock>) -> Self {
-        Self {
-            rules: rules.into(),
-        }
-    }
-}
+impl Stylesheet {}
 
 impl From<Vec<CssRuleBlock>> for Stylesheet {
     fn from(rules: Vec<CssRuleBlock>) -> Self {
@@ -50,60 +34,9 @@ impl From<Vec<CssRuleBlock>> for Stylesheet {
 
 /// Contains one parsed `key: value` pair, static or dynamic
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[repr(C, u8)]
-pub enum CssDeclaration {
-    /// Static key-value pair, such as `width: 500px`
-    Static(CssProperty),
-    /// Dynamic key-value pair with default value, such as `width: [[ my_id | 500px ]]`
-    Dynamic(DynamicCssProperty),
-}
+pub enum CssDeclaration {}
 
-impl CssDeclaration {
-    pub const fn new_static(prop: CssProperty) -> Self {
-        CssDeclaration::Static(prop)
-    }
-
-    pub const fn new_dynamic(prop: DynamicCssProperty) -> Self {
-        CssDeclaration::Dynamic(prop)
-    }
-
-    /// Returns the type of the property (i.e. the CSS key as a typed enum)
-    pub fn get_type(&self) -> CssPropertyType {
-        use self::CssDeclaration::*;
-        match self {
-            Static(s) => s.get_type(),
-            Dynamic(d) => d.default_value.get_type(),
-        }
-    }
-
-    /// Determines if the property will be inherited (applied to the children)
-    /// during the recursive application of the style on the DOM tree
-    pub fn is_inheritable(&self) -> bool {
-        use self::CssDeclaration::*;
-        match self {
-            Static(s) => s.get_type().is_inheritable(),
-            Dynamic(d) => d.is_inheritable(),
-        }
-    }
-
-    /// Returns whether this rule affects only styling properties or layout
-    /// properties (that could trigger a re-layout)
-    pub fn can_trigger_relayout(&self) -> bool {
-        use self::CssDeclaration::*;
-        match self {
-            Static(s) => s.get_type().can_trigger_relayout(),
-            Dynamic(d) => d.can_trigger_relayout(),
-        }
-    }
-
-    pub fn to_str(&self) -> String {
-        use self::CssDeclaration::*;
-        match self {
-            Static(s) => format!("{:?}", s),
-            Dynamic(d) => format!("var(--{}, {:?})", d.dynamic_id, d.default_value),
-        }
-    }
-}
+impl CssDeclaration {}
 
 /// A `DynamicCssProperty` is a type of css property that can be changed on possibly
 /// every frame by the Rust code - for example to implement an `On::Hover` behaviour.
@@ -137,10 +70,6 @@ pub struct DynamicCssProperty {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(C, u8)] // necessary for ABI stability
 pub enum CssPropertyValue<T> {
-    Auto,
-    None,
-    Initial,
-    Inherit,
     Exact(T),
 }
 
@@ -148,26 +77,10 @@ pub trait PrintAsCssValue {
     fn print_as_css_value(&self) -> String;
 }
 
-impl<T: PrintAsCssValue> CssPropertyValue<T> {
-    pub fn get_css_value_fmt(&self) -> String {
-        match self {
-            CssPropertyValue::Auto => format!("auto"),
-            CssPropertyValue::None => format!("none"),
-            CssPropertyValue::Initial => format!("initial"),
-            CssPropertyValue::Inherit => format!("inherit"),
-            CssPropertyValue::Exact(e) => e.print_as_css_value(),
-        }
-    }
-}
-
 impl<T: fmt::Display> fmt::Display for CssPropertyValue<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::CssPropertyValue::*;
         match self {
-            Auto => write!(f, "auto"),
-            None => write!(f, "none"),
-            Initial => write!(f, "initial"),
-            Inherit => write!(f, "inherit"),
             Exact(e) => write!(f, "{}", e),
         }
     }
@@ -179,96 +92,12 @@ impl<T> From<T> for CssPropertyValue<T> {
     }
 }
 
-impl<T> CssPropertyValue<T> {
-    /// Transforms a `CssPropertyValue<T>` into a `CssPropertyValue<U>` by applying a mapping function
-    #[inline]
-    pub fn map_property<F: Fn(T) -> U, U>(self, map_fn: F) -> CssPropertyValue<U> {
-        match self {
-            CssPropertyValue::Exact(c) => CssPropertyValue::Exact(map_fn(c)),
-            CssPropertyValue::Auto => CssPropertyValue::Auto,
-            CssPropertyValue::None => CssPropertyValue::None,
-            CssPropertyValue::Initial => CssPropertyValue::Initial,
-            CssPropertyValue::Inherit => CssPropertyValue::Inherit,
-        }
-    }
-
-    #[inline]
-    pub fn get_property(&self) -> Option<&T> {
-        match self {
-            CssPropertyValue::Exact(c) => Some(c),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn get_property_owned(self) -> Option<T> {
-        match self {
-            CssPropertyValue::Exact(c) => Some(c),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_auto(&self) -> bool {
-        match self {
-            CssPropertyValue::Auto => true,
-            _ => false,
-        }
-    }
-
-    #[inline]
-    pub fn is_none(&self) -> bool {
-        match self {
-            CssPropertyValue::None => true,
-            _ => false,
-        }
-    }
-
-    #[inline]
-    pub fn is_initial(&self) -> bool {
-        match self {
-            CssPropertyValue::Initial => true,
-            _ => false,
-        }
-    }
-
-    #[inline]
-    pub fn is_inherit(&self) -> bool {
-        match self {
-            CssPropertyValue::Inherit => true,
-            _ => false,
-        }
-    }
-}
-
-impl<T: Default> CssPropertyValue<T> {
-    #[inline]
-    pub fn get_property_or_default(self) -> Option<T> {
-        match self {
-            CssPropertyValue::Auto | CssPropertyValue::Initial => Some(T::default()),
-            CssPropertyValue::Exact(c) => Some(c),
-            CssPropertyValue::None | CssPropertyValue::Inherit => None,
-        }
-    }
-}
+impl<T> CssPropertyValue<T> {}
 
 impl<T: Default> Default for CssPropertyValue<T> {
     #[inline]
     fn default() -> Self {
         CssPropertyValue::Exact(T::default())
-    }
-}
-
-impl DynamicCssProperty {
-    pub fn is_inheritable(&self) -> bool {
-        // Dynamic style properties should not be inheritable,
-        // since that could lead to bugs - you set a property in Rust, suddenly
-        // the wrong UI component starts to react because it was inherited.
-        false
-    }
-
-    pub fn can_trigger_relayout(&self) -> bool {
-        self.default_value.get_type().can_trigger_relayout()
     }
 }
 
@@ -283,17 +112,6 @@ pub struct CssRuleBlock {
     /// `CssDeclaration::Static(CssProperty::JustifyContent(LayoutJustifyContent::Center))`
     pub declarations: Vec<CssDeclaration>,
 }
-
-impl CssRuleBlock {
-    pub fn new(path: CssPath, declarations: Vec<CssDeclaration>) -> Self {
-        Self {
-            path,
-            declarations: declarations.into(),
-        }
-    }
-}
-
-pub type CssContentGroup<'a> = Vec<&'a CssPathSelector>;
 
 /// Signifies the type (i.e. the discriminant value) of a DOM node
 /// without carrying any of its associated data
@@ -317,19 +135,6 @@ impl<'a> fmt::Display for NodeTypeTagParseError<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self {
             NodeTypeTagParseError::Invalid(e) => write!(f, "Invalid node type: {}", e),
-        }
-    }
-}
-
-/// Parses the node type from a CSS string such as `"div"` => `NodeTypeTag::Div`
-impl NodeTypeTag {
-    pub fn from_str(css_key: &str) -> Result<Self, NodeTypeTagParseError> {
-        match css_key {
-            "body" => Ok(NodeTypeTag::Body),
-            "div" => Ok(NodeTypeTag::Div),
-            "p" => Ok(NodeTypeTag::P),
-            "img" => Ok(NodeTypeTag::Img),
-            other => Err(NodeTypeTagParseError::Invalid(other)),
         }
     }
 }
@@ -364,13 +169,7 @@ pub struct CssPath {
     pub selectors: Vec<CssPathSelector>,
 }
 
-impl CssPath {
-    pub fn new(selectors: Vec<CssPathSelector>) -> Self {
-        Self {
-            selectors: selectors.into(),
-        }
-    }
-}
+impl CssPath {}
 
 impl fmt::Display for CssPath {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -486,27 +285,6 @@ impl fmt::Display for CssPathPseudoSelector {
     }
 }
 
-impl Css {
-    /// Creates a new, empty CSS with no stylesheets
-    pub fn empty() -> Self {
-        Default::default()
-    }
-
-    pub fn sort_by_specificity(&mut self) {
-        self.stylesheets
-            .iter_mut()
-            .for_each(|s| s.sort_by_specificity());
-    }
-
-    pub fn rules<'a>(&'a self) -> RuleIterator<'a> {
-        RuleIterator {
-            current_stylesheet: 0,
-            current_rule: 0,
-            css: self,
-        }
-    }
-}
-
 pub struct RuleIterator<'a> {
     current_stylesheet: usize,
     current_rule: usize,
@@ -529,195 +307,4 @@ impl<'a> Iterator for RuleIterator<'a> {
             }
         }
     }
-}
-
-impl Stylesheet {
-    /// Creates a new stylesheet with no style rules.
-    pub fn empty() -> Self {
-        Default::default()
-    }
-
-    /// Sort the style rules by their weight, so that the rules are applied in the correct order.
-    /// Should always be called when a new style is loaded from an external source.
-    pub fn sort_by_specificity(&mut self) {
-        self.rules
-            .sort_by(|a, b| get_specificity(&a.path).cmp(&get_specificity(&b.path)));
-    }
-}
-
-/// Returns specificity of the given css path. Further information can be found on
-/// [the w3 website](http://www.w3.org/TR/selectors/#specificity).
-fn get_specificity(path: &CssPath) -> (usize, usize, usize, usize) {
-    let id_count = path
-        .selectors
-        .iter()
-        .filter(|x| {
-            if let CssPathSelector::Id(_) = x {
-                true
-            } else {
-                false
-            }
-        })
-        .count();
-    let class_count = path
-        .selectors
-        .iter()
-        .filter(|x| {
-            if let CssPathSelector::Class(_) = x {
-                true
-            } else {
-                false
-            }
-        })
-        .count();
-    let div_count = path
-        .selectors
-        .iter()
-        .filter(|x| {
-            if let CssPathSelector::Type(_) = x {
-                true
-            } else {
-                false
-            }
-        })
-        .count();
-    (id_count, class_count, div_count, path.selectors.len())
-}
-
-#[test]
-fn test_specificity() {
-    use self::CssPathSelector::*;
-    assert_eq!(
-        get_specificity(&CssPath {
-            selectors: vec![Id("hello".to_string().into())].into()
-        }),
-        (1, 0, 0, 1)
-    );
-    assert_eq!(
-        get_specificity(&CssPath {
-            selectors: vec![Class("hello".to_string().into())].into()
-        }),
-        (0, 1, 0, 1)
-    );
-    assert_eq!(
-        get_specificity(&CssPath {
-            selectors: vec![Type(NodeTypeTag::Div)].into()
-        }),
-        (0, 0, 1, 1)
-    );
-    assert_eq!(
-        get_specificity(&CssPath {
-            selectors: vec![Id("hello".to_string().into()), Type(NodeTypeTag::Div)].into()
-        }),
-        (1, 0, 1, 2)
-    );
-}
-
-// Assert that order of the style items is correct
-// (in order of CSS path specificity, lowest-to-highest)
-#[test]
-fn test_specificity_sort() {
-    use self::CssPathSelector::*;
-    use crate::css::NodeTypeTag::*;
-
-    let mut input_style = Stylesheet {
-        rules: vec![
-            // Rules are sorted from lowest-specificity to highest specificity
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![Global].into(),
-                },
-                declarations: Vec::new().into(),
-            },
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![
-                        Global,
-                        Type(Div),
-                        Class("my_class".to_string().into()),
-                        Id("my_id".to_string().into()),
-                    ]
-                    .into(),
-                },
-                declarations: Vec::new().into(),
-            },
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![Global, Type(Div), Id("my_id".to_string().into())].into(),
-                },
-                declarations: Vec::new().into(),
-            },
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![Global, Id("my_id".to_string().into())].into(),
-                },
-                declarations: Vec::new().into(),
-            },
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![
-                        Type(Div),
-                        Class("my_class".to_string().into()),
-                        Class("specific".to_string().into()),
-                        Id("my_id".to_string().into()),
-                    ]
-                    .into(),
-                },
-                declarations: Vec::new().into(),
-            },
-        ]
-        .into(),
-    };
-    input_style.sort_by_specificity();
-
-    let expected_style = Stylesheet {
-        rules: vec![
-            // Rules are sorted from lowest-specificity to highest specificity
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![Global].into(),
-                },
-                declarations: Vec::new().into(),
-            },
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![Global, Id("my_id".to_string().into())].into(),
-                },
-                declarations: Vec::new().into(),
-            },
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![Global, Type(Div), Id("my_id".to_string().into())].into(),
-                },
-                declarations: Vec::new().into(),
-            },
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![
-                        Global,
-                        Type(Div),
-                        Class("my_class".to_string().into()),
-                        Id("my_id".to_string().into()),
-                    ]
-                    .into(),
-                },
-                declarations: Vec::new().into(),
-            },
-            CssRuleBlock {
-                path: CssPath {
-                    selectors: vec![
-                        Type(Div),
-                        Class("my_class".to_string().into()),
-                        Class("specific".to_string().into()),
-                        Id("my_id".to_string().into()),
-                    ]
-                    .into(),
-                },
-                declarations: Vec::new().into(),
-            },
-        ]
-        .into(),
-    };
-
-    assert_eq!(input_style, expected_style);
 }

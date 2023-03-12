@@ -6,22 +6,8 @@ use crate::{
     logical::{LogicalRect, LogicalSize},
 };
 
-pub const DEFAULT_FONT_SIZE_PX: isize = 16;
-pub const DEFAULT_FONT_SIZE: StyleFontSize = StyleFontSize {
-    inner: PixelValue::const_px(DEFAULT_FONT_SIZE_PX),
-};
-pub const DEFAULT_FONT_ID: &str = "serif";
-pub const DEFAULT_TEXT_COLOR: StyleTextColor = StyleTextColor {
-    inner: ColorU {
-        r: 0,
-        b: 0,
-        g: 0,
-        a: 255,
-    },
-};
 pub const DEFAULT_LINE_HEIGHT: f32 = 1.0;
 pub const DEFAULT_WORD_SPACING: f32 = 1.0;
-pub const DEFAULT_LETTER_SPACING: f32 = 0.0;
 pub const DEFAULT_TAB_WIDTH: f32 = 4.0;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

@@ -68,46 +68,31 @@
     html_logo_url = "https://raw.githubusercontent.com/maps4print/azul/master/assets/images/azul_logo_full_min.svg.png",
     html_favicon_url = "https://raw.githubusercontent.com/maps4print/azul/master/assets/images/favicon.ico"
 )]
+#![deny(dead_code)]
 
-// mod fontconfig;
-pub mod css;
-pub mod css_parser;
-pub mod logical;
-pub mod ui_solver;
+mod css;
+// mod css_parser;
+mod logical;
+mod ui_solver;
 mod words;
 
 #[macro_use]
 extern crate tinyvec;
 
-use self::css::{FontData, FontRef};
+mod script;
+mod text_layout;
+mod text_shaping;
 
-pub mod script;
-pub mod text_layout;
-pub mod text_shaping;
-
-use css::FontMetrics;
-
-pub fn parse_font_fn(source: LoadedFontSource) -> Option<FontRef> {
-    crate::text_layout::parse_font(
-        source.data.as_ref(),
-        source.index as usize,
-        source.load_outlines,
-    )
-    .map(|parsed_font| {
-        FontRef::new(FontData {
-            bytes: source.data,
-            font_index: source.index,
-            parsed: parsed_font,
-        })
-    })
-}
-
-pub fn get_font_metrics_fontref(font_ref: &FontRef) -> FontMetrics {
-    font_ref.data.parsed.font_metrics
-}
+pub use logical::{LogicalPosition, LogicalRect, LogicalSize};
+pub use text_layout::{
+    parse_font, position_words, shape_words, split_text_into_words,
+    word_positions_to_inline_text_layout,
+};
+pub use ui_solver::{InlineTextLayout, ResolvedTextLayoutOptions};
+pub use words::{get_inline_text, ShapedWord, ShapedWords, Word, WordType, Words};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct LoadedFontSource {
+struct LoadedFontSource {
     pub data: Vec<u8>,
     pub index: u32,
     pub load_outlines: bool,

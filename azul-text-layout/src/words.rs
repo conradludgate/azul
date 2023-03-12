@@ -105,7 +105,7 @@ impl Words {
     }
 
     pub fn get_str(&self) -> &str {
-        &self.internal_str.as_str()
+        self.internal_str.as_str()
     }
 
     // pub fn get_char(&self, idx: usize) -> Option<char> {
@@ -321,7 +321,7 @@ pub fn get_inline_text(
                             }
 
                             let inline_word = InlineWord::Word(InlineTextContents {
-                                glyphs: all_glyphs_in_this_word.into(),
+                                glyphs: all_glyphs_in_this_word,
                                 bounds: LogicalRect::new(
                                     word_position.position,
                                     word_position.size,
@@ -338,14 +338,14 @@ pub fn get_inline_text(
                 .collect::<Vec<InlineWord>>();
 
             Some(InlineLine {
-                words: words.into(),
+                words: words,
                 bounds: line.bounds,
             })
         })
         .collect::<Vec<InlineLine>>();
 
     InlineText {
-        lines: inline_lines.into(), // relative to 0, 0
+        lines: inline_lines, // relative to 0, 0
         content_size: word_positions.content_size,
         font_size_px,
         last_word_index: word_positions.number_of_shaped_words,
