@@ -1,10 +1,6 @@
 [workspace]
 members = [
-    "azul-css",
-    "azul-core",
-    # "azul-layout",
     "azul-text-layout",
-    "azul-css-parser",
 ]
 
 [profile.dev]

@@ -99,33 +99,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
-name = "azul-core"
-version = "0.0.2"
-dependencies = [
- "azul-css",
- "azul-css-parser",
- "gl-context-loader",
- "highway",
- "libm",
- "rust-fontconfig",
-]
-
-[[package]]
-name = "azul-css"
-version = "0.0.1"
-dependencies = [
- "libm",
-]
-
-[[package]]
-name = "azul-css-parser"
-version = "0.0.1"
-dependencies = [
- "azul-css",
- "azul-simplecss",
-]
-
-[[package]]
 name = "azul-simplecss"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
