@@ -124,10 +124,6 @@ pub fn split_text_into_words(text: &str) -> Words {
 /// Takes a text broken into semantic items and shape all the words
 /// (does NOT scale the words, only shapes them)
 pub fn shape_words(words: &Words, font: &ParsedFont) -> ShapedWords {
-    use crate::text_shaping;
-
-    let (script, lang) = text_shaping::estimate_script_and_language(&words.internal_str);
-
     // Get the dimensions of the space glyph
     let space_advance = font
         .get_space_width()
@@ -147,7 +143,7 @@ pub fn shape_words(words: &Words, font: &ParsedFont) -> ShapedWords {
                 .chars()
                 .map(|c| c as u32)
                 .collect::<Vec<_>>();
-            let shaped_word = font.shape(&chars, script, lang);
+            let shaped_word = font.shape(&chars);
             let word_width = shaped_word.get_word_visual_width_unscaled();
 
             longest_word_width = longest_word_width.max(word_width);

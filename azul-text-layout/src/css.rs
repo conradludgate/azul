@@ -704,74 +704,7 @@ pub struct FontMetrics {
     pub us_upper_optical_point_size: Option<u16>,
 }
 
-impl Default for FontMetrics {
-    fn default() -> Self {
-        FontMetrics::zero()
-    }
-}
-
 impl FontMetrics {
-    /// Only for testing, zero-sized font, will always return 0 for every metric (`units_per_em = 1000`)
-    pub const fn zero() -> Self {
-        FontMetrics {
-            units_per_em: 1000,
-            font_flags: 0,
-            x_min: 0,
-            y_min: 0,
-            x_max: 0,
-            y_max: 0,
-            ascender: 0,
-            descender: 0,
-            line_gap: 0,
-            advance_width_max: 0,
-            min_left_side_bearing: 0,
-            min_right_side_bearing: 0,
-            x_max_extent: 0,
-            caret_slope_rise: 0,
-            caret_slope_run: 0,
-            caret_offset: 0,
-            num_h_metrics: 0,
-            x_avg_char_width: 0,
-            us_weight_class: 0,
-            us_width_class: 0,
-            fs_type: 0,
-            y_subscript_x_size: 0,
-            y_subscript_y_size: 0,
-            y_subscript_x_offset: 0,
-            y_subscript_y_offset: 0,
-            y_superscript_x_size: 0,
-            y_superscript_y_size: 0,
-            y_superscript_x_offset: 0,
-            y_superscript_y_offset: 0,
-            y_strikeout_size: 0,
-            y_strikeout_position: 0,
-            s_family_class: 0,
-            panose: [0; 10],
-            ul_unicode_range1: 0,
-            ul_unicode_range2: 0,
-            ul_unicode_range3: 0,
-            ul_unicode_range4: 0,
-            ach_vend_id: 0,
-            fs_selection: 0,
-            us_first_char_index: 0,
-            us_last_char_index: 0,
-            s_typo_ascender: None,
-            s_typo_descender: None,
-            s_typo_line_gap: None,
-            us_win_ascent: None,
-            us_win_descent: None,
-            ul_code_page_range1: None,
-            ul_code_page_range2: None,
-            sx_height: None,
-            s_cap_height: None,
-            us_default_char: None,
-            us_break_char: None,
-            us_max_context: None,
-            us_lower_optical_point_size: None,
-            us_upper_optical_point_size: None,
-        }
-    }
-
     /// If set, use `OS/2.sTypoAscender - OS/2.sTypoDescender + OS/2.sTypoLineGap` to calculate the height
     ///
     /// See [`USE_TYPO_METRICS`](https://docs.microsoft.com/en-us/typography/opentype/spec/os2#fss)

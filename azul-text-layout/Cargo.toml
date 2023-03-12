@@ -1,5 +1,5 @@
 [package]
-name = "cl-azul-text-layout"
+name = "cl-text-layout"
 version = "0.1.0"
 authors = ["Conrad Ludgate <conradludgate@gmail.com>"]
 license = "MPL-2.0"

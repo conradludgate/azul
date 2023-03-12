@@ -75,14 +75,15 @@ mod logical;
 mod ui_solver;
 mod words;
 
-mod script;
 mod text_layout;
 mod text_shaping;
 
+pub use css::StyleTextAlign;
 pub use logical::{LogicalPosition, LogicalRect, LogicalSize};
 pub use text_layout::{
     parse_font, position_words, shape_words, split_text_into_words,
     word_positions_to_inline_text_layout,
 };
+pub use text_shaping::ParsedFont;
 pub use ui_solver::{InlineTextLayout, ResolvedTextLayoutOptions};
 pub use words::{get_inline_text, ShapedWord, ShapedWords, Word, WordType, Words};

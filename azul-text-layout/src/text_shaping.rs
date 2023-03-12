@@ -62,25 +62,13 @@ pub fn get_font_metrics(font_bytes: &[u8], font_index: usize) -> FontMetrics {
     }
 
     let scope = ReadScope::new(font_bytes);
-    let font_file = match scope.read::<FontData<'_>>() {
-        Ok(o) => o,
-        Err(_) => return FontMetrics::default(),
-    };
-    let provider = match font_file.table_provider(font_index) {
-        Ok(o) => o,
-        Err(_) => return FontMetrics::default(),
-    };
-    let font = match allsorts::font::Font::new(provider).ok() {
-        Some(Some(s)) => s,
-        _ => return FontMetrics::default(),
-    };
+    let font_file = scope.read::<FontData<'_>>().unwrap();
+    let provider = font_file.table_provider(font_index).unwrap();
+    let font = allsorts::font::Font::new(provider).unwrap().unwrap();
 
     // read the HHEA table to get the metrics for horizontal layout
     let hhea_table = &font.hhea_table;
-    let head_table = match font.head_table().ok() {
-        Some(Some(s)) => s,
-        _ => return FontMetrics::default(),
-    };
+    let head_table = font.head_table().unwrap().unwrap();
 
     let os2_table = match font.os2_table().ok() {
         Some(Some(s)) => Os2Info {
@@ -467,8 +455,8 @@ impl ParsedFont {
         Some((glyph_width, glyph_height))
     }
 
-    pub fn shape(&self, text: &[u32], script: u32, lang: Option<u32>) -> ShapedTextBufferUnsized {
-        shape(self, text, script, lang).unwrap_or_default()
+    pub fn shape(&self, text: &[u32]) -> ShapedTextBufferUnsized {
+        shape(self, text).unwrap_or_default()
     }
 
     pub fn lookup_glyph_index(&self, c: u32) -> Option<u16> {
@@ -494,105 +482,7 @@ impl ShapedTextBufferUnsized {
     }
 }
 
-/// Generate a 4-byte font table tag from byte string
-///
-/// Example:
-///
-/// ```
-/// assert_eq!(tag!(b"glyf"), 0x676C7966);
-/// ```
-macro_rules! tag {
-    ($w:expr) => {
-        tag(*$w)
-    };
-}
-
-const fn tag(chars: [u8; 4]) -> u32 {
-    u32::from_be_bytes(chars)
-}
-
-/// Estimate the language and the script from the text (uses trigrams)
-pub fn estimate_script_and_language(text: &str) -> (u32, Option<u32>) {
-    use crate::script::Script; // whatlang::Script
-
-    // https://docs.microsoft.com/en-us/typography/opentype/spec/scripttags
-
-    const TAG_ARAB: u32 = tag!(b"arab"); // Arabic
-    const TAG_BENG: u32 = tag!(b"beng"); // Bengali
-    const TAG_CYRL: u32 = tag!(b"cyrl"); // Cyrillic
-    const TAG_DEVA: u32 = tag!(b"deva"); // Devanagari
-    const TAG_ETHI: u32 = tag!(b"ethi"); // Ethiopic
-    const TAG_GEOR: u32 = tag!(b"geor"); // Georgian
-    const TAG_GREK: u32 = tag!(b"grek"); // Greek
-    const TAG_GUJR: u32 = tag!(b"gujr"); // Gujarati
-    const TAG_GUR2: u32 = tag!(b"gur2"); // Gurmukhi v.2
-    const TAG_HANG: u32 = tag!(b"hang"); // Hangul
-    const TAG_HEBR: u32 = tag!(b"hebr"); // Hebrew
-    const TAG_HIRG: u32 = tag!(b"kana"); // Hiragana
-    const TAG_KND2: u32 = tag!(b"knd2"); // Kannada v.2
-    const TAG_KANA: u32 = tag!(b"kana"); // Katakana
-    const TAG_KHMR: u32 = tag!(b"khmr"); // Khmer
-    const TAG_LATN: u32 = tag!(b"latn"); // Latin
-    const TAG_MLYM: u32 = tag!(b"mlym"); // Malayalam
-    const TAG_MAND: u32 = tag!(b"mand"); // Mandaic, Mandaean
-    const TAG_MYM2: u32 = tag!(b"mym2"); // Myanmar v.2
-    const TAG_ORYA: u32 = tag!(b"orya"); // Odia (formerly Oriya)
-    const TAG_SINH: u32 = tag!(b"sinh"); // Sinhala
-    const TAG_TAML: u32 = tag!(b"taml"); // Tamil
-    const TAG_TELU: u32 = tag!(b"telu"); // Telugu
-    const TAG_THAI: u32 = tag!(b"thai"); // Thai
-                                         // missing: Yi
-
-    // auto-detect script + language from text (todo: performance!)
-
-    // let (lang, script) = whatlang::detect(text)
-    //     .map(|info| (info.lang(), info.script()))
-    //     .unwrap_or((Lang::Eng, Script::Latin));
-
-    let lang = None; // detecting the language is only necessary for special font features
-
-    // let lang = tag_mod::from_string(&lang.code().to_string().to_uppercase()).unwrap();
-
-    let script = match crate::script::detect_script(text).unwrap_or(Script::Latin) {
-        Script::Arabic => TAG_ARAB,
-        Script::Bengali => TAG_BENG,
-        Script::Cyrillic => TAG_CYRL,
-        Script::Devanagari => TAG_DEVA,
-        Script::Ethiopic => TAG_ETHI,
-        Script::Georgian => TAG_GEOR,
-        Script::Greek => TAG_GREK,
-        Script::Gujarati => TAG_GUJR,
-        Script::Gurmukhi => TAG_GUR2,
-        Script::Hangul => TAG_HANG,
-        Script::Hebrew => TAG_HEBR,
-        Script::Hiragana => TAG_HIRG, // NOTE: tag = 'kana', probably error
-        Script::Kannada => TAG_KND2,
-        Script::Katakana => TAG_KANA,
-        Script::Khmer => TAG_KHMR,
-        Script::Latin => TAG_LATN,
-        Script::Malayalam => TAG_MLYM,
-        Script::Mandarin => TAG_MAND,
-        Script::Myanmar => TAG_MYM2,
-        Script::Oriya => TAG_ORYA,
-        Script::Sinhala => TAG_SINH,
-        Script::Tamil => TAG_TAML,
-        Script::Telugu => TAG_TELU,
-        Script::Thai => TAG_THAI,
-    };
-
-    (script, lang)
-}
-
-// shape_word(text: &str, &font) -> TextBuffer
-// get_word_visual_width(word: &TextBuffer) ->
-// get_glyph_instances(infos: &GlyphInfos, positions: &GlyphPositions) -> PositionedGlyphBuffer
-
-fn shape(
-    font: &ParsedFont,
-    text: &[u32],
-    script: u32,
-    lang: Option<u32>,
-) -> Option<ShapedTextBufferUnsized> {
+fn shape(font: &ParsedFont, text: &[u32]) -> Option<ShapedTextBufferUnsized> {
     use allsorts::gpos::apply as gpos_apply;
     use allsorts::gsub::apply as gsub_apply;
     use allsorts::gsub::{FeatureMask, Features};
@@ -631,8 +521,8 @@ fn shape(
         dotted_circle_index,
         &font.gsub_cache,
         font.opt_gdef_table.as_ref().map(Rc::as_ref),
-        script,
-        lang,
+        u32::from_be_bytes(*b"latn"),
+        None,
         &Features::Mask(FeatureMask::empty()),
         font.num_glyphs,
         &mut glyphs,
@@ -652,8 +542,8 @@ fn shape(
         font.opt_gdef_table.as_ref().map(Rc::as_ref),
         kerning,
         &Features::Mask(FeatureMask::all()),
-        script,
-        lang,
+        u32::from_be_bytes(*b"latn"),
+        None,
         &mut infos,
     )
     .ok()?;
