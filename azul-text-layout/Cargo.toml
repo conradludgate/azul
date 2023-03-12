@@ -1,25 +1,16 @@
 [package]
-name = "azul-text-layout"
-version = "0.0.5"
-authors = ["Felix Schütt <felix.schuett@maps4print.com>"]
+name = "cl-azul-text-layout"
+version = "0.1.0"
+authors = ["Conrad Ludgate <conradludgate@gmail.com>"]
 license = "MPL-2.0"
 description = '''
-    Text layout algorithms Azul desktop GUI framework
+    Text layout algorithms
 '''
-homepage = "https://azul.rs/"
-keywords = ["gui", "user-interface", "svg", "graphics", "native" ]
-categories = ["gui"]
-repository = "https://github.com/maps4print/azul"
+repository = "https://github.com/conradludgate/azul"
 edition = "2021"
-readme = "./README.md"
-autoexamples = false
 
 [dependencies]
 unicode-normalization   = { version = "0.1.21",  default-features = false }
 allsorts                = { version = "0.14.0", default-features = false, features = ["flate2_rust"] }
 tinyvec                 = { version = "1.6.0", default-features = false }
 ttf-parser              = { version = "0.18.1", default-features = false, features = ["variable-fonts"] }
-libm                    = { version = "0.2.2",   default-features = false                   }
-gl-context-loader       = { version ="0.1.8", default-features = false }
-highway                 = { version = "1.0.0", default-features = false }
-azul-simplecss          = { version = "0.1.1",      default-features = false }

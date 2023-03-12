@@ -75,9 +75,6 @@ mod logical;
 mod ui_solver;
 mod words;
 
-#[macro_use]
-extern crate tinyvec;
-
 mod script;
 mod text_layout;
 mod text_shaping;

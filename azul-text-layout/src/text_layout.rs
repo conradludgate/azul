@@ -8,18 +8,13 @@ use crate::{
         InlineTextLayout, InlineTextLine, ResolvedTextLayoutOptions, DEFAULT_LINE_HEIGHT,
         DEFAULT_TAB_WIDTH, DEFAULT_WORD_SPACING,
     },
-    words::{
-        ShapedWord, ShapedWords, Word, WordPosition, WordPositions, WordType, Words,
-    },
+    words::{ShapedWord, ShapedWords, Word, WordPosition, WordPositions, WordType, Words},
 };
 
 /// Creates a font from a font file (TTF, OTF, WOFF, etc.)
 ///
 /// NOTE: EXPENSIVE function, needs to parse tables, etc.
-pub fn parse_font(
-    font_bytes: &[u8],
-    font_index: usize,
-) -> Option<ParsedFont> {
+pub fn parse_font(font_bytes: &[u8], font_index: usize) -> Option<ParsedFont> {
     ParsedFont::from_bytes(font_bytes, font_index)
 }
 
