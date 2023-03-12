@@ -382,9 +382,6 @@ impl InlineText {
     /// relative to the text_origin), but the word position is relative to the BOTTOM left
     /// corner (of the line bounds)
     pub fn get_layouted_glyphs(&self) -> LayoutedGlyphs {
-        let default = Vec::new().into();
-        let default_ref = &default;
-
         // descender_px is NEGATIVE
         let baseline_descender_px = LogicalPosition::new(0.0, self.baseline_descender_px);
 
@@ -399,10 +396,10 @@ impl InlineText {
                     line.words.iter().flat_map(move |word| {
                         let (glyphs, mut word_origin) = match word {
                             InlineWord::Tab | InlineWord::Return | InlineWord::Space => {
-                                (default_ref, LogicalPosition::zero())
+                                ([].as_slice(), LogicalPosition::zero())
                             }
                             InlineWord::Word(text_contents) => {
-                                (&text_contents.glyphs, text_contents.bounds.origin)
+                                (text_contents.glyphs.as_slice(), text_contents.bounds.origin)
                             }
                         };
 
@@ -445,7 +442,6 @@ impl InlineText {
         // NOTE: this function cannot exit early, since it has to
         // iterate through all lines
 
-        let font_size_px = self.font_size_px;
         let descender_px = self.baseline_descender_px;
 
         self.lines
@@ -458,11 +454,11 @@ impl InlineText {
             let glyph_at_line_start = global_glyph_hit;
             let text_content_at_line_start = global_text_content_hit;
 
-            let mut line_bounds = line.bounds.clone();
+            let mut line_bounds = line.bounds;
             line_bounds.origin.y -= line.bounds.size.height;
 
             line_bounds.hit_test(&hit_relative_to_inline_text)
-            .map(|mut hit_relative_to_line| {
+            .map(|hit_relative_to_line| {
 
                 line.words
                 .iter() // TODO: par_iter
@@ -475,12 +471,12 @@ impl InlineText {
                     .get_text_content()
                     .and_then(|text_content| {
 
-                        let mut text_content_bounds = text_content.bounds.clone();
+                        let mut text_content_bounds = text_content.bounds;
                         text_content_bounds.origin.y = 0.0;
 
                         text_content_bounds
                         .hit_test(&hit_relative_to_line)
-                        .map(|mut hit_relative_to_text_content| {
+                        .map(|hit_relative_to_text_content| {
 
                             text_content.glyphs
                             .iter() // TODO: par_iter

@@ -7,6 +7,7 @@ use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 use std::collections::btree_map::BTreeMap;
+use std::sync::Arc;
 
 /// Currently hard-coded: Height of one em in pixels
 pub const EM_HEIGHT: f32 = 16.0;
@@ -4537,7 +4538,7 @@ impl Default for RadialGradient {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(C)]
 pub enum RadialGradientSize {
     // The gradient's ending shape meets the side of the box closest to its center
@@ -4552,20 +4553,8 @@ pub enum RadialGradientSize {
     FarthestSide,
     // The default value, the gradient's ending shape is sized so that it exactly
     // meets the farthest corner of the box from its center
+    #[default]
     FarthestCorner,
-}
-
-impl Default for RadialGradientSize {
-    fn default() -> Self {
-        RadialGradientSize::FarthestCorner
-    }
-}
-
-impl RadialGradientSize {
-    pub fn get_size(&self, parent_rect: LayoutRect, gradient_center: LayoutPosition) -> LayoutSize {
-        // TODO!
-        parent_rect.size
-    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -6000,55 +5989,48 @@ impl FontMetrics {
     }
 }
 
-#[repr(C)]
+
+#[derive(Debug, Clone)]
 pub struct FontRef {
     /// shared pointer to an opaque implementation of the parsed font
-    pub data: *const FontData,
-    /// How many copies does this font have (if 0, the font data will be deleted on drop)
-    pub copies: *const AtomicUsize,
-    pub run_destructor: bool,
-}
-
-impl fmt::Debug for FontRef {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "printing FontRef 0x{:0x}", self.data as usize)?;
-        if let Some(d) = unsafe { self.data.as_ref() } {
-            d.fmt(f)?;
-        }
-        if let Some(c) = unsafe { self.copies.as_ref() } {
-            c.fmt(f)?;
-        }
-        Ok(())
-    }
+    pub data: Arc<FontData>,
 }
 
 impl FontRef {
     #[inline]
     pub fn get_data<'a>(&'a self) -> &'a FontData {
-        unsafe { &*self.data }
+        &*self.data
     }
 }
 
-unsafe impl Send for FontRef {}
-unsafe impl Sync for FontRef {}
+impl FontRef {
+    pub fn new(data: FontData) -> Self {
+        Self {
+            data: Arc::new(data),
+        }
+    }
+    pub fn get_bytes(&self) -> Vec<u8> {
+        self.get_data().bytes.clone()
+    }
+}
 
 impl PartialEq for FontRef {
     fn eq(&self, rhs: &Self) -> bool {
-        self.data as usize == rhs.data as usize
+        Arc::ptr_eq(&self.data, &rhs.data)
     }
 }
 
 impl PartialOrd for FontRef {
     fn partial_cmp(&self, other: &Self) -> Option<::core::cmp::Ordering> {
-        Some((self.data as usize).cmp(&(other.data as usize)))
+        Some(self.cmp(other))
     }
 }
 
 impl Ord for FontRef {
     fn cmp(&self, other: &Self) -> Ordering {
-        let self_data = self.data as usize;
-        let other_data = other.data as usize;
-        self_data.cmp(&other_data)
+        let a = Arc::as_ptr(&self.data) as usize;
+        let b = Arc::as_ptr(&other.data) as usize;
+        a.cmp(&b)
     }
 }
 
@@ -6059,49 +6041,8 @@ impl Hash for FontRef {
     where
         H: Hasher,
     {
-        let self_data = self.data as usize;
-        self_data.hash(state)
-    }
-}
-
-impl FontRef {
-    pub fn new(data: FontData) -> Self {
-        Self {
-            data: Box::into_raw(Box::new(data)),
-            copies: Box::into_raw(Box::new(AtomicUsize::new(1))),
-            run_destructor: true,
-        }
-    }
-    pub fn get_bytes(&self) -> Vec<u8> {
-        self.get_data().bytes.clone()
-    }
-}
-
-impl Clone for FontRef {
-    fn clone(&self) -> Self {
-        unsafe {
-            self.copies
-                .as_ref()
-                .map(|f| f.fetch_add(1, AtomicOrdering::SeqCst));
-        }
-        Self {
-            data: self.data,     // copy the pointer
-            copies: self.copies, // copy the pointer
-            run_destructor: true,
-        }
-    }
-}
-
-impl Drop for FontRef {
-    fn drop(&mut self) {
-        self.run_destructor = false;
-        unsafe {
-            let copies = unsafe { (*self.copies).fetch_sub(1, AtomicOrdering::SeqCst) };
-            if copies == 1 {
-                let _ = Box::from_raw(self.data as *mut FontData);
-                let _ = Box::from_raw(self.copies as *mut AtomicUsize);
-            }
-        }
+        let a = Arc::as_ptr(&self.data) as usize;
+        a.hash(state)
     }
 }
 
@@ -6120,12 +6061,10 @@ pub struct FontData {
 
 impl fmt::Debug for FontData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "FontData: {{");
-        "    bytes: ".fmt(f)?;
-        self.bytes.len().fmt(f)?;
-        "    font_index: ".fmt(f)?;
-        write!(f, "}}")?;
-        Ok(())
+        f.debug_struct("FontData")
+            .field("bytes", &self.bytes)
+            .field("font_index", &self.font_index)
+            .finish()
     }
 }
 
@@ -6141,7 +6080,6 @@ impl Drop for FontData {
 
 /// Represents a `font-family` attribute
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C, u8)]
 pub enum StyleFontFamily {
     /// Native font, such as "Webly Sleeky UI", "monospace", etc.
     System(String),
@@ -6157,7 +6095,7 @@ impl StyleFontFamily {
         match &self {
             StyleFontFamily::System(s) => s.clone(),
             StyleFontFamily::File(s) => s.clone(),
-            StyleFontFamily::Ref(s) => format!("{:0x}", s.data as usize),
+            StyleFontFamily::Ref(s) => format!("{:p}", &s.data),
         }
     }
 }
