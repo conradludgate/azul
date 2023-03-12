@@ -1,5 +1,5 @@
 use crate::{
-    css::css_properties::{StyleTextAlign, StyleVerticalAlign},
+    css::{StyleTextAlign, StyleVerticalAlign},
     logical::{LogicalRect, LogicalSize},
 };
 
@@ -91,7 +91,7 @@ impl InlineTextLayout {
 
 #[inline]
 pub fn calculate_horizontal_shift_multiplier(horizontal_alignment: StyleTextAlign) -> Option<f32> {
-    use crate::css::css_properties::StyleTextAlign::*;
+    use crate::css::StyleTextAlign::*;
     match horizontal_alignment {
         Left => None,
         Center => Some(0.5), // move the line by the half width
@@ -101,7 +101,7 @@ pub fn calculate_horizontal_shift_multiplier(horizontal_alignment: StyleTextAlig
 
 #[inline]
 pub fn calculate_vertical_shift_multiplier(vertical_alignment: StyleVerticalAlign) -> Option<f32> {
-    use crate::css::css_properties::StyleVerticalAlign::*;
+    use crate::css::StyleVerticalAlign::*;
     match vertical_alignment {
         Top => None,
         Center => Some(0.5), // move the line by the half width

@@ -223,15 +223,6 @@ macro_rules! derive_display_zero {
     };
 }
 
-/// Creates `pt`, `px` and `em` constructors for any struct that has a
-/// `PixelValue` as it's self.0 field.
-macro_rules! impl_pixel_value {
-    ($struct:ident) => {
-        derive_debug_zero!($struct);
-        derive_display_zero!($struct);
-    };
-}
-
 macro_rules! impl_percentage_value {
     ($struct:ident) => {
         impl ::core::fmt::Display for $struct {
@@ -332,48 +323,6 @@ pub struct SvgQuadraticCurve {
 /// `1.00001 == 1.0`
 const FP_PRECISION_MULTIPLIER: f32 = 1000.0;
 const FP_PRECISION_MULTIPLIER_CONST: isize = FP_PRECISION_MULTIPLIER as isize;
-
-/// FloatValue, but associated with a certain metric (i.e. px, em, etc.)
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct AngleValue {
-    pub metric: AngleMetric,
-    pub number: FloatValue,
-}
-
-impl fmt::Debug for AngleValue {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
-// Manual Debug implementation, because the auto-generated one is nearly unreadable
-impl fmt::Display for AngleValue {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", self.number, self.metric)
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum AngleMetric {
-    Degree,
-}
-
-impl Default for AngleMetric {
-    fn default() -> AngleMetric {
-        AngleMetric::Degree
-    }
-}
-
-impl fmt::Display for AngleMetric {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::AngleMetric::*;
-        match self {
-            Degree => write!(f, "deg"),
-        }
-    }
-}
 
 /// Wrapper around FloatValue, represents a percentage instead
 /// of just being a regular floating-point value, i.e `5` = `5%`
@@ -487,7 +436,7 @@ impl Default for StyleBackgroundContent {
     }
 }
 
-impl<'a> From<String> for StyleBackgroundContent {
+impl From<String> for StyleBackgroundContent {
     fn from(id: String) -> Self {
         StyleBackgroundContent::Image(id)
     }
@@ -498,13 +447,6 @@ impl<'a> From<String> for StyleBackgroundContent {
 #[repr(C)]
 pub struct NormalizedLinearColorStop {
     pub offset: PercentageValue, // 0 to 100% // -- todo: theoretically this should be PixelValue
-    pub color: ColorU,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct NormalizedRadialColorStop {
-    pub angle: AngleValue, // 0 to 360 degrees
     pub color: ColorU,
 }
 
@@ -543,31 +485,6 @@ impl Default for Direction {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
-pub enum Shape {
-    Ellipse,
-}
-
-impl Default for Shape {
-    fn default() -> Self {
-        Shape::Ellipse
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum StyleCursor {
-    /// `default` - note: called "arrow" in winit
-    Default,
-}
-
-impl Default for StyleCursor {
-    fn default() -> StyleCursor {
-        StyleCursor::Default
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
 pub enum DirectionCorner {
     Top,
     Bottom,
@@ -584,13 +501,6 @@ impl fmt::Display for DirectionCorner {
             }
         )
     }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct RadialColorStop {
-    // this is set to None if there was no offset that could be parsed
-    pub offset: Option<AngleValue>,
-    pub color: ColorU,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -630,32 +540,6 @@ impl Default for LayoutFlexShrink {
     }
 }
 
-/// Represents a `flex-direction` attribute - default: `Column`
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutFlexDirection {
-    Column,
-}
-
-impl Default for LayoutFlexDirection {
-    fn default() -> Self {
-        LayoutFlexDirection::Column
-    }
-}
-
-/// Represents a `flex-direction` attribute - default: `Column`
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutBoxSizing {
-    ContentBox,
-}
-
-impl Default for LayoutBoxSizing {
-    fn default() -> Self {
-        LayoutBoxSizing::ContentBox
-    }
-}
-
 /// Represents a `line-height` attribute
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -690,117 +574,6 @@ impl Default for StyleTabWidth {
     }
 }
 
-/// Represents a `display` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutDisplay {
-    Flex,
-}
-
-impl Default for LayoutDisplay {
-    fn default() -> Self {
-        LayoutDisplay::Flex
-    }
-}
-
-/// Represents a `float` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutFloat {
-    Left,
-}
-
-impl Default for LayoutFloat {
-    fn default() -> Self {
-        LayoutFloat::Left
-    }
-}
-
-/// Represents a `position` attribute - default: `Static`
-///
-/// NOTE: No inline positioning is supported.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutPosition {
-    Static,
-}
-
-impl Default for LayoutPosition {
-    fn default() -> Self {
-        LayoutPosition::Static
-    }
-}
-
-/// Represents a `flex-wrap` attribute - default: `Wrap`
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutFlexWrap {
-    Wrap,
-}
-
-impl Default for LayoutFlexWrap {
-    fn default() -> Self {
-        LayoutFlexWrap::Wrap
-    }
-}
-
-/// Represents a `justify-content` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutJustifyContent {
-    /// Default value. Items are positioned at the beginning of the container
-    Start,
-}
-
-impl Default for LayoutJustifyContent {
-    fn default() -> Self {
-        LayoutJustifyContent::Start
-    }
-}
-
-/// Represents a `align-items` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutAlignItems {
-    /// Items are positioned at the beginning of the container
-    FlexStart,
-}
-
-impl Default for LayoutAlignItems {
-    fn default() -> Self {
-        LayoutAlignItems::FlexStart
-    }
-}
-
-/// Represents a `align-content` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutAlignContent {
-    /// Default value. Lines stretch to take up the remaining space
-    Stretch,
-}
-
-impl Default for LayoutAlignContent {
-    fn default() -> Self {
-        LayoutAlignContent::Stretch
-    }
-}
-
-/// Represents a `overflow-x` or `overflow-y` property, see
-/// [`TextOverflowBehaviour`](./struct.TextOverflowBehaviour.html) - default: `Auto`
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum LayoutOverflow {
-    /// Does not show a scroll bar by default, only when text is overflowing
-    Auto,
-}
-
-impl Default for LayoutOverflow {
-    fn default() -> Self {
-        LayoutOverflow::Auto
-    }
-}
-
 /// Horizontal text alignment enum (left, center, right) - default: `Center`
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -810,12 +583,6 @@ pub enum StyleTextAlign {
     Right,
 }
 
-impl Default for StyleTextAlign {
-    fn default() -> Self {
-        StyleTextAlign::Left
-    }
-}
-
 /// Vertical text alignment enum (top, center, bottom) - default: `Center`
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -823,12 +590,6 @@ pub enum StyleVerticalAlign {
     Top,
     Center,
     Bottom,
-}
-
-impl Default for StyleVerticalAlign {
-    fn default() -> Self {
-        StyleVerticalAlign::Top
-    }
 }
 
 /// Represents an `opacity` attribute
@@ -847,28 +608,6 @@ impl Default for StyleOpacity {
 }
 
 impl_percentage_value!(StyleOpacity);
-
-/// Represents a `backface-visibility` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum StyleBackfaceVisibility {
-    Visible,
-}
-
-impl Default for StyleBackfaceVisibility {
-    fn default() -> Self {
-        StyleBackfaceVisibility::Visible
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleTransformRotate3D {
-    pub x: PercentageValue,
-    pub y: PercentageValue,
-    pub z: PercentageValue,
-    pub angle: AngleValue,
-}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -1229,31 +968,6 @@ impl fmt::Debug for FontData {
             .field("bytes", &self.bytes)
             .field("font_index", &self.font_index)
             .finish()
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum StyleMixBlendMode {
-    Normal,
-}
-
-impl Default for StyleMixBlendMode {
-    fn default() -> StyleMixBlendMode {
-        StyleMixBlendMode::Normal
-    }
-}
-
-impl fmt::Display for StyleMixBlendMode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::StyleMixBlendMode::*;
-        write!(
-            f,
-            "{}",
-            match self {
-                Normal => "normal",
-            }
-        )
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::{
-    css::css_properties::FontMetrics,
+    css::FontMetrics,
     words::{Advance, Anchor, GlyphInfo, GlyphOrigin, Placement, RawGlyph, VariationSelector},
 };
 use allsorts::{

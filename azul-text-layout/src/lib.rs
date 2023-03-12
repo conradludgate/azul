@@ -89,10 +89,3 @@ pub use text_layout::{
 };
 pub use ui_solver::{InlineTextLayout, ResolvedTextLayoutOptions};
 pub use words::{get_inline_text, ShapedWord, ShapedWords, Word, WordType, Words};
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct LoadedFontSource {
-    pub data: Vec<u8>,
-    pub index: u32,
-    pub load_outlines: bool,
-}

@@ -1,8 +1,8 @@
 //! Contains functions for breaking a string into words, calculate
 //! the positions of words / lines and do glyph positioning
 
-pub use crate::logical::{LogicalPosition, LogicalRect, LogicalSize};
-pub use crate::text_shaping::ParsedFont;
+use crate::logical::{LogicalPosition, LogicalRect, LogicalSize};
+use crate::text_shaping::ParsedFont;
 use crate::{
     ui_solver::{
         InlineTextLayout, InlineTextLine, ResolvedTextLayoutOptions, DEFAULT_LINE_HEIGHT,
