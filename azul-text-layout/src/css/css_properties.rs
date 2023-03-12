@@ -1,12 +1,12 @@
 //! Provides a public API with datatypes used to describe style properties of DOM nodes.
 
 use crate::css::CssPropertyValue;
-use std::collections::btree_map::BTreeMap;
 use core::cmp::Ordering;
 use core::ffi::c_void;
 use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
+use std::collections::btree_map::BTreeMap;
 
 /// Currently hard-coded: Height of one em in pixels
 pub const EM_HEIGHT: f32 = 16.0;

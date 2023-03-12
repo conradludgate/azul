@@ -4,13 +4,13 @@ use azul_simplecss::Tokenizer;
 use std::collections::BTreeMap;
 use std::{fmt, num::ParseIntError};
 
-use crate::css_parser;
-pub use crate::css_parser::CssParsingError;
 use crate::css::{
     CombinedCssPropertyType, Css, CssDeclaration, CssKeyMap, CssNthChildSelector,
     CssNthChildSelector::*, CssPath, CssPathPseudoSelector, CssPathSelector, CssPropertyType,
     CssRuleBlock, DynamicCssProperty, NodeTypeTag, NodeTypeTagParseError, Stylesheet,
 };
+use crate::css_parser;
+pub use crate::css_parser::CssParsingError;
 
 #[derive(Debug, Default, PartialEq, PartialOrd, Clone)]
 #[repr(transparent)]
@@ -865,30 +865,33 @@ mod stylesheet_parse {
     // Tests that an element with a single class always gets the CSS element applied properly
     #[test]
     fn test_apply_css_pure_class() {
-        let red = CssProperty::BackgroundContent(CssPropertyValue::Exact(
-            Vec::<StyleBackgroundContent>::from(vec![StyleBackgroundContent::Color(ColorU {
-                r: 255,
-                g: 0,
-                b: 0,
-                a: 255,
-            })]),
-        ));
-        let blue = CssProperty::BackgroundContent(CssPropertyValue::Exact(
-            Vec::<StyleBackgroundContent>::from(vec![StyleBackgroundContent::Color(ColorU {
-                r: 0,
-                g: 0,
-                b: 255,
-                a: 255,
-            })]),
-        ));
-        let black = CssProperty::BackgroundContent(CssPropertyValue::Exact(
-            Vec::<StyleBackgroundContent>::from(vec![StyleBackgroundContent::Color(ColorU {
-                r: 0,
-                g: 0,
-                b: 0,
-                a: 255,
-            })]),
-        ));
+        let red =
+            CssProperty::BackgroundContent(CssPropertyValue::Exact(
+                Vec::<StyleBackgroundContent>::from(vec![StyleBackgroundContent::Color(ColorU {
+                    r: 255,
+                    g: 0,
+                    b: 0,
+                    a: 255,
+                })]),
+            ));
+        let blue =
+            CssProperty::BackgroundContent(CssPropertyValue::Exact(
+                Vec::<StyleBackgroundContent>::from(vec![StyleBackgroundContent::Color(ColorU {
+                    r: 0,
+                    g: 0,
+                    b: 255,
+                    a: 255,
+                })]),
+            ));
+        let black =
+            CssProperty::BackgroundContent(CssPropertyValue::Exact(
+                Vec::<StyleBackgroundContent>::from(vec![StyleBackgroundContent::Color(ColorU {
+                    r: 0,
+                    g: 0,
+                    b: 0,
+                    a: 255,
+                })]),
+            ));
 
         // Simple example
         {
