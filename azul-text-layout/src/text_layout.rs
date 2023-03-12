@@ -1,11 +1,6 @@
 //! Contains functions for breaking a string into words, calculate
 //! the positions of words / lines and do glyph positioning
 
-// pub use crate::azul_core::app_resources::{
-//     IndexOfLineBreak, LayoutedGlyphs, LineBreaks, LineLength,
-//     RemainingSpaceToRight,
-// };
-pub use crate::css::FontRef;
 pub use crate::logical::{LogicalPosition, LogicalRect, LogicalSize};
 pub use crate::text_shaping::ParsedFont;
 use crate::{
@@ -14,7 +9,7 @@ use crate::{
         DEFAULT_TAB_WIDTH, DEFAULT_WORD_SPACING,
     },
     words::{
-        InlineText, ShapedWord, ShapedWords, Word, WordPosition, WordPositions, WordType, Words,
+        ShapedWord, ShapedWords, Word, WordPosition, WordPositions, WordType, Words,
     },
 };
 
@@ -24,9 +19,8 @@ use crate::{
 pub fn parse_font(
     font_bytes: &[u8],
     font_index: usize,
-    parse_outlines: bool,
 ) -> Option<ParsedFont> {
-    ParsedFont::from_bytes(font_bytes, font_index, parse_outlines)
+    ParsedFont::from_bytes(font_bytes, font_index)
 }
 
 /// Splits the text by whitespace into logical units (word, tab, return, whitespace).

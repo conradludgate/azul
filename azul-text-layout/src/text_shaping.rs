@@ -1,5 +1,5 @@
 use crate::{
-    css::FontMetrics,
+    css::css_properties::FontMetrics,
     words::{Advance, Anchor, GlyphInfo, GlyphOrigin, Placement, RawGlyph, VariationSelector},
 };
 use allsorts::{
@@ -319,7 +319,7 @@ pub struct OwnedGlyph {
 }
 
 impl OwnedGlyph {
-    fn from_glyph_data<'a>(glyph: Glyph<'a>, horz_advance: u16) -> Self {
+    fn from_glyph_data(glyph: Glyph, horz_advance: u16) -> Self {
         Self {
             bounding_box: OwnedGlyphBoundingBox {
                 max_x: glyph.bounding_box.x_max,
@@ -334,11 +334,7 @@ impl OwnedGlyph {
 }
 
 impl ParsedFont {
-    pub fn from_bytes(
-        font_bytes: &[u8],
-        font_index: usize,
-        parse_glyph_outlines: bool,
-    ) -> Option<Self> {
+    pub fn from_bytes(font_bytes: &[u8], font_index: usize) -> Option<Self> {
         use allsorts::tag;
 
         let scope = ReadScope::new(font_bytes);
@@ -512,10 +508,7 @@ macro_rules! tag {
 }
 
 const fn tag(chars: [u8; 4]) -> u32 {
-    ((chars[3] as u32) << 0)
-        | ((chars[2] as u32) << 8)
-        | ((chars[1] as u32) << 16)
-        | ((chars[0] as u32) << 24)
+    u32::from_be_bytes(chars)
 }
 
 /// Estimate the language and the script from the text (uses trigrams)
@@ -739,7 +732,7 @@ pub fn estimate_script_and_language(text: &str) -> (u32, Option<u32>) {
 // get_word_visual_width(word: &TextBuffer) ->
 // get_glyph_instances(infos: &GlyphInfos, positions: &GlyphPositions) -> PositionedGlyphBuffer
 
-fn shape<'a>(
+fn shape(
     font: &ParsedFont,
     text: &[u32],
     script: u32,
@@ -782,7 +775,7 @@ fn shape<'a>(
     gsub_apply(
         dotted_circle_index,
         &font.gsub_cache,
-        font.opt_gdef_table.as_ref().map(|f| Rc::as_ref(f)),
+        font.opt_gdef_table.as_ref().map(Rc::as_ref),
         script,
         lang,
         &Features::Mask(FeatureMask::empty()),
@@ -795,13 +788,13 @@ fn shape<'a>(
 
     let kerning = true;
     let mut infos = allsorts::gpos::Info::init_from_glyphs(
-        font.opt_gdef_table.as_ref().map(|f| Rc::as_ref(f)),
+        font.opt_gdef_table.as_ref().map(Rc::as_ref),
         glyphs,
     );
 
     gpos_apply(
         &font.gpos_cache,
-        font.opt_gdef_table.as_ref().map(|f| Rc::as_ref(f)),
+        font.opt_gdef_table.as_ref().map(Rc::as_ref),
         kerning,
         &Features::Mask(FeatureMask::all()),
         script,
@@ -823,7 +816,7 @@ fn shape<'a>(
                 size_y,
                 kerning: info.kerning,
             };
-            let info = translate_info(&info, advance);
+            let info = translate_info(info, advance);
             Some(info)
         })
         .collect();
@@ -848,7 +841,7 @@ fn make_raw_glyph(
 ) -> allsorts::gsub::RawGlyph<()> {
     allsorts::gsub::RawGlyph {
         unicodes: tiny_vec![[char; 1] => ch],
-        glyph_index: glyph_index,
+        glyph_index,
         liga_component_pos: 0,
         glyph_origin: allsorts::gsub::GlyphOrigin::Char(ch),
         small_caps: false,
@@ -864,7 +857,7 @@ fn make_raw_glyph(
 #[inline]
 fn translate_raw_glyph(rg: &allsorts::gsub::RawGlyph<()>) -> RawGlyph {
     RawGlyph {
-        unicode_codepoint: rg.unicodes.get(0).copied(),
+        unicode_codepoint: rg.unicodes.first().copied(),
         glyph_index: rg.glyph_index,
         liga_component_pos: rg.liga_component_pos,
         glyph_origin: translate_glyph_origin(&rg.glyph_origin),
@@ -873,11 +866,7 @@ fn translate_raw_glyph(rg: &allsorts::gsub::RawGlyph<()>) -> RawGlyph {
         is_vert_alt: rg.is_vert_alt,
         fake_bold: rg.fake_bold,
         fake_italic: rg.fake_italic,
-        variation: rg
-            .variation
-            .as_ref()
-            .map(translate_variation_selector)
-            .into(),
+        variation: rg.variation.as_ref().map(translate_variation_selector),
     }
 }
 

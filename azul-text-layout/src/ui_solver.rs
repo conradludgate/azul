@@ -1,8 +1,5 @@
 use crate::{
-    css::{
-        ColorU, LayoutRect, PixelValue, StyleFontSize, StyleTextAlign, StyleTextColor,
-        StyleVerticalAlign,
-    },
+    css::css_properties::{StyleTextAlign, StyleVerticalAlign},
     logical::{LogicalRect, LogicalSize},
 };
 
@@ -44,7 +41,7 @@ impl InlineTextLayout {
     pub fn get_leading(&self) -> f32 {
         match self.lines.first() {
             None => 0.0,
-            Some(s) => s.bounds.origin.x as f32,
+            Some(s) => s.bounds.origin.x,
         }
     }
 
@@ -52,7 +49,7 @@ impl InlineTextLayout {
     pub fn get_trailing(&self) -> f32 {
         match self.lines.first() {
             None => 0.0,
-            Some(s) => (s.bounds.origin.x + s.bounds.size.width) as f32,
+            Some(s) => s.bounds.origin.x + s.bounds.size.width,
         }
     }
 
@@ -94,7 +91,7 @@ impl InlineTextLayout {
 
 #[inline]
 pub fn calculate_horizontal_shift_multiplier(horizontal_alignment: StyleTextAlign) -> Option<f32> {
-    use crate::css::StyleTextAlign::*;
+    use crate::css::css_properties::StyleTextAlign::*;
     match horizontal_alignment {
         Left => None,
         Center => Some(0.5), // move the line by the half width
@@ -104,38 +101,12 @@ pub fn calculate_horizontal_shift_multiplier(horizontal_alignment: StyleTextAlig
 
 #[inline]
 pub fn calculate_vertical_shift_multiplier(vertical_alignment: StyleVerticalAlign) -> Option<f32> {
-    use crate::css::StyleVerticalAlign::*;
+    use crate::css::css_properties::StyleVerticalAlign::*;
     match vertical_alignment {
         Top => None,
         Center => Some(0.5), // move the line by the half width
         Bottom => Some(1.0), // move the line by the full width
     }
-}
-
-/// Layout options that can impact the flow of word positions
-#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
-pub struct TextLayoutOptions {
-    /// Font size (in pixels) that this text has been laid out with
-    pub font_size_px: PixelValue,
-    /// Multiplier for the line height, default to 1.0
-    pub line_height: Option<f32>,
-    /// Additional spacing between glyphs (in pixels)
-    pub letter_spacing: Option<PixelValue>,
-    /// Additional spacing between words (in pixels)
-    pub word_spacing: Option<PixelValue>,
-    /// How many spaces should a tab character emulate
-    /// (multiplying value, i.e. `4.0` = one tab = 4 spaces)?
-    pub tab_width: Option<f32>,
-    /// Maximum width of the text (in pixels) - if the text is set to `overflow:visible`, set this to None.
-    pub max_horizontal_width: Option<f32>,
-    /// How many pixels of leading does the first line have? Note that this added onto to the holes,
-    /// so for effects like `:first-letter`, use a hole instead of a leading.
-    pub leading: Option<f32>,
-    /// This is more important for inline text layout where items can punch "holes"
-    /// into the text flow, for example an image that floats to the right.
-    ///
-    /// TODO: Currently unused!
-    pub holes: Vec<LayoutRect>,
 }
 
 /// Same as `TextLayoutOptions`, but with the widths / heights of the `PixelValue`s

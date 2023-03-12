@@ -338,7 +338,7 @@ pub fn get_inline_text(
                 .collect::<Vec<InlineWord>>();
 
             Some(InlineLine {
-                words: words,
+                words,
                 bounds: line.bounds,
             })
         })

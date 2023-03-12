@@ -1,16 +1,13 @@
 //! Provides a public API with datatypes used to describe style properties of DOM nodes.
 
-use crate::css::CssPropertyValue;
 use crate::text_shaping::ParsedFont;
 use core::cmp::Ordering;
-use core::ffi::c_void;
 use core::fmt;
 use core::hash::{Hash, Hasher};
-use core::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 use std::collections::btree_map::BTreeMap;
 use std::sync::Arc;
 
-const COMBINED_CSS_PROPERTIES_KEY_MAP: [(CombinedCssPropertyType, &'static str); 12] = [
+const COMBINED_CSS_PROPERTIES_KEY_MAP: [(CombinedCssPropertyType, &str); 12] = [
     (CombinedCssPropertyType::BorderRadius, "border-radius"),
     (CombinedCssPropertyType::Overflow, "overflow"),
     (CombinedCssPropertyType::Padding, "padding"),
@@ -86,13 +83,6 @@ impl fmt::Display for LayoutPoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
     }
-}
-
-/// Represents a parsed pair of `5px, 10px` values - useful for border radius calculation
-#[derive(Default, Debug, Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
-pub struct PixelSize {
-    pub width: PixelValue,
-    pub height: PixelValue,
 }
 
 /// Offsets of the border-width calculations
@@ -213,24 +203,6 @@ impl From<ColorF> for ColorU {
     }
 }
 
-/// Whether a `gradient` should be repeated or clamped to the edges.
-#[derive(Debug, Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
-#[repr(C)]
-pub enum ExtendMode {
-    Clamp,
-}
-
-impl Default for ExtendMode {
-    fn default() -> Self {
-        ExtendMode::Clamp
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Ord, PartialOrd, Eq, Hash)]
-pub struct NinePatchBorder {
-    // not implemented or parse-able yet, so no fields!
-}
-
 macro_rules! derive_debug_zero {
     ($struct:ident) => {
         impl fmt::Debug for $struct {
@@ -297,7 +269,7 @@ impl fmt::Display for CombinedCssPropertyType {
         let key = COMBINED_CSS_PROPERTIES_KEY_MAP
             .iter()
             .find(|(v, _)| *v == *self)
-            .and_then(|(k, _)| Some(k))
+            .map(|(k, _)| k)
             .unwrap();
         write!(f, "{}", key)
     }
@@ -361,25 +333,6 @@ pub struct SvgQuadraticCurve {
 const FP_PRECISION_MULTIPLIER: f32 = 1000.0;
 const FP_PRECISION_MULTIPLIER_CONST: isize = FP_PRECISION_MULTIPLIER as isize;
 
-/// Same as PixelValue, but doesn't allow a "%" sign
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct PixelValueNoPercent {
-    pub inner: PixelValue,
-}
-
-impl fmt::Display for PixelValueNoPercent {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.inner)
-    }
-}
-
-impl ::core::fmt::Debug for PixelValueNoPercent {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
 /// FloatValue, but associated with a certain metric (i.e. px, em, etc.)
 #[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -418,82 +371,6 @@ impl fmt::Display for AngleMetric {
         use self::AngleMetric::*;
         match self {
             Degree => write!(f, "deg"),
-        }
-    }
-}
-
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct PixelValue {
-    pub metric: SizeMetric,
-    pub number: FloatValue,
-}
-
-impl fmt::Debug for PixelValue {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", self.number, self.metric)
-    }
-}
-
-// Manual Debug implementation, because the auto-generated one is nearly unreadable
-impl fmt::Display for PixelValue {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}", self.number, self.metric)
-    }
-}
-
-impl fmt::Display for SizeMetric {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::SizeMetric::*;
-        match self {
-            Px => write!(f, "px"),
-            Pt => write!(f, "pt"),
-            Em => write!(f, "pt"),
-            Percent => write!(f, "%"),
-        }
-    }
-}
-
-impl PixelValue {
-    /// Same as `PixelValue::px()`, but only accepts whole numbers,
-    /// since using `f32` in const fn is not yet stabilized.
-    #[inline]
-    pub const fn const_px(value: isize) -> Self {
-        Self::const_from_metric(SizeMetric::Px, value)
-    }
-
-    /// Same as `PixelValue::em()`, but only accepts whole numbers,
-    /// since using `f32` in const fn is not yet stabilized.
-    #[inline]
-    pub const fn const_em(value: isize) -> Self {
-        Self::const_from_metric(SizeMetric::Em, value)
-    }
-
-    /// Same as `PixelValue::pt()`, but only accepts whole numbers,
-    /// since using `f32` in const fn is not yet stabilized.
-    #[inline]
-    pub const fn const_percent(value: isize) -> Self {
-        Self::const_from_metric(SizeMetric::Percent, value)
-    }
-
-    #[inline]
-    pub const fn const_from_metric(metric: SizeMetric, value: isize) -> Self {
-        Self {
-            metric: metric,
-            number: FloatValue::const_new(value),
-        }
-    }
-
-    #[inline]
-    pub fn px(value: f32) -> Self {
-        Self::from_metric(SizeMetric::Px, value)
-    }
-
-    #[inline]
-    pub fn from_metric(metric: SizeMetric, value: f32) -> Self {
-        Self {
-            metric: metric,
-            number: FloatValue::new(value),
         }
     }
 }
@@ -585,75 +462,6 @@ impl From<f32> for FloatValue {
     }
 }
 
-/// Enum representing the metric associated with a number (px, pt, em, etc.)
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum SizeMetric {
-    Px,
-    Em,
-    Percent,
-}
-
-impl Default for SizeMetric {
-    fn default() -> Self {
-        SizeMetric::Px
-    }
-}
-
-/// Represents a `background-size` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum StyleBackgroundSize {
-    Contain,
-}
-
-impl Default for StyleBackgroundSize {
-    fn default() -> Self {
-        StyleBackgroundSize::Contain
-    }
-}
-
-/// Represents a `background-position` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleBackgroundPosition {
-    pub horizontal: BackgroundPositionHorizontal,
-    pub vertical: BackgroundPositionVertical,
-}
-
-impl Default for StyleBackgroundPosition {
-    fn default() -> Self {
-        StyleBackgroundPosition {
-            horizontal: BackgroundPositionHorizontal::Left,
-            vertical: BackgroundPositionVertical::Top,
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum BackgroundPositionHorizontal {
-    Left,
-    Center,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum BackgroundPositionVertical {
-    Top,
-    Center,
-}
-
-/// Represents a `background-repeat` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub enum StyleBackgroundRepeat {
-    Repeat,
-}
-
-impl Default for StyleBackgroundRepeat {
-    fn default() -> Self {
-        StyleBackgroundRepeat::Repeat
-    }
-}
-
 /// Represents a `color` attribute
 #[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -665,66 +473,6 @@ derive_debug_zero!(StyleTextColor);
 derive_display_zero!(StyleTextColor);
 
 // -- TODO: Technically, border-radius can take two values for each corner!
-
-/// Represents a `border-top-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleBorderTopLeftRadius {
-    pub inner: PixelValue,
-}
-/// Represents a `border-left-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleBorderBottomLeftRadius {
-    pub inner: PixelValue,
-}
-/// Represents a `border-right-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleBorderTopRightRadius {
-    pub inner: PixelValue,
-}
-/// Represents a `border-bottom-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleBorderBottomRightRadius {
-    pub inner: PixelValue,
-}
-
-impl_pixel_value!(StyleBorderTopLeftRadius);
-impl_pixel_value!(StyleBorderBottomLeftRadius);
-impl_pixel_value!(StyleBorderTopRightRadius);
-impl_pixel_value!(StyleBorderBottomRightRadius);
-
-/// Represents a `border-top-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutBorderTopWidth {
-    pub inner: PixelValue,
-}
-/// Represents a `border-left-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutBorderLeftWidth {
-    pub inner: PixelValue,
-}
-/// Represents a `border-right-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutBorderRightWidth {
-    pub inner: PixelValue,
-}
-/// Represents a `border-bottom-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutBorderBottomWidth {
-    pub inner: PixelValue,
-}
-
-impl_pixel_value!(LayoutBorderTopWidth);
-impl_pixel_value!(LayoutBorderLeftWidth);
-impl_pixel_value!(LayoutBorderRightWidth);
-impl_pixel_value!(LayoutBorderBottomWidth);
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C, u8)]
@@ -745,47 +493,6 @@ impl<'a> From<String> for StyleBackgroundContent {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LinearGradient {
-    pub direction: Direction,
-    pub extend_mode: ExtendMode,
-    pub stops: Vec<NormalizedLinearColorStop>,
-}
-
-impl Default for LinearGradient {
-    fn default() -> Self {
-        Self {
-            direction: Direction::default(),
-            extend_mode: ExtendMode::default(),
-            stops: Vec::new().into(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct ConicGradient {
-    pub extend_mode: ExtendMode,               // default = clamp (no-repeat)
-    pub center: StyleBackgroundPosition,       // default = center center
-    pub angle: AngleValue,                     // default = 0deg
-    pub stops: Vec<NormalizedRadialColorStop>, // default = []
-}
-
-impl Default for ConicGradient {
-    fn default() -> Self {
-        Self {
-            extend_mode: ExtendMode::default(),
-            center: StyleBackgroundPosition {
-                horizontal: BackgroundPositionHorizontal::Center,
-                vertical: BackgroundPositionVertical::Center,
-            },
-            angle: AngleValue::default(),
-            stops: Vec::new().into(),
-        }
-    }
-}
-
 // normalized linear color stop
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -799,28 +506,6 @@ pub struct NormalizedLinearColorStop {
 pub struct NormalizedRadialColorStop {
     pub angle: AngleValue, // 0 to 360 degrees
     pub color: ColorU,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct RadialGradient {
-    pub shape: Shape,
-    pub size: RadialGradientSize,
-    pub position: StyleBackgroundPosition,
-    pub extend_mode: ExtendMode,
-    pub stops: Vec<NormalizedLinearColorStop>,
-}
-
-impl Default for RadialGradient {
-    fn default() -> Self {
-        Self {
-            shape: Shape::default(),
-            size: RadialGradientSize::default(),
-            position: StyleBackgroundPosition::default(),
-            extend_mode: ExtendMode::default(),
-            stops: Vec::new().into(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -915,155 +600,6 @@ pub struct LinearColorStop {
     pub color: ColorU,
 }
 
-/// Represents a `width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutWidth {
-    pub inner: PixelValue,
-}
-/// Represents a `min-width` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutMinWidth {
-    pub inner: PixelValue,
-}
-/// Represents a `max-width` attribute
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutMaxWidth {
-    pub inner: PixelValue,
-}
-/// Represents a `height` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutHeight {
-    pub inner: PixelValue,
-}
-/// Represents a `min-height` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutMinHeight {
-    pub inner: PixelValue,
-}
-/// Represents a `max-height` attribute
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutMaxHeight {
-    pub inner: PixelValue,
-}
-
-impl Default for LayoutMaxHeight {
-    fn default() -> Self {
-        Self {
-            inner: PixelValue::px(core::f32::MAX),
-        }
-    }
-}
-impl Default for LayoutMaxWidth {
-    fn default() -> Self {
-        Self {
-            inner: PixelValue::px(core::f32::MAX),
-        }
-    }
-}
-
-impl_pixel_value!(LayoutWidth);
-impl_pixel_value!(LayoutHeight);
-impl_pixel_value!(LayoutMinHeight);
-impl_pixel_value!(LayoutMinWidth);
-impl_pixel_value!(LayoutMaxWidth);
-impl_pixel_value!(LayoutMaxHeight);
-
-/// Represents a `top` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutTop {
-    pub inner: PixelValue,
-}
-/// Represents a `left` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutLeft {
-    pub inner: PixelValue,
-}
-/// Represents a `right` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutRight {
-    pub inner: PixelValue,
-}
-/// Represents a `bottom` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutBottom {
-    pub inner: PixelValue,
-}
-
-impl_pixel_value!(LayoutTop);
-impl_pixel_value!(LayoutBottom);
-impl_pixel_value!(LayoutRight);
-impl_pixel_value!(LayoutLeft);
-
-/// Represents a `padding-top` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutPaddingTop {
-    pub inner: PixelValue,
-}
-/// Represents a `padding-left` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutPaddingLeft {
-    pub inner: PixelValue,
-}
-/// Represents a `padding-right` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutPaddingRight {
-    pub inner: PixelValue,
-}
-/// Represents a `padding-bottom` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutPaddingBottom {
-    pub inner: PixelValue,
-}
-
-impl_pixel_value!(LayoutPaddingTop);
-impl_pixel_value!(LayoutPaddingBottom);
-impl_pixel_value!(LayoutPaddingRight);
-impl_pixel_value!(LayoutPaddingLeft);
-
-/// Represents a `padding-top` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutMarginTop {
-    pub inner: PixelValue,
-}
-/// Represents a `padding-left` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutMarginLeft {
-    pub inner: PixelValue,
-}
-/// Represents a `padding-right` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutMarginRight {
-    pub inner: PixelValue,
-}
-/// Represents a `padding-bottom` attribute
-#[derive(Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct LayoutMarginBottom {
-    pub inner: PixelValue,
-}
-
-impl_pixel_value!(LayoutMarginTop);
-impl_pixel_value!(LayoutMarginBottom);
-impl_pixel_value!(LayoutMarginRight);
-impl_pixel_value!(LayoutMarginLeft);
-
 /// Represents a `flex-grow` attribute
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -1150,40 +686,6 @@ impl Default for StyleTabWidth {
     fn default() -> Self {
         Self {
             inner: PercentageValue::const_new(100),
-        }
-    }
-}
-
-/// Represents a `letter-spacing` attribute
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleLetterSpacing {
-    pub inner: PixelValue,
-}
-
-impl Default for StyleLetterSpacing {
-    fn default() -> Self {
-        Self {
-            inner: PixelValue::const_px(0),
-        }
-    }
-}
-
-impl_pixel_value!(StyleLetterSpacing);
-
-/// Represents a `word-spacing` attribute
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleWordSpacing {
-    pub inner: PixelValue,
-}
-
-impl_pixel_value!(StyleWordSpacing);
-
-impl Default for StyleWordSpacing {
-    fn default() -> Self {
-        Self {
-            inner: PixelValue::const_px(0),
         }
     }
 }
@@ -1346,40 +848,6 @@ impl Default for StyleOpacity {
 
 impl_percentage_value!(StyleOpacity);
 
-/// Represents a `perspective-origin` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StylePerspectiveOrigin {
-    pub x: PixelValue,
-    pub y: PixelValue,
-}
-
-impl Default for StylePerspectiveOrigin {
-    fn default() -> Self {
-        StylePerspectiveOrigin {
-            x: PixelValue::const_px(0),
-            y: PixelValue::const_px(0),
-        }
-    }
-}
-
-/// Represents a `transform-origin` attribute
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleTransformOrigin {
-    pub x: PixelValue,
-    pub y: PixelValue,
-}
-
-impl Default for StyleTransformOrigin {
-    fn default() -> Self {
-        StyleTransformOrigin {
-            x: PixelValue::const_percent(50),
-            y: PixelValue::const_percent(50),
-        }
-    }
-}
-
 /// Represents a `backface-visibility` attribute
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -1391,53 +859,6 @@ impl Default for StyleBackfaceVisibility {
     fn default() -> Self {
         StyleBackfaceVisibility::Visible
     }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleTransformMatrix2D {
-    pub a: PixelValue,
-    pub b: PixelValue,
-    pub c: PixelValue,
-    pub d: PixelValue,
-    pub tx: PixelValue,
-    pub ty: PixelValue,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleTransformMatrix3D {
-    pub m11: PixelValue,
-    pub m12: PixelValue,
-    pub m13: PixelValue,
-    pub m14: PixelValue,
-    pub m21: PixelValue,
-    pub m22: PixelValue,
-    pub m23: PixelValue,
-    pub m24: PixelValue,
-    pub m31: PixelValue,
-    pub m32: PixelValue,
-    pub m33: PixelValue,
-    pub m34: PixelValue,
-    pub m41: PixelValue,
-    pub m42: PixelValue,
-    pub m43: PixelValue,
-    pub m44: PixelValue,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleTransformTranslate2D {
-    pub x: PixelValue,
-    pub y: PixelValue,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleTransformTranslate3D {
-    pub x: PixelValue,
-    pub y: PixelValue,
-    pub z: PixelValue,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1470,58 +891,6 @@ pub struct StyleTransformSkew2D {
     pub x: PercentageValue,
     pub y: PercentageValue,
 }
-
-/// Holds info necessary for layouting / styling scrollbars (-webkit-scrollbar)
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct ScrollbarInfo {
-    /// Total width (or height for vertical scrollbars) of the scrollbar in pixels
-    pub width: LayoutWidth,
-    /// Padding of the scrollbar tracker, in pixels. The inner bar is `width - padding` pixels wide.
-    pub padding_left: LayoutPaddingLeft,
-    /// Padding of the scrollbar (right)
-    pub padding_right: LayoutPaddingRight,
-    /// Style of the scrollbar background
-    /// (`-webkit-scrollbar` / `-webkit-scrollbar-track` / `-webkit-scrollbar-track-piece` combined)
-    pub track: StyleBackgroundContent,
-    /// Style of the scrollbar thumbs (the "up" / "down" arrows), (`-webkit-scrollbar-thumb`)
-    pub thumb: StyleBackgroundContent,
-    /// Styles the directional buttons on the scrollbar (`-webkit-scrollbar-button`)
-    pub button: StyleBackgroundContent,
-    /// If two scrollbars are present, addresses the (usually) bottom corner
-    /// of the scrollable element, where two scrollbars might meet (`-webkit-scrollbar-corner`)
-    pub corner: StyleBackgroundContent,
-    /// Addresses the draggable resizing handle that appears above the
-    /// `corner` at the bottom corner of some elements (`-webkit-resizer`)
-    pub resizer: StyleBackgroundContent,
-}
-
-/// Scrollbar style
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct ScrollbarStyle {
-    /// Vertical scrollbar style, if any
-    pub horizontal: ScrollbarInfo,
-    /// Horizontal scrollbar style, if any
-    pub vertical: ScrollbarInfo,
-}
-
-/// Represents a `font-size` attribute
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleFontSize {
-    pub inner: PixelValue,
-}
-
-impl Default for StyleFontSize {
-    fn default() -> Self {
-        Self {
-            inner: PixelValue::const_em(1),
-        }
-    }
-}
-
-impl_pixel_value!(StyleFontSize);
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
@@ -1675,7 +1044,7 @@ impl FontMetrics {
         let use_typo = if !self.use_typo_metrics() {
             None
         } else {
-            self.s_typo_ascender.into()
+            self.s_typo_ascender
         };
         match use_typo {
             Some(s) => s,
@@ -1688,7 +1057,7 @@ impl FontMetrics {
         let use_typo = if !self.use_typo_metrics() {
             None
         } else {
-            self.s_typo_descender.into()
+            self.s_typo_descender
         };
         match use_typo {
             Some(s) => s,
@@ -1700,7 +1069,7 @@ impl FontMetrics {
         let use_typo = if !self.use_typo_metrics() {
             None
         } else {
-            self.s_typo_line_gap.into()
+            self.s_typo_line_gap
         };
         match use_typo {
             Some(s) => s,
@@ -1890,19 +1259,6 @@ impl fmt::Display for StyleMixBlendMode {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
-pub struct StyleBlur {
-    pub width: PixelValue,
-    pub height: PixelValue,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
 pub struct StyleColorMatrix {
     pub matrix: [FloatValue; 20],
-}
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(C)]
-pub struct StyleFilterOffset {
-    pub x: PixelValue,
-    pub y: PixelValue,
 }

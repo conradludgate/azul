@@ -1,6 +1,3 @@
 //! Provides datatypes used to describe an application's style using the Azul GUI framework.
-mod css;
-mod css_properties;
-
-pub use self::css::*;
-pub use self::css_properties::*;
+pub(crate) mod css;
+pub(crate) mod css_properties;
