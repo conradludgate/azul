@@ -68,50 +68,25 @@
     html_logo_url = "https://raw.githubusercontent.com/maps4print/azul/master/assets/images/azul_logo_full_min.svg.png",
     html_favicon_url = "https://raw.githubusercontent.com/maps4print/azul/master/assets/images/favicon.ico"
 )]
-#![allow(warnings)]
 
-// #[macro_use]
-extern crate azul_css;
+pub mod css;
+pub mod css_parser;
+pub mod logical;
+pub mod ui_solver;
+mod words;
+
 #[macro_use]
 extern crate tinyvec;
 
+use self::css::{FontData, FontRef};
 use crate::text_shaping::ParsedFont;
-use azul_css::{FontData, FontRef};
 use core::ffi::c_void;
 
 pub mod script;
 pub mod text_layout;
 pub mod text_shaping;
 
-use azul_core::{
-    app_resources::{LoadedFontSource, ShapedWords, Words},
-    callbacks::DocumentId,
-    id_tree::NodeId,
-    traits::GetTextLayout,
-    ui_solver::{InlineTextLayout, ResolvedTextLayoutOptions},
-};
-
-use crate::text_layout::FontMetrics;
-
-#[derive(Debug, Clone)]
-pub struct InlineText<'a> {
-    pub words: &'a Words,
-    pub shaped_words: &'a ShapedWords,
-}
-
-impl<'a> GetTextLayout for InlineText<'a> {
-    fn get_text_layout(
-        &mut self,
-        _: &DocumentId,
-        _: NodeId,
-        text_layout_options: &ResolvedTextLayoutOptions,
-    ) -> InlineTextLayout {
-        let layouted_text_block =
-            text_layout::position_words(self.words, self.shaped_words, text_layout_options);
-        // TODO: Cache the layouted text block on the &mut self
-        text_layout::word_positions_to_inline_text_layout(&layouted_text_block)
-    }
-}
+use css::FontMetrics;
 
 fn parsed_font_destructor(ptr: *mut c_void) {
     unsafe {
@@ -137,5 +112,12 @@ pub fn parse_font_fn(source: LoadedFontSource) -> Option<FontRef> {
 
 pub fn get_font_metrics_fontref(font_ref: &FontRef) -> FontMetrics {
     let parsed_font = unsafe { &*(font_ref.get_data().parsed as *const ParsedFont) };
-    parsed_font.font_metrics.clone()
+    parsed_font.font_metrics
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LoadedFontSource {
+    pub data: Vec<u8>,
+    pub index: u32,
+    pub load_outlines: bool,
 }

@@ -1,3 +1,7 @@
+use crate::{
+    css::FontMetrics,
+    words::{Advance, Anchor, GlyphInfo, GlyphOrigin, Placement, RawGlyph, VariationSelector},
+};
 use allsorts::{
     binary::read::ReadScope,
     font_data::FontData,
@@ -9,9 +13,6 @@ use allsorts::{
         loca::LocaTable,
         FontTableProvider, HeadTable, HheaTable, MaxpTable,
     },
-};
-use azul_core::app_resources::{
-    Advance, Anchor, FontMetrics, GlyphInfo, GlyphOrigin, Placement, RawGlyph, VariationSelector,
 };
 use std::collections::btree_map::BTreeMap;
 use std::rc::Rc;
@@ -180,20 +181,20 @@ pub fn get_font_metrics(font_bytes: &[u8], font_index: usize) -> FontMetrics {
         fs_selection: os2_table.fs_selection,
         us_first_char_index: os2_table.us_first_char_index,
         us_last_char_index: os2_table.us_last_char_index,
-        s_typo_ascender: os2_table.s_typo_ascender.into(),
-        s_typo_descender: os2_table.s_typo_descender.into(),
-        s_typo_line_gap: os2_table.s_typo_line_gap.into(),
-        us_win_ascent: os2_table.us_win_ascent.into(),
-        us_win_descent: os2_table.us_win_descent.into(),
-        ul_code_page_range1: os2_table.ul_code_page_range1.into(),
-        ul_code_page_range2: os2_table.ul_code_page_range2.into(),
-        sx_height: os2_table.sx_height.into(),
-        s_cap_height: os2_table.s_cap_height.into(),
-        us_default_char: os2_table.us_default_char.into(),
-        us_break_char: os2_table.us_break_char.into(),
-        us_max_context: os2_table.us_max_context.into(),
-        us_lower_optical_point_size: os2_table.us_lower_optical_point_size.into(),
-        us_upper_optical_point_size: os2_table.us_upper_optical_point_size.into(),
+        s_typo_ascender: os2_table.s_typo_ascender,
+        s_typo_descender: os2_table.s_typo_descender,
+        s_typo_line_gap: os2_table.s_typo_line_gap,
+        us_win_ascent: os2_table.us_win_ascent,
+        us_win_descent: os2_table.us_win_descent,
+        ul_code_page_range1: os2_table.ul_code_page_range1,
+        ul_code_page_range2: os2_table.ul_code_page_range2,
+        sx_height: os2_table.sx_height,
+        s_cap_height: os2_table.s_cap_height,
+        us_default_char: os2_table.us_default_char,
+        us_break_char: os2_table.us_break_char,
+        us_max_context: os2_table.us_max_context,
+        us_lower_optical_point_size: os2_table.us_lower_optical_point_size,
+        us_upper_optical_point_size: os2_table.us_upper_optical_point_size,
     }
 }
 
@@ -262,17 +263,9 @@ pub struct GlyphOutline {
     pub operations: Vec<GlyphOutlineOperation>,
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 struct GlyphOutlineBuilder {
     operations: Vec<GlyphOutlineOperation>,
-}
-
-impl Default for GlyphOutlineBuilder {
-    fn default() -> Self {
-        GlyphOutlineBuilder {
-            operations: Vec::new(),
-        }
-    }
 }
 
 impl ttf_parser::OutlineBuilder for GlyphOutlineBuilder {
@@ -872,7 +865,7 @@ fn make_raw_glyph(
 #[inline]
 fn translate_raw_glyph(rg: &allsorts::gsub::RawGlyph<()>) -> RawGlyph {
     RawGlyph {
-        unicode_codepoint: rg.unicodes.get(0).map(|s| (*s) as u32).into(),
+        unicode_codepoint: rg.unicodes.get(0).copied(),
         glyph_index: rg.glyph_index,
         liga_component_pos: rg.liga_component_pos,
         glyph_origin: translate_glyph_origin(&rg.glyph_origin),
@@ -900,10 +893,8 @@ const fn translate_glyph_origin(g: &allsorts::gsub::GlyphOrigin) -> GlyphOrigin 
 
 #[inline]
 const fn translate_placement(p: &allsorts::gpos::Placement) -> Placement {
+    use crate::words::{CursiveAnchorPlacement, MarkAnchorPlacement, PlacementDistance};
     use allsorts::gpos::Placement::*;
-    use azul_core::app_resources::{
-        CursiveAnchorPlacement, MarkAnchorPlacement, PlacementDistance,
-    };
 
     match p {
         None => Placement::None,

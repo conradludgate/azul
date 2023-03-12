@@ -1,22 +1,22 @@
 //! Contains functions for breaking a string into words, calculate
 //! the positions of words / lines and do glyph positioning
 
+// pub use crate::azul_core::app_resources::{
+//     IndexOfLineBreak, LayoutedGlyphs, LineBreaks, LineLength,
+//     RemainingSpaceToRight,
+// };
+pub use crate::css::FontRef;
+pub use crate::logical::{LogicalPosition, LogicalRect, LogicalSize};
 pub use crate::text_shaping::ParsedFont;
-pub use azul_core::{
-    app_resources::{
-        FontMetrics, GlyphIndex, IndexOfLineBreak, LayoutedGlyphs, LineBreaks, LineLength,
-        RemainingSpaceToRight, ShapedWord, ShapedWords, Word, WordIndex, WordPositions, WordType,
-        Words,
-    },
-    callbacks::InlineText,
-    display_list::GlyphInstance,
+use crate::{
     ui_solver::{
-        InlineTextLayout, ResolvedTextLayoutOptions, TextLayoutOptions, DEFAULT_LETTER_SPACING,
-        DEFAULT_LINE_HEIGHT, DEFAULT_TAB_WIDTH, DEFAULT_WORD_SPACING,
+        InlineTextLayout, InlineTextLine, ResolvedTextLayoutOptions, DEFAULT_LINE_HEIGHT,
+        DEFAULT_TAB_WIDTH, DEFAULT_WORD_SPACING,
     },
-    window::{LogicalPosition, LogicalRect, LogicalSize},
+    words::{
+        InlineText, ShapedWord, ShapedWords, Word, WordPosition, WordPositions, WordType, Words,
+    },
 };
-pub use azul_css::FontRef;
 
 /// Creates a font from a font file (TTF, OTF, WOFF, etc.)
 ///
@@ -126,8 +126,8 @@ pub fn split_text_into_words(text: &str) -> Words {
     }
 
     Words {
-        items: words.into(),
-        internal_str: normalized_string.into(),
+        items: words,
+        internal_str: normalized_string,
         // internal_chars: normalized_chars.iter().map(|c| *c as u32).collect(),
     }
 }
@@ -166,7 +166,7 @@ pub fn shape_words(words: &Words, font: &ParsedFont) -> ShapedWords {
             let ShapedTextBufferUnsized { infos } = shaped_word;
 
             ShapedWord {
-                glyph_infos: infos.into(),
+                glyph_infos: infos,
                 word_width,
             }
         })
@@ -174,7 +174,7 @@ pub fn shape_words(words: &Words, font: &ParsedFont) -> ShapedWords {
 
     ShapedWords {
         items: shaped_words,
-        longest_word_width: longest_word_width,
+        longest_word_width,
         space_advance,
         font_metrics_units_per_em: font.font_metrics.units_per_em,
         font_metrics_ascender: font.font_metrics.get_ascender_unscaled(),
@@ -191,9 +191,6 @@ pub fn position_words(
     text_layout_options: &ResolvedTextLayoutOptions,
 ) -> WordPositions {
     use self::LineCaretIntersection::*;
-    use self::WordType::*;
-    use azul_core::app_resources::WordPosition;
-    use azul_core::ui_solver::InlineTextLine;
     use core::f32;
 
     let font_size_px = text_layout_options.font_size_px;
@@ -235,7 +232,7 @@ pub fn position_words(
     // The last word is a bit special: Any text must have at least one line break!
     for (word_idx, word) in words.items.iter().enumerate() {
         match word.word_type {
-            Word => {
+            WordType::Word => {
                 // shaped words only contains the actual shaped words, not spaces / tabs / return chars
                 let shaped_word = match shaped_words.items.get(shaped_word_idx) {
                     Some(s) => s,
@@ -302,7 +299,7 @@ pub fn position_words(
                 shaped_word_idx += 1;
                 last_shaped_word_word_idx = word_idx;
             }
-            Return => {
+            WordType::Return => {
                 if word_idx != last_word_idx {
                     line_breaks.push(InlineTextLine {
                         word_start: last_line_start_idx,
@@ -325,10 +322,10 @@ pub fn position_words(
                     line_caret_y = line_caret_y + font_size_px + line_height_px;
                 }
             }
-            Space | Tab => {
+            WordType::Space | WordType::Tab => {
                 let x_advance = match word.word_type {
-                    Space => word_spacing_px,
-                    Tab => tab_width_px,
+                    WordType::Space => word_spacing_px,
+                    WordType::Tab => tab_width_px,
                     _ => word_spacing_px, // unreachable
                 };
 
@@ -414,7 +411,7 @@ pub fn position_words(
 /// Returns the (left-aligned!) bounding boxes of the indidividual text lines
 pub fn word_positions_to_inline_text_layout(word_positions: &WordPositions) -> InlineTextLayout {
     InlineTextLayout {
-        lines: word_positions.line_breaks.clone().into(),
+        lines: word_positions.line_breaks.clone(),
         content_size: word_positions.content_size,
     }
 }
@@ -475,12 +472,7 @@ pub fn shape_text(font: &FontRef, text: &str, options: &ResolvedTextLayoutOption
     let word_positions = position_words(&words, &shaped_words, options);
     let inline_text_layout = word_positions_to_inline_text_layout(&word_positions);
 
-    azul_core::app_resources::get_inline_text(
-        &words,
-        &shaped_words,
-        &word_positions,
-        &inline_text_layout,
-    )
+    crate::words::get_inline_text(&words, &shaped_words, &word_positions, &inline_text_layout)
 }
 
 #[test]
@@ -496,10 +488,6 @@ fn test_split_words() {
                 item.word_type
             );
         }
-    }
-
-    fn string_to_vec(s: String) -> Vec<char> {
-        s.chars().collect()
     }
 
     fn assert_words(expected: &Words, got_words: &Words) {
@@ -523,8 +511,7 @@ fn test_split_words() {
     let ascii_str = String::from("abc\tdef  \nghi\r\njkl");
     let words_ascii = split_text_into_words(&ascii_str);
     let words_ascii_expected = Words {
-        internal_str: ascii_str.clone(),
-        // internal_chars: string_to_vec(ascii_str),
+        internal_str: ascii_str,
         items: vec![
             Word {
                 start: 0,
@@ -579,7 +566,7 @@ fn test_split_words() {
     let unicode_str = String::from("㌊㌋㌌㌍㌎㌏㌐㌑ ㌒㌓㌔㌕㌖㌗");
     let words_unicode = split_text_into_words(&unicode_str);
     let words_unicode_expected = Words {
-        internal_str: unicode_str.clone(),
+        internal_str: unicode_str,
         // internal_chars: string_to_vec(unicode_str),
         items: vec![
             Word {
@@ -605,7 +592,7 @@ fn test_split_words() {
     let single_str = String::from("A");
     let words_single_str = split_text_into_words(&single_str);
     let words_single_str_expected = Words {
-        internal_str: single_str.clone(),
+        internal_str: single_str,
         // internal_chars: string_to_vec(single_str),
         items: vec![
             Word {
