@@ -80,20 +80,12 @@ mod words;
 extern crate tinyvec;
 
 use self::css::{FontData, FontRef};
-use crate::text_shaping::ParsedFont;
-use core::ffi::c_void;
 
 pub mod script;
 pub mod text_layout;
 pub mod text_shaping;
 
 use css::FontMetrics;
-
-fn parsed_font_destructor(ptr: *mut c_void) {
-    unsafe {
-        let _ = Box::from_raw(ptr as *mut ParsedFont);
-    }
-}
 
 pub fn parse_font_fn(source: LoadedFontSource) -> Option<FontRef> {
     crate::text_layout::parse_font(
@@ -105,15 +97,13 @@ pub fn parse_font_fn(source: LoadedFontSource) -> Option<FontRef> {
         FontRef::new(FontData {
             bytes: source.data,
             font_index: source.index,
-            parsed: Box::into_raw(Box::new(parsed_font)) as *const c_void,
-            parsed_destructor: parsed_font_destructor,
+            parsed: parsed_font,
         })
     })
 }
 
 pub fn get_font_metrics_fontref(font_ref: &FontRef) -> FontMetrics {
-    let parsed_font = unsafe { &*(font_ref.get_data().parsed as *const ParsedFont) };
-    parsed_font.font_metrics
+    font_ref.data.parsed.font_metrics
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

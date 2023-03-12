@@ -1,6 +1,7 @@
 //! Provides a public API with datatypes used to describe style properties of DOM nodes.
 
 use crate::css::CssPropertyValue;
+use crate::text_shaping::ParsedFont;
 use core::cmp::Ordering;
 use core::ffi::c_void;
 use core::fmt;
@@ -5989,7 +5990,6 @@ impl FontMetrics {
     }
 }
 
-
 #[derive(Debug, Clone)]
 pub struct FontRef {
     /// shared pointer to an opaque implementation of the parsed font
@@ -6053,10 +6053,7 @@ pub struct FontData {
     /// Index of the font in the file (if not known, set to 0) -
     /// only relevant if the file is a font collection
     pub font_index: u32,
-    // Since this type has to be defined in the
-    pub parsed: *const c_void, // *const ParsedFont
-    // destructor of the ParsedFont
-    pub parsed_destructor: fn(*mut c_void),
+    pub parsed: ParsedFont,
 }
 
 impl fmt::Debug for FontData {
@@ -6065,16 +6062,6 @@ impl fmt::Debug for FontData {
             .field("bytes", &self.bytes)
             .field("font_index", &self.font_index)
             .finish()
-    }
-}
-
-unsafe impl Send for FontData {}
-unsafe impl Sync for FontData {}
-
-impl Drop for FontData {
-    fn drop(&mut self) {
-        // destroy the ParsedFont
-        (self.parsed_destructor)(self.parsed as *mut c_void)
     }
 }
 

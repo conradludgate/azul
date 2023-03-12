@@ -465,10 +465,9 @@ impl LineCaretIntersection {
 
 pub fn shape_text(font: &FontRef, text: &str, options: &ResolvedTextLayoutOptions) -> InlineText {
     let font_data = font.get_data();
-    let parsed_font_downcasted = unsafe { &*(font_data.parsed as *const ParsedFont) };
 
     let words = split_text_into_words(text);
-    let shaped_words = shape_words(&words, parsed_font_downcasted);
+    let shaped_words = shape_words(&words, &font_data.parsed);
     let word_positions = position_words(&words, &shaped_words, options);
     let inline_text_layout = word_positions_to_inline_text_layout(&word_positions);
 
