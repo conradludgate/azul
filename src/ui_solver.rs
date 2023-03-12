@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use crate::{
     css::{StyleTextAlign, StyleVerticalAlign},
     logical::{LogicalRect, LogicalSize},
@@ -5,9 +7,8 @@ use crate::{
 
 pub const DEFAULT_LINE_HEIGHT: f32 = 1.0;
 pub const DEFAULT_WORD_SPACING: f32 = 1.0;
-pub const DEFAULT_TAB_WIDTH: f32 = 4.0;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq)]
 #[repr(C)]
 pub struct InlineTextLayout {
     pub lines: Vec<InlineTextLine>,
@@ -16,22 +17,18 @@ pub struct InlineTextLayout {
 
 /// NOTE: The bounds of the text line is the TOP left corner (relative to the text origin),
 /// but the word_position is the BOTTOM left corner (relative to the text line)
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq)]
 #[repr(C)]
 pub struct InlineTextLine {
     pub bounds: LogicalRect,
-    /// At which word does this line start?
-    pub word_start: usize,
-    /// At which word does this line end
-    pub word_end: usize,
+    pub words: RangeInclusive<usize>,
 }
 
 impl InlineTextLine {
     pub const fn new(bounds: LogicalRect, word_start: usize, word_end: usize) -> Self {
         Self {
             bounds,
-            word_start,
-            word_end,
+            words: word_start..=word_end,
         }
     }
 }
@@ -90,7 +87,7 @@ impl InlineTextLayout {
 }
 
 #[inline]
-pub fn calculate_horizontal_shift_multiplier(horizontal_alignment: StyleTextAlign) -> Option<f32> {
+fn calculate_horizontal_shift_multiplier(horizontal_alignment: StyleTextAlign) -> Option<f32> {
     use crate::css::StyleTextAlign::*;
     match horizontal_alignment {
         Left => None,
@@ -100,7 +97,7 @@ pub fn calculate_horizontal_shift_multiplier(horizontal_alignment: StyleTextAlig
 }
 
 #[inline]
-pub fn calculate_vertical_shift_multiplier(vertical_alignment: StyleVerticalAlign) -> Option<f32> {
+fn calculate_vertical_shift_multiplier(vertical_alignment: StyleVerticalAlign) -> Option<f32> {
     use crate::css::StyleVerticalAlign::*;
     match vertical_alignment {
         Top => None,
@@ -122,17 +119,9 @@ pub struct ResolvedTextLayoutOptions {
     pub letter_spacing: Option<f32>,
     /// Additional spacing between words (in pixels)
     pub word_spacing: Option<f32>,
-    /// How many spaces should a tab character emulate
-    /// (multiplying value, i.e. `4.0` = one tab = 4 spaces)?
-    pub tab_width: Option<f32>,
     /// Maximum width of the text (in pixels) - if the text is set to `overflow:visible`, set this to None.
     pub max_horizontal_width: Option<f32>,
     /// How many pixels of leading does the first line have? Note that this added onto to the holes,
     /// so for effects like `:first-letter`, use a hole instead of a leading.
     pub leading: Option<f32>,
-    /// This is more important for inline text layout where items can punch "holes"
-    /// into the text flow, for example an image that floats to the right.
-    ///
-    /// TODO: Currently unused!
-    pub holes: Vec<LogicalRect>,
 }

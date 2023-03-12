@@ -110,7 +110,6 @@ name = "cl-text-layout"
 version = "0.1.0"
 dependencies = [
  "allsorts",
- "tinyvec",
  "ttf-parser",
  "unicode-normalization",
 ]

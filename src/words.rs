@@ -1,4 +1,7 @@
 use core::fmt;
+use std::ops::Range;
+
+use allsorts::gpos::{Info, Placement};
 
 use crate::{
     logical::{LogicalPosition, LogicalRect, LogicalSize},
@@ -6,8 +9,7 @@ use crate::{
 };
 
 /// Word that is scaled (to a font / font instance), but not yet positioned
-#[derive(PartialEq, PartialOrd, Clone)]
-#[repr(C)]
+#[derive(Clone)]
 pub struct ShapedWord {
     /// Glyph codepoint, glyph ID + kerning data
     pub glyph_infos: Vec<GlyphInfo>,
@@ -34,7 +36,7 @@ impl ShapedWord {
     pub fn number_of_glyphs(&self) -> usize {
         self.glyph_infos
             .iter()
-            .filter(|i| i.placement == Placement::None)
+            .filter(|i| i.info.placement == Placement::None)
             .count()
     }
 }
@@ -88,48 +90,39 @@ pub struct GlyphInstance {
 }
 
 /// Text broken up into `Tab`, `Word()`, `Return` characters
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct Words {
     /// Words (and spaces), broken up into semantic items
     pub items: Vec<Word>,
     /// String that makes up this paragraph of words
     pub internal_str: String,
-    // /// `internal_chars` is used in order to enable copy-paste (since taking a sub-string isn't possible using UTF-8)
-    // pub internal_chars: Vec<char>U32Vec,
 }
 
 impl Words {
     pub fn get_substr(&self, word: &Word) -> &str {
-        &self.internal_str.as_str()[word.start..word.end]
+        &self.internal_str.as_str()[word.index.clone()]
     }
 
     pub fn get_str(&self) -> &str {
         self.internal_str.as_str()
     }
-
-    // pub fn get_char(&self, idx: usize) -> Option<char> {
-    //     self.internal_str.as_ref().get(idx).and_then(|c| core::char::from_u32(*c))
-    // }
 }
 
 /// Section of a certain type
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct Word {
-    pub start: usize,
-    pub end: usize,
-    pub word_type: WordType,
+    pub index: Range<usize>,
+    pub word_type: Token,
 }
 
 /// Either a white-space delimited word, tab or return character
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(C)]
-pub enum WordType {
+pub enum Token {
     /// Encountered a word (delimited by spaces)
     Word,
-    // `\t` or `x09`
-    Tab,
     /// `\r`, `\n` or `\r\n`, escaped: `\x0D`, `\x0A` or `\x0D\x0A`
     Return,
     /// Space character
@@ -160,13 +153,16 @@ impl ShapedWords {
     pub fn get_longest_word_width_px(&self, target_font_size: f32) -> f32 {
         self.longest_word_width as f32 / self.font_metrics_units_per_em as f32 * target_font_size
     }
+
     pub fn get_space_advance_px(&self, target_font_size: f32) -> f32 {
         self.space_advance as f32 / self.font_metrics_units_per_em as f32 * target_font_size
     }
+
     /// Get the distance from the top of the text to the baseline of the text (= ascender)
     pub fn get_baseline_px(&self, target_font_size: f32) -> f32 {
         target_font_size + self.get_descender(target_font_size)
     }
+
     /// NOTE: descender is NEGATIVE
     pub fn get_descender(&self, target_font_size: f32) -> f32 {
         self.font_metrics_descender as f32 / self.font_metrics_units_per_em as f32
@@ -192,19 +188,6 @@ pub fn get_inline_text(
     word_positions: &WordPositions,
     inline_text_layout: &crate::ui_solver::InlineTextLayout,
 ) -> InlineText {
-    // check the range so that in the worst case there isn't a random crash here
-    fn get_range_checked_inclusive_end(
-        input: &[Word],
-        word_start: usize,
-        word_end: usize,
-    ) -> Option<&[Word]> {
-        if word_start < input.len() && word_end < input.len() && word_start <= word_end {
-            Some(&input[word_start..=word_end])
-        } else {
-            None
-        }
-    }
-
     let font_size_px = word_positions.text_layout_options.font_size_px;
     let descender_px = &shaped_words.get_descender(font_size_px); // descender is NEGATIVE
     let letter_spacing_px = word_positions
@@ -219,17 +202,18 @@ pub fn get_inline_text(
         .lines
         .iter()
         .filter_map(|line| {
-            let word_items = words.items.as_ref();
-            let word_start = line.word_start.min(line.word_end);
-            let word_end = line.word_end.max(line.word_start);
+            let word_items = words.items.as_slice();
+            let word_start = *line.words.start().min(line.words.end());
+            let word_end = *line.words.end().max(line.words.start());
 
-            let words = get_range_checked_inclusive_end(word_items, word_start, word_end)?
+            let words = word_items
+                .get(word_start..=word_end)?
                 .iter()
                 .enumerate()
                 .filter_map(|(word_idx, word)| {
                     let word_idx = word_start + word_idx;
                     match word.word_type {
-                        WordType::Word => {
+                        Token::Word => {
                             let word_position = word_positions.word_positions.get(word_idx)?;
                             let shaped_word_index = word_position.shaped_word_index?;
                             let shaped_word = shaped_words.items.get(shaped_word_index)?;
@@ -245,73 +229,65 @@ pub fn get_inline_text(
 
                                 // if the character is a mark, the mark displacement has to be added ON TOP OF the existing displacement
                                 // the origin should be relative to the word, not the final text
-                                let (letter_spacing_for_glyph, origin) = match glyph_info.placement
-                                {
-                                    Placement::None => (
-                                        letter_spacing_px,
-                                        LogicalPosition::new(
-                                            x_pos_in_word_px + displacement.x,
-                                            displacement.y,
-                                        ),
-                                    ),
-                                    Placement::Distance(PlacementDistance { x, y }) => {
-                                        let font_metrics_divisor =
-                                            units_per_em as f32 / font_size_px;
-                                        displacement = LogicalPosition {
-                                            x: x as f32 / font_metrics_divisor,
-                                            y: y as f32 / font_metrics_divisor,
-                                        };
-                                        (
+                                let (letter_spacing_for_glyph, origin) =
+                                    match glyph_info.info.placement {
+                                        Placement::None => (
                                             letter_spacing_px,
                                             LogicalPosition::new(
                                                 x_pos_in_word_px + displacement.x,
                                                 displacement.y,
                                             ),
-                                        )
-                                    }
-                                    Placement::MarkAnchor(MarkAnchorPlacement {
-                                        base_glyph_index,
-                                        ..
-                                    }) => {
-                                        let anchor = &all_glyphs_in_this_word[base_glyph_index];
-                                        (0.0, anchor.bounds.origin + displacement)
-                                        // TODO: wrong
-                                    }
-                                    Placement::MarkOverprint(index) => {
-                                        let anchor = &all_glyphs_in_this_word[index];
-                                        (0.0, anchor.bounds.origin + displacement)
-                                    }
-                                    Placement::CursiveAnchor(CursiveAnchorPlacement {
-                                        exit_glyph_index,
-                                        ..
-                                    }) => {
-                                        let anchor = &all_glyphs_in_this_word[exit_glyph_index];
-                                        (0.0, anchor.bounds.origin + displacement)
-                                        // TODO: wrong
-                                    }
-                                };
+                                        ),
+                                        Placement::Distance(x, y) => {
+                                            let font_metrics_divisor =
+                                                units_per_em as f32 / font_size_px;
+                                            displacement = LogicalPosition {
+                                                x: x as f32 / font_metrics_divisor,
+                                                y: y as f32 / font_metrics_divisor,
+                                            };
+                                            (
+                                                letter_spacing_px,
+                                                LogicalPosition::new(
+                                                    x_pos_in_word_px + displacement.x,
+                                                    displacement.y,
+                                                ),
+                                            )
+                                        }
+                                        Placement::MarkAnchor(base_glyph_index, _, _) => {
+                                            let anchor = &all_glyphs_in_this_word[base_glyph_index];
+                                            (0.0, anchor.bounds.origin + displacement)
+                                            // TODO: wrong
+                                        }
+                                        Placement::MarkOverprint(index) => {
+                                            let anchor = &all_glyphs_in_this_word[index];
+                                            (0.0, anchor.bounds.origin + displacement)
+                                        }
+                                        Placement::CursiveAnchor(exit_glyph_index, _, _, _) => {
+                                            let anchor = &all_glyphs_in_this_word[exit_glyph_index];
+                                            (0.0, anchor.bounds.origin + displacement)
+                                            // TODO: wrong
+                                        }
+                                    };
 
                                 let glyph_scale_x = glyph_info
-                                    .size
+                                    .advance
                                     .get_x_size_scaled(units_per_em, font_size_px);
                                 let glyph_scale_y = glyph_info
-                                    .size
+                                    .advance
                                     .get_y_size_scaled(units_per_em, font_size_px);
 
                                 let glyph_advance_x = glyph_info
-                                    .size
+                                    .advance
                                     .get_x_advance_scaled(units_per_em, font_size_px);
-                                let kerning_x = glyph_info
-                                    .size
-                                    .get_kerning_scaled(units_per_em, font_size_px);
+                                let kerning_x =
+                                    glyph_info.get_kerning_scaled(units_per_em, font_size_px);
 
                                 let inline_char = InlineGlyph {
                                     bounds: LogicalRect::new(
                                         origin,
                                         LogicalSize::new(glyph_scale_x, glyph_scale_y),
                                     ),
-                                    unicode_codepoint: glyph_info.glyph.unicode_codepoint,
-                                    glyph_index: glyph_info.glyph.glyph_index as u32,
+                                    glyph_index: glyph_info.info.glyph.glyph_index as u32,
                                 };
 
                                 x_pos_in_word_px +=
@@ -330,9 +306,8 @@ pub fn get_inline_text(
 
                             Some(inline_word)
                         }
-                        WordType::Tab => Some(InlineWord::Tab),
-                        WordType::Return => Some(InlineWord::Return),
-                        WordType::Space => Some(InlineWord::Space),
+                        Token::Return => Some(InlineWord::Return),
+                        Token::Space => Some(InlineWord::Space),
                     }
                 })
                 .collect::<Vec<InlineWord>>();
@@ -395,7 +370,7 @@ impl InlineText {
 
                     line.words.iter().flat_map(move |word| {
                         let (glyphs, mut word_origin) = match word {
-                            InlineWord::Tab | InlineWord::Return | InlineWord::Space => {
+                            InlineWord::Return | InlineWord::Space => {
                                 ([].as_slice(), LogicalPosition::zero())
                             }
                             InlineWord::Word(text_contents) => {
@@ -432,7 +407,6 @@ pub struct InlineLine {
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 #[repr(C, u8)]
 pub enum InlineWord {
-    Tab,
     Return,
     Space,
     Word(InlineTextContents),
@@ -444,7 +418,7 @@ impl InlineWord {
     }
     pub fn get_text_content(&self) -> Option<&InlineTextContents> {
         match self {
-            InlineWord::Tab | InlineWord::Return | InlineWord::Space => None,
+            InlineWord::Return | InlineWord::Space => None,
             InlineWord::Word(tc) => Some(tc),
         }
     }
@@ -453,14 +427,7 @@ impl InlineWord {
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct InlineGlyph {
     pub bounds: LogicalRect,
-    pub unicode_codepoint: Option<char>,
     pub glyph_index: u32,
-}
-
-impl InlineGlyph {
-    pub fn has_codepoint(&self) -> bool {
-        self.unicode_codepoint.is_some()
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -498,98 +465,10 @@ pub struct InlineTextHit {
     pub char_index_relative_to_word: usize,
 }
 
-#[derive(Debug, Copy, PartialEq, PartialOrd, Clone, Hash)]
-#[repr(C)]
-pub struct PlacementDistance {
-    pub x: i32,
-    pub y: i32,
-}
-
-/// When not Attachment::None indicates that this glyph
-/// is an attachment with placement indicated by the variant.
-#[derive(Debug, Copy, PartialEq, PartialOrd, Clone, Hash)]
-#[repr(C, u8)]
-pub enum Placement {
-    None,
-    Distance(PlacementDistance),
-    MarkAnchor(MarkAnchorPlacement),
-    /// An overprint mark.
-    ///
-    /// This mark is shown at the same position as the base glyph.
-    ///
-    /// Fields: (base glyph index in `Vec<GlyphInfo>`)
-    MarkOverprint(usize),
-    CursiveAnchor(CursiveAnchorPlacement),
-}
-
-/// Cursive anchored placement.
-///
-/// https://docs.microsoft.com/en-us/typography/opentype/spec/gpos#lookup-type-3-cursive-attachment-positioning-subtable
-#[derive(Debug, Copy, PartialEq, PartialOrd, Clone, Hash)]
-#[repr(C)]
-pub struct CursiveAnchorPlacement {
-    /// exit glyph index in the `Vec<GlyphInfo>`
-    pub exit_glyph_index: usize,
-    /// RIGHT_TO_LEFT flag from lookup table
-    pub right_to_left: bool,
-    /// exit glyph anchor
-    pub exit_glyph_anchor: Anchor,
-    /// entry glyph anchor
-    pub entry_glyph_anchor: Anchor,
-}
-
-/// An anchored mark.
-///
-/// This is a mark where its anchor is aligned with the base glyph anchor.
-#[derive(Debug, Copy, PartialEq, PartialOrd, Clone, Hash)]
-#[repr(C)]
-pub struct MarkAnchorPlacement {
-    /// base glyph index in `Vec<GlyphInfo>`
-    pub base_glyph_index: usize,
-    /// base glyph anchor
-    pub base_glyph_anchor: Anchor,
-    /// mark anchor
-    pub mark_anchor: Anchor,
-}
-
-#[derive(Debug, Copy, PartialEq, PartialOrd, Clone, Hash)]
-#[repr(C)]
-pub struct Anchor {
-    pub x: i16,
-    pub y: i16,
-}
-
-#[derive(Debug, PartialEq, PartialOrd, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub struct GlyphInfo {
-    pub glyph: RawGlyph,
-    pub size: Advance,
-    pub kerning: i16,
-    pub placement: Placement,
-}
-
-#[derive(Debug, Copy, PartialEq, PartialOrd, Clone, Hash)]
-#[repr(C)]
-pub struct RawGlyph {
-    pub unicode_codepoint: Option<char>,
-    pub glyph_index: u16,
-    pub liga_component_pos: u16,
-    pub glyph_origin: GlyphOrigin,
-    pub small_caps: bool,
-    pub multi_subst_dup: bool,
-    pub is_vert_alt: bool,
-    pub fake_bold: bool,
-    pub fake_italic: bool,
-    pub variation: Option<VariationSelector>,
-}
-
-impl RawGlyph {
-    pub fn has_codepoint(&self) -> bool {
-        self.unicode_codepoint.is_some()
-    }
-
-    pub fn get_codepoint(&self) -> Option<char> {
-        self.unicode_codepoint
-    }
+    pub info: Info,
+    pub advance: Advance,
 }
 
 #[derive(Debug, Default, Copy, PartialEq, PartialOrd, Clone, Hash)]
@@ -597,14 +476,9 @@ pub struct Advance {
     pub advance_x: u16,
     pub size_x: i32,
     pub size_y: i32,
-    pub kerning: i16,
 }
 
 impl Advance {
-    #[inline]
-    pub const fn get_x_advance_total_unscaled(&self) -> i32 {
-        self.advance_x as i32 + self.kerning as i32
-    }
     #[inline]
     pub const fn get_x_advance_unscaled(&self) -> u16 {
         self.advance_x
@@ -617,15 +491,7 @@ impl Advance {
     pub const fn get_y_size_unscaled(&self) -> i32 {
         self.size_y
     }
-    #[inline]
-    pub const fn get_kerning_unscaled(&self) -> i16 {
-        self.kerning
-    }
 
-    #[inline]
-    pub fn get_x_advance_total_scaled(&self, units_per_em: u16, target_font_size: f32) -> f32 {
-        self.get_x_advance_total_unscaled() as f32 / units_per_em as f32 * target_font_size
-    }
     #[inline]
     pub fn get_x_advance_scaled(&self, units_per_em: u16, target_font_size: f32) -> f32 {
         self.get_x_advance_unscaled() as f32 / units_per_em as f32 * target_font_size
@@ -638,31 +504,24 @@ impl Advance {
     pub fn get_y_size_scaled(&self, units_per_em: u16, target_font_size: f32) -> f32 {
         self.get_y_size_unscaled() as f32 / units_per_em as f32 * target_font_size
     }
+}
+
+impl GlyphInfo {
+    #[inline]
+    pub const fn get_x_advance_total_unscaled(&self) -> i32 {
+        self.advance.advance_x as i32 + self.info.kerning as i32
+    }
+    #[inline]
+    pub const fn get_kerning_unscaled(&self) -> i16 {
+        self.info.kerning
+    }
+
+    #[inline]
+    pub fn get_x_advance_total_scaled(&self, units_per_em: u16, target_font_size: f32) -> f32 {
+        self.get_x_advance_total_unscaled() as f32 / units_per_em as f32 * target_font_size
+    }
     #[inline]
     pub fn get_kerning_scaled(&self, units_per_em: u16, target_font_size: f32) -> f32 {
         self.get_kerning_unscaled() as f32 / units_per_em as f32 * target_font_size
     }
-}
-
-/// A Unicode variation selector.
-///
-/// VS04-VS14 are omitted as they aren't currently used.
-#[derive(Debug, Copy, PartialEq, PartialOrd, Clone, Hash)]
-pub enum VariationSelector {
-    /// VARIATION SELECTOR-1
-    VS01 = 1,
-    /// VARIATION SELECTOR-2
-    VS02 = 2,
-    /// VARIATION SELECTOR-3
-    VS03 = 3,
-    /// Text presentation
-    VS15 = 15,
-    /// Emoji presentation
-    VS16 = 16,
-}
-
-#[derive(Debug, Copy, PartialEq, PartialOrd, Clone, Hash)]
-pub enum GlyphOrigin {
-    Char(char),
-    Direct,
 }

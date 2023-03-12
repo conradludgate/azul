@@ -86,4 +86,7 @@ pub use text_layout::{
 };
 pub use text_shaping::ParsedFont;
 pub use ui_solver::{InlineTextLayout, ResolvedTextLayoutOptions};
-pub use words::{get_inline_text, ShapedWord, ShapedWords, Word, WordType, Words};
+pub use words::{
+    get_inline_text, InlineLine, InlineText, InlineWord, ShapedWord, ShapedWords, Word, Token,
+    Words,
+};

@@ -8,7 +8,7 @@ use crate::{
         InlineTextLayout, InlineTextLine, ResolvedTextLayoutOptions, DEFAULT_LINE_HEIGHT,
         DEFAULT_WORD_SPACING,
     },
-    words::{ShapedWord, ShapedWords, Word, WordPosition, WordPositions, WordType, Words},
+    words::{ShapedWord, ShapedWords, Token, Word, WordPosition, WordPositions, Words},
 };
 
 /// Creates a font from a font file (TTF, OTF, WOFF, etc.)
@@ -25,7 +25,6 @@ pub fn split_text_into_words(text: &str) -> Words {
     // Necessary because we need to handle both \n and \r\n characters
     // If we just look at the characters one-by-one, this wouldn't be possible.
     let normalized_string = text.nfc().collect::<String>();
-    let normalized_chars = normalized_string.chars().collect::<Vec<char>>();
 
     let mut words = Vec::new();
 
@@ -34,32 +33,29 @@ pub fn split_text_into_words(text: &str) -> Words {
     // (where the position of the character data does not correspond to the actual glyph order).
     let mut current_word_start = 0;
     let mut last_char_idx = 0;
+    let mut last_char = '0';
     let mut last_char_was_whitespace = false;
 
-    for (ch_idx, ch) in normalized_chars.iter().enumerate() {
-        let ch = *ch;
+    for (ch_idx, ch) in normalized_string.char_indices() {
         let current_char_is_whitespace = ch == ' ' || ch == '\r' || ch == '\n';
 
         let should_push_delimiter = match ch {
             ' ' => Some(Word {
-                start: last_char_idx + 1,
-                end: ch_idx + 1,
-                word_type: WordType::Space,
+                index: (last_char_idx + 1)..(ch_idx + 1),
+                word_type: Token::Space,
             }),
             '\n' => {
-                Some(if normalized_chars[last_char_idx] == '\r' {
+                Some(if last_char == '\r' {
                     // "\r\n" return
                     Word {
-                        start: last_char_idx,
-                        end: ch_idx + 1,
-                        word_type: WordType::Return,
+                        index: (last_char_idx)..(ch_idx + 1),
+                        word_type: Token::Return,
                     }
                 } else {
                     // "\n" return
                     Word {
-                        start: last_char_idx + 1,
-                        end: ch_idx + 1,
-                        word_type: WordType::Return,
+                        index: (last_char_idx + 1)..(ch_idx + 1),
+                        word_type: Token::Return,
                     }
                 })
             }
@@ -69,9 +65,8 @@ pub fn split_text_into_words(text: &str) -> Words {
         // Character is a whitespace or the character is the last character in the text (end of text)
         let should_push_word = if current_char_is_whitespace && !last_char_was_whitespace {
             Some(Word {
-                start: current_word_start,
-                end: ch_idx,
-                word_type: WordType::Word,
+                index: (current_word_start)..(ch_idx),
+                word_type: Token::Word,
             })
         } else {
             None
@@ -82,27 +77,27 @@ pub fn split_text_into_words(text: &str) -> Words {
         }
 
         let mut push_words = |arr: [Option<Word>; 2]| {
-            words.extend(arr.iter().filter_map(|e| *e));
+            words.extend(arr.into_iter().flatten());
         };
 
         push_words([should_push_word, should_push_delimiter]);
 
         last_char_was_whitespace = current_char_is_whitespace;
         last_char_idx = ch_idx;
+        last_char = ch;
     }
 
     // Push the last word
     if current_word_start != last_char_idx + 1 {
         words.push(Word {
-            start: current_word_start,
-            end: normalized_chars.len(),
-            word_type: WordType::Word,
+            index: current_word_start..normalized_string.len(),
+            word_type: Token::Word,
         });
     }
 
     // If the last item is a `Return`, remove it
     if let Some(Word {
-        word_type: WordType::Return,
+        word_type: Token::Return,
         ..
     }) = words.last()
     {
@@ -122,7 +117,7 @@ pub fn shape_words(words: &Words, font: &ParsedFont) -> ShapedWords {
     // Get the dimensions of the space glyph
     let space_advance = font
         .get_space_width()
-        .unwrap_or(font.font_metrics.units_per_em as usize);
+        .unwrap_or(font.font_metrics.head.units_per_em as usize);
 
     let mut longest_word_width = 0_usize;
 
@@ -130,23 +125,18 @@ pub fn shape_words(words: &Words, font: &ParsedFont) -> ShapedWords {
     let shaped_words = words
         .items
         .iter()
-        .filter(|w| w.word_type == WordType::Word)
+        .filter(|w| w.word_type == Token::Word)
         .map(|word| {
-            use crate::text_shaping::ShapedTextBufferUnsized;
-
-            let chars = words.internal_str.as_str()[word.index]
+            let chars = words.internal_str.as_str()[word.index.clone()]
                 .chars()
-                .map(|c| c as u32)
                 .collect::<Vec<_>>();
             let shaped_word = font.shape(&chars);
             let word_width = shaped_word.get_word_visual_width_unscaled();
 
             longest_word_width = longest_word_width.max(word_width);
 
-            let ShapedTextBufferUnsized { infos } = shaped_word;
-
             ShapedWord {
-                glyph_infos: infos,
+                glyph_infos: shaped_word.infos,
                 word_width,
             }
         })
@@ -156,7 +146,7 @@ pub fn shape_words(words: &Words, font: &ParsedFont) -> ShapedWords {
         items: shaped_words,
         longest_word_width,
         space_advance,
-        font_metrics_units_per_em: font.font_metrics.units_per_em,
+        font_metrics_units_per_em: font.font_metrics.head.units_per_em,
         font_metrics_ascender: font.font_metrics.get_ascender_unscaled(),
         font_metrics_descender: font.font_metrics.get_descender_unscaled(),
         font_metrics_line_gap: font.font_metrics.get_line_gap_unscaled(),
@@ -206,7 +196,7 @@ pub fn position_words(
     // The last word is a bit special: Any text must have at least one line break!
     for (word_idx, word) in words.items.iter().enumerate() {
         match word.word_type {
-            WordType::Word => {
+            Token::Word => {
                 // shaped words only contains the actual shaped words, not spaces / tabs / return chars
                 let shaped_word = match shaped_words.items.get(shaped_word_idx) {
                     Some(s) => s,
@@ -248,8 +238,8 @@ pub fn position_words(
                     LineBreak { new_x, new_y } => {
                         // push the line break first
                         line_breaks.push(InlineTextLine {
-                            word_start: last_line_start_idx,
-                            word_end: word_idx.saturating_sub(1).max(last_line_start_idx),
+                            words: last_line_start_idx
+                                ..=word_idx.saturating_sub(1).max(last_line_start_idx),
                             bounds: LogicalRect::new(
                                 LogicalPosition::new(0.0, line_caret_y),
                                 LogicalSize::new(line_caret_x, font_size_px + line_height_px),
@@ -273,11 +263,11 @@ pub fn position_words(
                 shaped_word_idx += 1;
                 last_shaped_word_word_idx = word_idx;
             }
-            WordType::Return => {
+            Token::Return => {
                 if word_idx != last_word_idx {
                     line_breaks.push(InlineTextLine {
-                        word_start: last_line_start_idx,
-                        word_end: word_idx.saturating_sub(1).max(last_line_start_idx),
+                        words: last_line_start_idx
+                            ..=word_idx.saturating_sub(1).max(last_line_start_idx),
                         bounds: LogicalRect::new(
                             LogicalPosition::new(0.0, line_caret_y),
                             LogicalSize::new(line_caret_x, font_size_px + line_height_px),
@@ -296,7 +286,7 @@ pub fn position_words(
                     line_caret_y = line_caret_y + font_size_px + line_height_px;
                 }
             }
-            WordType::Space => {
+            Token::Space => {
                 let x_advance = word_spacing_px;
 
                 let caret_intersection = LineCaretIntersection::new(
@@ -321,8 +311,8 @@ pub fn position_words(
                         // push the line break before increasing
                         if word_idx != last_word_idx {
                             line_breaks.push(InlineTextLine {
-                                word_start: last_line_start_idx,
-                                word_end: word_idx.saturating_sub(1).max(last_line_start_idx),
+                                words: last_line_start_idx
+                                    ..=word_idx.saturating_sub(1).max(last_line_start_idx),
                                 bounds: LogicalRect::new(
                                     LogicalPosition::new(0.0, line_caret_y),
                                     LogicalSize::new(line_caret_x, font_size_px + line_height_px),
@@ -346,8 +336,7 @@ pub fn position_words(
     }
 
     line_breaks.push(InlineTextLine {
-        word_start: last_line_start_idx,
-        word_end: last_shaped_word_word_idx,
+        words: last_line_start_idx..=last_shaped_word_word_idx,
         bounds: LogicalRect::new(
             LogicalPosition::new(0.0, line_caret_y),
             LogicalSize::new(line_caret_x, font_size_px + line_height_px),
@@ -439,10 +428,9 @@ fn test_split_words() {
         println!("-- string: {:?}", w.get_str());
         for item in &w.items {
             println!(
-                "{:?} - ({}..{}) = {:?}",
+                "{:?} - ({:?}) = {:?}",
                 w.get_substr(item),
-                item.start,
-                item.end,
+                item.index,
                 item.word_type
             );
         }
@@ -472,49 +460,40 @@ fn test_split_words() {
         internal_str: ascii_str,
         items: vec![
             Word {
-                start: 0,
-                end: 3,
-                word_type: WordType::Word,
+                index: 0..3,
+                word_type: Token::Word,
             }, // "abc" - (0..3) = Word
             Word {
-                start: 3,
-                end: 4,
-                word_type: WordType::Space,
+                index: 3..4,
+                word_type: Token::Space,
             }, // "\t" - (3..4) = Tab
             Word {
-                start: 4,
-                end: 7,
-                word_type: WordType::Word,
+                index: 4..7,
+                word_type: Token::Word,
             }, // "def" - (4..7) = Word
             Word {
-                start: 7,
-                end: 8,
-                word_type: WordType::Space,
+                index: 7..8,
+                word_type: Token::Space,
             }, // " " - (7..8) = Space
             Word {
-                start: 8,
-                end: 9,
-                word_type: WordType::Space,
+                index: 8..9,
+                word_type: Token::Space,
             }, // " " - (8..9) = Space
             Word {
-                start: 9,
-                end: 10,
-                word_type: WordType::Return,
+                index: 9..10,
+                word_type: Token::Return,
             }, // "\n" - (9..10) = Return
             Word {
-                start: 10,
-                end: 13,
-                word_type: WordType::Word,
+                index: 10..13,
+                word_type: Token::Word,
             }, // "ghi" - (10..13) = Word
             Word {
-                start: 13,
-                end: 15,
-                word_type: WordType::Return,
+                index: 13..15,
+                word_type: Token::Return,
             }, // "\r\n" - (13..15) = Return
             Word {
-                start: 15,
-                end: 18,
-                word_type: WordType::Word,
+                index: 15..18,
+                word_type: Token::Word,
             }, // "jkl" - (15..18) = Word
         ],
     };
@@ -528,19 +507,16 @@ fn test_split_words() {
         // internal_chars: string_to_vec(unicode_str),
         items: vec![
             Word {
-                start: 0,
-                end: 8,
-                word_type: WordType::Word,
+                index: 0..8,
+                word_type: Token::Word,
             }, // "㌊㌋㌌㌍㌎㌏㌐㌑"
             Word {
-                start: 8,
-                end: 9,
-                word_type: WordType::Space,
+                index: 8..9,
+                word_type: Token::Space,
             }, // " "
             Word {
-                start: 9,
-                end: 15,
-                word_type: WordType::Word,
+                index: 9..15,
+                word_type: Token::Word,
             }, // "㌒㌓㌔㌕㌖㌗"
         ],
     };
@@ -554,9 +530,8 @@ fn test_split_words() {
         // internal_chars: string_to_vec(single_str),
         items: vec![
             Word {
-                start: 0,
-                end: 1,
-                word_type: WordType::Word,
+                index: 0..1,
+                word_type: Token::Word,
             }, // "A"
         ],
     };
