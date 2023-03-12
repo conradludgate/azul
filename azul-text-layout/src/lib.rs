@@ -69,6 +69,7 @@
     html_favicon_url = "https://raw.githubusercontent.com/maps4print/azul/master/assets/images/favicon.ico"
 )]
 
+// mod fontconfig;
 pub mod css;
 pub mod css_parser;
 pub mod logical;

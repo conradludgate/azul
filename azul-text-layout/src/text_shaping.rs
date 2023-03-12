@@ -748,7 +748,6 @@ fn shape<'a>(
     use allsorts::gpos::apply as gpos_apply;
     use allsorts::gsub::apply as gsub_apply;
     use allsorts::gsub::{FeatureMask, Features};
-    use core::convert::TryFrom;
 
     // Map glyphs
     //
